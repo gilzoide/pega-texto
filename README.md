@@ -1,5 +1,7 @@
 pega-texto
 ==========
+[![Build Status](https://travis-ci.org/gilzoide/pega-texto.svg?branch=master)](https://travis-ci.org/gilzoide/pega-texto)
+
 A runtime engine for [Parsing Expression Grammars
 (PEG)](http://bford.info/packrat/) in C.
 
