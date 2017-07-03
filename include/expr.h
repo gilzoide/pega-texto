@@ -18,10 +18,9 @@
  * Any bugs should be reported to <gilzoide@gmail.com>
  */
 
-#ifndef __PEGA_TEXTO_H__
-#define __PEGA_TEXTO_H__
+#ifndef __PEGA_TEXTO_EXPR_H__
+#define __PEGA_TEXTO_EXPR_H__
 
-#include <stdlib.h>
 #include <stdint.h>
 
 /// Operators for constructing Parsing Expressions
@@ -87,23 +86,8 @@ pt_expr *pt_create_custom_matcher(pt_custom_matcher f);
 
 void pt_destroy_expr(pt_expr *e);
 
-/// Easy to use macros for building PEGs
-#ifdef PEGA_TEXTO_MACROS
+/// Function for creating Sequences and Choices from NULL-terminated arrays
 pt_expr *pt__from_nt_array(pt_expr *(*f)(pt_expr **, int), pt_expr **nt_exprs);
-# define ARRAY(...) ((pt_expr*[]){__VA_ARGS__})
-# define L(s)     (pt_create_literal(s))
-# define S(s)     (pt_create_set(s))
-# define R(s)     (pt_create_range(s))
-# define Any      (pt_create_any())
-# define V(e)     (pt_create_non_terminal(e))
-# define Vi(i)    (pt_create_non_terminal_idx(i))
-# define Q(e, N)  (pt_create_quantifier(e, N))
-# define And(e)   (pt_create_and(e))
-# define Not(e)   (pt_create_not(e))
-# define Seq(...) (pt__from_nt_array(&pt_create_sequence, ARRAY(__VA_ARGS__, NULL)))
-# define Or(...)  (pt__from_nt_array(&pt_create_choice, ARRAY(__VA_ARGS__, NULL)))
-# define F(f)     (pt_create_custom_matcher(f))
-#endif
 
 #endif
 

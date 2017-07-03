@@ -30,10 +30,6 @@
 	}                                 \
 	return new_expr;
 
-	
-static inline pt_expr *create_expr() {
-	return malloc(sizeof(pt_expr));
-}
 
 pt_expr *pt_create_literal(char *str) {
 	NEW_EXPR(

@@ -1,4 +1,4 @@
-include_directories(${PROJECT_SOURCE_DIR})
+include_directories("${PROJECT_SOURCE_DIR}/include")
 
 macro(run_test test_name pass)
 	add_executable(${test_name} "${test_name}.c")

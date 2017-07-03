@@ -1,11 +1,13 @@
 cmake_minimum_required(VERSION 2.6)
 project(pega-texto)
 
-# Build
-add_library(pega-texto SHARED pega-texto.h pega-texto.c)
+# Compile
+add_subdirectory(src)
 
 # Test
 enable_testing()
 add_subdirectory(test)
 
-# Install TODO
+# Install headers
+file(GLOB headers "include/*.h")
+install(FILES ${headers} DESTINATION "include/${CMAKE_PROJECT_NAME}")

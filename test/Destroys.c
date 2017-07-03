@@ -1,5 +1,5 @@
-#define PEGA_TEXTO_MACROS
 #include <pega-texto.h>
+#include <macro-on.h>
 #include <ctype.h>
 
 int main() {
