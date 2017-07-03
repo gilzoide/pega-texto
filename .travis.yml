@@ -1,0 +1,8 @@
+language: c
+
+install:
+- cmake .
+- make
+
+script:
+- make test
