@@ -19,3 +19,143 @@
  */
 
 #include "pega-texto.h"
+#include <stdlib.h>
+#include <assert.h>
+#include <string.h>
+
+#define NEW_EXPR(body)                \
+	pt_expr *new_expr;                       \
+	if(new_expr = malloc(sizeof(pt_expr))) { \
+	    body                          \
+	}                                 \
+	return new_expr;
+
+	
+static inline pt_expr *create_expr() {
+	return malloc(sizeof(pt_expr));
+}
+
+pt_expr *pt_create_literal(char *str) {
+	NEW_EXPR(
+		new_expr->op = PT_LITERAL;
+		new_expr->data.characters = str;
+	)
+}
+
+pt_expr *pt_create_set(char *str) {
+	NEW_EXPR(
+		new_expr->op = PT_SET;
+		new_expr->data.characters = str;
+	)
+}
+
+pt_expr *pt_create_range(char *str) {
+	assert(strlen(str) == 2 && "Character ranges should be pairs");
+	NEW_EXPR(
+		new_expr->op = PT_RANGE;
+		new_expr->data.characters = str;
+	)
+}
+
+pt_expr *pt_create_any() {
+	NEW_EXPR(
+		new_expr->op = PT_ANY;
+	)
+}
+
+pt_expr *pt_create_non_terminal(pt_expr *e) {
+	NEW_EXPR(
+		new_expr->op = PT_NON_TERMINAL;
+		new_expr->data.e = e;
+	)
+}
+
+pt_expr *pt_create_non_terminal_idx(int index) {
+	NEW_EXPR(
+		new_expr->op = PT_NON_TERMINAL_IDX;
+		new_expr->data.index = index;
+	)
+}
+
+pt_expr *pt_create_quantifier(pt_expr *e, int N) {
+	NEW_EXPR(
+		new_expr->op = PT_QUANTIFIER;
+		new_expr->N = N;
+		new_expr->data.e = e;
+	)
+}
+
+pt_expr *pt_create_and(pt_expr *e) {
+	NEW_EXPR(
+		new_expr->op = PT_AND;
+		new_expr->data.e = e;
+	)
+}
+
+pt_expr *pt_create_not(pt_expr *e) {
+	NEW_EXPR(
+		new_expr->op = PT_NOT;
+		new_expr->data.e = e;
+	)
+}
+
+pt_expr *pt_create_sequence(pt_expr **es, int N) {
+	NEW_EXPR(
+		new_expr->op = PT_SEQUENCE;
+		new_expr->N = N;
+		new_expr->data.es = es;
+	)
+}
+
+pt_expr *pt_create_choice(pt_expr **es, int N) {
+	NEW_EXPR(
+		new_expr->op = PT_CHOICE;
+		new_expr->N = N;
+		new_expr->data.es = es;
+	)
+}
+
+pt_expr *pt_create_custom_matcher(pt_custom_matcher f) {
+	NEW_EXPR(
+		new_expr->op = PT_FUNCTION;
+		new_expr->data.matcher = f;
+	)
+}
+
+void pt_destroy_expr(pt_expr *e) {
+	int i;
+	switch(e->op) {
+		case PT_QUANTIFIER:
+		case PT_AND:
+		case PT_NOT:
+			pt_destroy_expr(e->data.e);
+			break;
+
+		case PT_SEQUENCE:
+		case PT_CHOICE:
+			for(i = 0; i < e->N; i++) {
+				pt_destroy_expr(e->data.es[i]);
+			}
+			free(e->data.es);
+			break;
+
+		default:
+			break;
+	}
+	free(e);
+}
+
+pt_expr *pt__from_nt_array(pt_expr *(*f)(pt_expr **, int), pt_expr **nt_exprs) {
+	int N, byte_size;
+	pt_expr **aux;
+	for(aux = nt_exprs; *aux; aux++);
+	N = aux - nt_exprs;
+	byte_size = N * sizeof(pt_expr *);
+	if(aux = malloc(byte_size)) {
+		return f(memcpy(aux, nt_exprs, byte_size), N);
+	}
+	else {
+		return NULL;
+	}
+}
+
