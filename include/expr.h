@@ -32,7 +32,6 @@ enum {
 	PT_ANY,              // .
 	// Unary
 	PT_NON_TERMINAL,     // <non-terminal> // Recurse to non-terminal expression
-	PT_NON_TERMINAL_IDX, // <non-terminal> // Recurse by index in the grammar
 	PT_QUANTIFIER,       // e{N} // If positive, match N or more occurrences of `e`
 	                             // If negative, match at most N occurrences of `e`
 	                             // e{0}  == e*
@@ -54,14 +53,10 @@ typedef int(*pt_custom_matcher)(int);
 /// Parsing Expressions
 typedef struct pt_expr_t pt_expr;
 struct pt_expr_t {
-	uint8_t op;  // Operation to be performed
-	uint16_t N;  // Quantifier, or array size for N-ary operations
 	union {
-		// Literals, Character Sets and Ranges.
+		// Literals, Character Sets, Ranges and Non-Terminal names.
 		// @warning: pt_expr DO NOT own the memory for char buffers
-		char *characters;
-		// Non-terminal index in the grammar
-		int index;
+		const char *characters;
 		// Quantifier, And & Not operand
 		pt_expr *e;
 		// N-ary operators: a N-array of operands
@@ -69,13 +64,16 @@ struct pt_expr_t {
 		// Custom match function
 		int (*matcher)(int);
 	} data;
+	int16_t N;  // Quantifier, array size for N-ary operations or Non-Terminal index
+	uint8_t op;  // Operation to be performed
+	uint8_t own_characters : 1;  // Do Expression own te characters buffer?
 };
 
-pt_expr *pt_create_literal(char *str);
-pt_expr *pt_create_set(char *str);
-pt_expr *pt_create_range(char *str);
+pt_expr *pt_create_literal(const char *str, uint8_t own_characters);
+pt_expr *pt_create_set(const char *str, uint8_t own_characters);
+pt_expr *pt_create_range(const char *str, uint8_t own_characters);
 pt_expr *pt_create_any();
-pt_expr *pt_create_non_terminal(pt_expr *e);
+pt_expr *pt_create_non_terminal(const char *rules, uint8_t own_characters);
 pt_expr *pt_create_non_terminal_idx(int index);
 pt_expr *pt_create_quantifier(pt_expr *e, int N);
 pt_expr *pt_create_and(pt_expr *e);

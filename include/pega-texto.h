@@ -22,6 +22,8 @@
 #define __PEGA_TEXTO_H__
 
 #include "expr.h"
+#include "grammar.h"
+#include "match.h"
 
 #endif
 

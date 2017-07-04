@@ -23,33 +23,36 @@
 #include <assert.h>
 #include <string.h>
 
-#define NEW_EXPR(body)                \
+#define NEW_EXPR(body)                       \
 	pt_expr *new_expr;                       \
 	if(new_expr = malloc(sizeof(pt_expr))) { \
-	    body                          \
-	}                                 \
+	    body                                 \
+	}                                        \
 	return new_expr;
 
 
-pt_expr *pt_create_literal(char *str) {
+pt_expr *pt_create_literal(const char *str, uint8_t own_characters) {
 	NEW_EXPR(
 		new_expr->op = PT_LITERAL;
 		new_expr->data.characters = str;
+		new_expr->own_characters = own_characters;
 	)
 }
 
-pt_expr *pt_create_set(char *str) {
+pt_expr *pt_create_set(const char *str, uint8_t own_characters) {
 	NEW_EXPR(
 		new_expr->op = PT_SET;
 		new_expr->data.characters = str;
+		new_expr->own_characters = own_characters;
 	)
 }
 
-pt_expr *pt_create_range(char *str) {
+pt_expr *pt_create_range(const char *str, uint8_t own_characters) {
 	assert(strlen(str) == 2 && "Character ranges should be pairs");
 	NEW_EXPR(
 		new_expr->op = PT_RANGE;
 		new_expr->data.characters = str;
+		new_expr->own_characters = own_characters;
 	)
 }
 
@@ -59,17 +62,20 @@ pt_expr *pt_create_any() {
 	)
 }
 
-pt_expr *pt_create_non_terminal(pt_expr *e) {
+pt_expr *pt_create_non_terminal(const char *rule, uint8_t own_characters) {
 	NEW_EXPR(
 		new_expr->op = PT_NON_TERMINAL;
-		new_expr->data.e = e;
+		new_expr->data.characters = rule;
+		new_expr->own_characters = own_characters;
+		new_expr->N = -1;
 	)
 }
 
 pt_expr *pt_create_non_terminal_idx(int index) {
 	NEW_EXPR(
-		new_expr->op = PT_NON_TERMINAL_IDX;
-		new_expr->data.index = index;
+		new_expr->op = PT_NON_TERMINAL;
+		new_expr->data.characters = NULL;
+		new_expr->N = index;
 	)
 }
 
@@ -121,14 +127,19 @@ pt_expr *pt_create_custom_matcher(pt_custom_matcher f) {
 void pt_destroy_expr(pt_expr *e) {
 	int i;
 	switch(e->op) {
-		case PT_QUANTIFIER:
-		case PT_AND:
-		case PT_NOT:
+		case PT_NON_TERMINAL:
+			if(!e->data.characters) break;
+		case PT_LITERAL: case PT_SET: case PT_RANGE:
+			if(e->own_characters) {
+				free((void *) e->data.characters);
+			}
+			break;
+
+		case PT_QUANTIFIER: case PT_AND: case PT_NOT:
 			pt_destroy_expr(e->data.e);
 			break;
 
-		case PT_SEQUENCE:
-		case PT_CHOICE:
+		case PT_SEQUENCE: case PT_CHOICE:
 			for(i = 0; i < e->N; i++) {
 				pt_destroy_expr(e->data.es[i]);
 			}

@@ -18,22 +18,22 @@
  * Any bugs should be reported to <gilzoide@gmail.com>
  */
 
-/* Turn off Parsing Expression constructor macros */
+#ifndef __PEGA_TEXTO_GRAMMAR_H__
+#define __PEGA_TEXTO_GRAMMAR_H__
 
-#undef L
-#undef L_O
-#undef S
-#undef S_O
-#undef R
-#undef R_O
-#undef ANY
-#undef V
-#undef V_O
-#undef VI
-#undef Q
-#undef AND
-#undef NOT
-#undef SEQ
-#undef OR
-#undef F
+#include "expr.h"
+
+/// A Rule for the Grammar: `Name <- Expr`
+typedef struct {
+	const char *name;
+	pt_expr *e;
+} pt_rule;
+
+/// The Grammar: Rule SOA
+typedef struct pt_grammar_t pt_grammar;
+
+pt_grammar *pt_create_grammar(pt_rule *rules, uint8_t own_names);
+void pt_destroy_grammar(pt_grammar *g);
+
+#endif
 

@@ -18,22 +18,15 @@
  * Any bugs should be reported to <gilzoide@gmail.com>
  */
 
-/* Turn off Parsing Expression constructor macros */
+#ifndef __PEGA_TEXTO_MATCH_H__
+#define __PEGA_TEXTO_MATCH_H__
 
-#undef L
-#undef L_O
-#undef S
-#undef S_O
-#undef R
-#undef R_O
-#undef ANY
-#undef V
-#undef V_O
-#undef VI
-#undef Q
-#undef AND
-#undef NOT
-#undef SEQ
-#undef OR
-#undef F
+#include "expr.h"
 
+typedef struct {
+} pt_match_options;
+
+int pt_match_expr(pt_expr *e, const char *str, pt_match_options *opts);
+// int pt_match_grammar(pt_grammar *g, const char *str);
+
+#endif
