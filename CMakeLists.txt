@@ -5,8 +5,11 @@ project(pega-texto)
 add_subdirectory(src)
 
 # Test
-enable_testing()
-add_subdirectory(test)
+option(ENABLE_TESTS "Enable tests to be built and run with `make test`" OFF)
+if(ENABLE_TESTS)
+	enable_testing()
+	add_subdirectory(test)
+endif()
 
 # Install headers
 file(GLOB headers "include/*.h")

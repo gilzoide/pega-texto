@@ -52,22 +52,6 @@ typedef int(*pt_custom_matcher)(int);
 
 /// Parsing Expressions
 typedef struct pt_expr_t pt_expr;
-struct pt_expr_t {
-	union {
-		// Literals, Character Sets, Ranges and Non-Terminal names.
-		// @warning: pt_expr DO NOT own the memory for char buffers
-		const char *characters;
-		// Quantifier, And & Not operand
-		pt_expr *e;
-		// N-ary operators: a N-array of operands
-		pt_expr **es;
-		// Custom match function
-		int (*matcher)(int);
-	} data;
-	int16_t N;  // Quantifier, array size for N-ary operations or Non-Terminal index
-	uint8_t op;  // Operation to be performed
-	uint8_t own_characters : 1;  // Do Expression own te characters buffer?
-};
 
 pt_expr *pt_create_literal(const char *str, uint8_t own_characters);
 pt_expr *pt_create_set(const char *str, uint8_t own_characters);

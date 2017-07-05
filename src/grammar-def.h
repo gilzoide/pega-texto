@@ -18,23 +18,18 @@
  * Any bugs should be reported to <gilzoide@gmail.com>
  */
 
-#ifndef __PEGA_TEXTO_MATCH_H__
-#define __PEGA_TEXTO_MATCH_H__
+#ifndef __PEGA_TEXTO_GRAMMAR_DEF_H__
+#define __PEGA_TEXTO_GRAMMAR_DEF_H__
 
 #include "expr.h"
-#include "grammar.h"
 
-typedef enum {
-	PT_NO_STACK_MEM = -2,
-	PT_NO_MATCH = -1,
-	PT_MATCH_SUCCESS = 0,
-} pt_match_result;
-
-typedef struct {
-} pt_match_options;
-
-pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_match_options *opts);
-pt_match_result pt_match_expr(pt_expr *e, const char *str, pt_match_options *opts);
-pt_match_result pt_match_grammar(pt_grammar *g, const char *str, pt_match_options *opts);
+/// The Grammar: Rule SOA
+struct pt_grammar_t {
+	const char **names;  // The Rules' names
+	pt_expr **es;  // The expressions
+	int16_t N;  // Number or Rules
+	uint8_t own_names : 1;  // Do Grammar own the names' buffers?
+};
 
 #endif
+

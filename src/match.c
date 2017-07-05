@@ -19,8 +19,64 @@
  */
 
 #include "match.h"
+#include "expr-def.h"
+#include "grammar-def.h"
+#include "match-state.h"
 
-int pt_match_expr(pt_expr *e, const char *str, pt_match_options *opts) {
-	return -1;
+#include <stdlib.h>
+#include <string.h>
+
+pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_match_options *opts) {
+	pt_match_state_stack S;
+	if(!pt_initialize_state_stack(&S, 8)) return PT_NO_STACK_MEM;
+
+	// iteration variables
+	pt_match_state *state = pt_push_state(&S, es[0], 0);
+	pt_expr *e;
+	const char *ptr;
+	int matched;
+
+	// match loop
+	while(state) {
+		ptr = str + state->pos;
+		e = state->e;
+		matched = -1;
+
+		switch(e->op) {
+			case PT_LITERAL:
+				if(strncmp(ptr, e->data.characters, e->N) == 0) {
+					matched = e->N;
+				}
+				break;
+			case PT_SET:
+				if(*ptr && strchr(e->data.characters, *ptr)) {
+					matched = 1;
+				}
+				break;
+			case PT_RANGE:
+				if(*ptr >= e->data.characters[0] && *ptr <= e->data.characters[1]) {
+					matched = 1;
+				}
+				break;
+			case PT_ANY:
+				if(*ptr) {
+					matched = 1;
+				}
+				break;
+		}
+
+		state = matched < 0 ? pt_match_fail(&S) : pt_match_succeed(&S, matched);
+	}
+
+	pt_destroy_state_stack(&S);
+	return matched;
+}
+
+pt_match_result pt_match_expr(pt_expr *e, const char *str, pt_match_options *opts) {
+	return pt_match(&e, NULL, str, opts);
+}
+
+pt_match_result pt_match_grammar(pt_grammar *g, const char *str, pt_match_options *opts) {
+	return pt_match(g->es, g->names, str, opts);
 }
 

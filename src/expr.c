@@ -18,7 +18,9 @@
  * Any bugs should be reported to <gilzoide@gmail.com>
  */
 
-#include "pega-texto.h"
+#include "expr.h"
+#include "expr-def.h"
+
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
@@ -35,6 +37,7 @@ pt_expr *pt_create_literal(const char *str, uint8_t own_characters) {
 	NEW_EXPR(
 		new_expr->op = PT_LITERAL;
 		new_expr->data.characters = str;
+		new_expr->N = strlen(str);
 		new_expr->own_characters = own_characters;
 	)
 }
