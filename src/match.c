@@ -55,21 +55,25 @@ pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_m
 					matched = e->N;
 				}
 				break;
+
 			case PT_SET:
 				if(*ptr && strchr(e->data.characters, *ptr)) {
 					matched = 1;
 				}
 				break;
+
 			case PT_RANGE:
 				if(*ptr >= e->data.characters[0] && *ptr <= e->data.characters[1]) {
 					matched = 1;
 				}
 				break;
+
 			case PT_ANY:
 				if(*ptr) {
 					matched = 1;
 				}
 				break;
+
 			// Unary
 			case PT_NON_TERMINAL:
 				if(e->N < 0) {
@@ -77,19 +81,71 @@ pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_m
 				}
 				state = pt_push_state(&S, es[e->N], state->pos);
 				continue;
-			/* case PT_QUANTIFIER: */
-				/* // match at most N */
-				/* if(e->N < 0) { */
-				/* } */
-				/* // match at least N */
-				/* else { */
-				/* } */
-				/* break; */
+
+			case PT_QUANTIFIER:
+				// "at least N" quantifier
+				if(e->N >= 0) {
+					if(state->reg >= 0) goto iterate_quantifier;
+					else if(-(state->reg) > e->N) matched = 0;
+				}
+				// "at most N" quantifier
+				else {
+					if(state->reg >= 0) {
+						if(state->reg < -(e->N)) goto iterate_quantifier;
+						else matched = 0;
+					}
+					else if(state->reg >= e->N - 1) matched = 0;
+				}
+				break;
+iterate_quantifier:
+				state->reg++;
+				state = pt_push_state(&S, e->data.e, state->pos);
+				continue;
+
+			case PT_NOT:
+				// was failing, so succeed!
+				if(state->reg == 1) {
+					matched = 0;
+					break;
+				}
+				// was succeeding, so fail!
+				else if(state->reg == -1) break;
+				// none, fallthrough
+			case PT_AND:
+				state = pt_push_state(&S, e->data.e, state->pos);
+				continue;
+
+			case PT_SEQUENCE:
+				if(state->reg < e->N) {
+					state = pt_push_state(&S, e->data.es[state->reg++], state->pos);
+					continue;
+				}
+				else matched = 0;
+				break;
+
+			case PT_CHOICE:
+				if(state->reg < e->N) {
+					state = pt_push_state(&S, e->data.es[state->reg++], state->pos);
+					continue;
+				}
+				break;
+
+			case PT_FUNCTION:
+				if(e->data.matcher(*ptr)) {
+					matched = 1;
+				}
+				break;
+
+			// Unknown operation: always fail
+			default: break;
 		}
 
-		state = matched < 0 ? pt_match_fail(&S) : pt_match_succeed(&S, matched);
+		state = matched < 0 ? pt_match_fail(&S) : pt_match_succeed(&S, state->pos + matched);
 	}
 
+	if(matched >= 0) {
+		matched = S.states[0].pos;
+	}
 	pt_destroy_state_stack(&S);
 	return matched;
 }

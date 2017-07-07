@@ -8,7 +8,8 @@ int main() {
 	pt_expr *any = ANY;
 	char control_stuff[] = {1, 0};
 
-	puts(Yes(literal, "Hello") && Yes(literal, "Hello world!") &&
+	puts(
+		Yes(literal, "Hello") && Yes(literal, "Hello world!") &&
 		No(literal, "Helo?") && No(literal, "Hell") &&
 		Yes(set, "a") && Yes(set, "b") && Yes(set, "c") && Yes(set, "d") && Yes(set, "e") && Yes(set, "blabla") &&
 		No(set, "f") && No(set, "A") && No(set, "") &&

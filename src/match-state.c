@@ -33,8 +33,11 @@ pt_match_state *pt_push_state(pt_match_state_stack *s, pt_expr *e, size_t pos) {
 	pt_match_state *state;
 	// Double capacity, if reached
 	if(s->size == s->capacity) {
-		s->capacity <<= 1;
-		if(state = realloc(s->states, s->capacity)) s->states = state;
+		int new_capacity = s->capacity << 1;
+		if(state = realloc(s->states, s->capacity)) {
+			s->capacity = new_capacity;
+			s->states = state;
+		}
 		else return NULL;
 	}
 	state = s->states + (s->size)++;
@@ -45,22 +48,48 @@ pt_match_state *pt_push_state(pt_match_state_stack *s, pt_expr *e, size_t pos) {
 	return state;
 }
 
-pt_match_state *pt_match_succeed(pt_match_state_stack *s, size_t increment) {
-	int index = --(s->size);
-	size_t new_pos = s->states[s->size].pos + increment;
-	if(index > 0) {
-		s->states[index].pos = new_pos;
-		return s->states + index;
+pt_match_state *pt_match_succeed(pt_match_state_stack *s, size_t new_pos) {
+	int i, op;
+	for(i = s->size - 2; i >= 0; i--) {
+		op = s->states[i].e->op;
+		switch(op) {
+			case PT_QUANTIFIER:
+			case PT_SEQUENCE:
+				s->states[i].pos = new_pos;
+				goto end;
+
+			case PT_AND:
+				new_pos = s->states[i].pos;
+				break;
+
+			case PT_NOT:
+				s->states[i].reg = -1;
+				goto end;
+		}
 	}
-	else {
-		return NULL;
-	}
+end:
+	s->size = i + 1;
+	return i >= 0 ? s->states + i : (s->states[0].pos = new_pos, NULL);
 }
 
 pt_match_state *pt_match_fail(pt_match_state_stack *s) {
-	int index = --(s->size);
-	/* for(i = s->size; i > 0; i--) */
-	return index > 0 ? s->states + index : NULL;
+	int i, op;
+	for(i = s->size - 2; i >= 0; i--) {
+		op = s->states[i].e->op;
+		switch(op) {
+			case PT_QUANTIFIER:
+				s->states[i].reg = -(s->states[i].reg);
+			case PT_CHOICE:
+				goto end;
+
+			case PT_NOT:
+				s->states[i].reg = 1;
+				goto end;
+		}
+	}
+end:
+	s->size = i + 1;
+	return i >= 0 ? s->states + i : NULL;
 }
 
 void pt_destroy_state_stack(pt_match_state_stack *s) {

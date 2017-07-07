@@ -2,6 +2,7 @@
 #define __PEGA_TEXTO_TEST_UTILS_H__
 
 #include "pega-texto.h"
+#include <stdlib.h>
 #include <stdio.h>
 
 // Raw

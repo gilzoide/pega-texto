@@ -45,7 +45,9 @@ int pt_initialize_state_stack(pt_match_state_stack *s, size_t initial_capacity);
 void pt_destroy_state_stack(pt_match_state_stack *s);
 
 pt_match_state *pt_push_state(pt_match_state_stack *s, pt_expr *e, size_t pos);
-pt_match_state *pt_match_succeed(pt_match_state_stack *s, size_t increment);
+/// Propagate success back until reach a Quantifier or Sequence, incrementing it's position
+pt_match_state *pt_match_succeed(pt_match_state_stack *s, size_t new_pos);
+/// Return to a backtrack point: either Quantifier or Choice
 pt_match_state *pt_match_fail(pt_match_state_stack *s);
 
 #endif
