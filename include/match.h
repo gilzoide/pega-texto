@@ -24,6 +24,8 @@
 #include "expr.h"
 #include "grammar.h"
 
+#include <stdlib.h>
+
 typedef enum {
 	PT_NO_STACK_MEM = -2,
 	PT_NO_MATCH = -1,
@@ -31,6 +33,7 @@ typedef enum {
 } pt_match_result;
 
 typedef struct {
+	size_t *stack_size;
 } pt_match_options;
 
 pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_match_options *opts);

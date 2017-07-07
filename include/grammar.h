@@ -31,6 +31,12 @@ typedef struct {
 
 /// The Grammar: Rule SOA
 typedef struct pt_grammar_t pt_grammar;
+struct pt_grammar_t {
+	const char **names;  // The Rules' names
+	pt_expr **es;  // The expressions
+	int16_t N;  // Number or Rules
+	uint8_t own_names : 1;  // Do Grammar own the names' buffers?
+};
 
 pt_grammar *pt_create_grammar(pt_rule *rules, uint8_t own_names);
 void pt_destroy_grammar(pt_grammar *g);

@@ -19,12 +19,18 @@
  */
 
 #include "match.h"
-#include "expr-def.h"
-#include "grammar-def.h"
 #include "match-state.h"
 
 #include <stdlib.h>
 #include <string.h>
+
+/// Look for a name in the array.
+// @warning This doesn't check for NULLs, nor array size: `name` is better be in `names`!
+static int pt_find_non_terminal_index(const char *name, const char **names) {
+	int i;
+	for(i = 0; strcmp(name, names[i]) != 0; i++);
+	return i;
+}
 
 pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_match_options *opts) {
 	pt_match_state_stack S;
@@ -43,6 +49,7 @@ pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_m
 		matched = -1;
 
 		switch(e->op) {
+			// Primary
 			case PT_LITERAL:
 				if(strncmp(ptr, e->data.characters, e->N) == 0) {
 					matched = e->N;
@@ -63,6 +70,21 @@ pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_m
 					matched = 1;
 				}
 				break;
+			// Unary
+			case PT_NON_TERMINAL:
+				if(e->N < 0) {
+					e->N = pt_find_non_terminal_index(e->data.characters, names);
+				}
+				state = pt_push_state(&S, es[e->N], state->pos);
+				continue;
+			/* case PT_QUANTIFIER: */
+				/* // match at most N */
+				/* if(e->N < 0) { */
+				/* } */
+				/* // match at least N */
+				/* else { */
+				/* } */
+				/* break; */
 		}
 
 		state = matched < 0 ? pt_match_fail(&S) : pt_match_succeed(&S, matched);

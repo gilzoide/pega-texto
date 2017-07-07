@@ -1,18 +1,5 @@
-#include "pega-texto.h"
+#include "test-utils.h"
 #include "macro-on.h"
-
-#include <stdio.h>
-
-int Yes(pt_expr *e, const char *s) {
-	if(pt_match_expr(e, s, NULL) >= 0) return 1;
-	printf("No match for \"%s\"\n", s);
-	return 0;
-}
-int No(pt_expr *e, const char *s) {
-	if(pt_match_expr(e, s, NULL) < 0) return 1;
-	printf("No match for \"%s\"\n", s);
-	return 0;
-}
 
 int main() {
 	pt_expr *literal = L("Hello");

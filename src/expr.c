@@ -19,7 +19,6 @@
  */
 
 #include "expr.h"
-#include "expr-def.h"
 
 #include <stdlib.h>
 #include <assert.h>

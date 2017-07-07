@@ -19,7 +19,7 @@
  */
 
 #include "grammar.h"
-#include "grammar-def.h"
+
 #include <stdlib.h>
 
 pt_grammar *pt_create_grammar(pt_rule *rules, uint8_t own_names) {

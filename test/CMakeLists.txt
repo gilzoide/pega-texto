@@ -9,12 +9,14 @@ macro(run_test test_name pass)
 	add_test(${test_name} ${test_name} ${ARGN})
 
 	set(_pass ${pass})
-	if(_pass STREQUAL "valgrind" AND VALGRIND)
-		# memcheck with valgrind
-		add_test(${test_name}_memcheck valgrind ./${test_name} ${ARGN})
-		set_tests_properties(${test_name}_memcheck
-			PROPERTIES PASS_REGULAR_EXPRESSION "All heap blocks were freed -- no leaks are possible"
-		)
+	if(_pass STREQUAL "valgrind")
+		if(VALGRIND)
+			# memcheck with valgrind
+			add_test(${test_name}_memcheck valgrind ./${test_name} ${ARGN})
+			set_tests_properties(${test_name}_memcheck
+				PROPERTIES PASS_REGULAR_EXPRESSION "All heap blocks were freed -- no leaks are possible"
+			)
+		endif()
 	elseif(_pass)
 		set_tests_properties(${test_name}
 			PROPERTIES PASS_REGULAR_EXPRESSION ${pass}
@@ -28,3 +30,4 @@ run_test(DestroysExpr "valgrind")
 run_test(DestroysGrammar "valgrind")
 run_test(HelloWorldMatcher "PASS" "Hello world!")
 run_test(PrimaryMatchers "PASS")
+run_test(UnaryMatchers "PASS")
