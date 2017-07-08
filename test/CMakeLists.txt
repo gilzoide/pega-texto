@@ -26,10 +26,14 @@ endmacro()
 
 include(CTest)
 run_test(JustInclude "PASS")
+# memory management
 run_test(DestroysExpr "valgrind")
 run_test(DestroysGrammar "valgrind")
+# test each operation apart
 run_test(HelloWorldMatcher "PASS")
 run_test(PrimaryMatchers "PASS")
 run_test(UnaryMatchers "PASS")
 run_test(N-aryMatchers "PASS")
 run_test(CustomMatchers "PASS")
+# full tests
+run_test(MatchingParens "PASS")

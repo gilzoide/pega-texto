@@ -24,6 +24,20 @@
 #include <assert.h>
 #include <string.h>
 
+const char *pt_operator_names[] = {
+	"PT_LITERAL",
+	"PT_SET",
+	"PT_RANGE",
+	"PT_ANY",
+	"PT_NON_TERMINAL",
+	"PT_QUANTIFIER",
+	"PT_AND",
+	"PT_NOT",
+	"PT_SEQUENCE",
+	"PT_CHOICE",
+	"PT_FUNCTION",
+};
+
 #define NEW_EXPR(body)                       \
 	pt_expr *new_expr;                       \
 	if(new_expr = malloc(sizeof(pt_expr))) { \

@@ -34,7 +34,7 @@ pt_match_state *pt_push_state(pt_match_state_stack *s, pt_expr *e, size_t pos) {
 	// Double capacity, if reached
 	if(s->size == s->capacity) {
 		int new_capacity = s->capacity << 1;
-		if(state = realloc(s->states, s->capacity)) {
+		if(state = realloc(s->states, new_capacity * sizeof(pt_match_state))) {
 			s->capacity = new_capacity;
 			s->states = state;
 		}

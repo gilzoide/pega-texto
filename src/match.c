@@ -104,12 +104,12 @@ iterate_quantifier:
 
 			case PT_NOT:
 				// was failing, so succeed!
-				if(state->reg == 1) {
+				if(state->reg > 0) {
 					matched = 0;
 					break;
 				}
 				// was succeeding, so fail!
-				else if(state->reg == -1) break;
+				else if(state->reg < 0) break;
 				// none, fallthrough
 			case PT_AND:
 				state = pt_push_state(&S, e->data.e, state->pos);

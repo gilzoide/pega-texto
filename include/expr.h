@@ -46,6 +46,7 @@ enum {
 	PT_FUNCTION,         // function(c) // If return 0, match fails
 	                                    // If return nonzero, match succeeds, advance 1
 };
+extern const char *pt_operator_names[];
 
 /// Custom matcher: a function that receives a character (int) and match it or not
 typedef int(*pt_custom_matcher)(int);

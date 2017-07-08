@@ -18,6 +18,7 @@ int main() {
 		Yes(any, "\t") && Yes(any, control_stuff) &&
 		No(any, "")
 		? "PASS" : "FAIL");
+
 	pt_destroy_expr(literal);
 	pt_destroy_expr(set);
 	pt_destroy_expr(range);
