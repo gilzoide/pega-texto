@@ -18,8 +18,9 @@ macro(run_test test_name pass)
 			)
 		endif()
 	elseif(_pass)
-		set_tests_properties(${test_name}
-			PROPERTIES PASS_REGULAR_EXPRESSION ${pass}
+		set_tests_properties(${test_name} PROPERTIES
+			PASS_REGULAR_EXPRESSION "PASS"
+			FAIL_REGULAR_EXPRESSION "FAIL"
 		)
 	endif()
 endmacro()
@@ -35,5 +36,7 @@ run_test(PrimaryMatchers "PASS")
 run_test(UnaryMatchers "PASS")
 run_test(N-aryMatchers "PASS")
 run_test(CustomMatchers "PASS")
+# actions
+run_test(SuccessAction "PASS")
 # full tests
 run_test(MatchingParens "PASS")

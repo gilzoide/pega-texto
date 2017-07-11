@@ -18,12 +18,18 @@
  * Any bugs should be reported to <gilzoide@gmail.com>
  */
 
+/** @file pega-texto.h
+ * Main include file.
+ */
+
 #ifndef __PEGA_TEXTO_H__
 #define __PEGA_TEXTO_H__
 
+#include "action.h"
 #include "expr.h"
 #include "grammar.h"
 #include "match.h"
+#include "match-state.h"
 
 #endif
 

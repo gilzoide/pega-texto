@@ -11,6 +11,12 @@ if(ENABLE_TESTS)
 	add_subdirectory(test)
 endif()
 
+# Examples
+option(COMPILE_EXAMPLES "Compile the examples" OFF)
+if(COMPILE_EXAMPLES)
+	add_subdirectory(examples)
+endif()
+
 # Install headers
 file(GLOB headers "include/*.h")
 install(FILES ${headers} DESTINATION "include/${CMAKE_PROJECT_NAME}")

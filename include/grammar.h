@@ -18,28 +18,71 @@
  * Any bugs should be reported to <gilzoide@gmail.com>
  */
 
+/** @file grammar.h
+ * Parsing Expression Grammars.
+ */
+
 #ifndef __PEGA_TEXTO_GRAMMAR_H__
 #define __PEGA_TEXTO_GRAMMAR_H__
 
 #include "expr.h"
 
-/// A Rule for the Grammar: `Name <- Expr`
+/**
+ * A Rule for the Grammar: `Name <- Expr`
+ */
 typedef struct {
-	const char *name;
-	pt_expr *e;
+	const char *name;  ///< Rule name.
+	pt_expr *e;  ///< Rule Expression.
 } pt_rule;
 
-/// The Grammar: Rule SOA
-typedef struct pt_grammar_t pt_grammar;
-struct pt_grammar_t {
-	const char **names;  // The Rules' names
-	pt_expr **es;  // The expressions
-	int16_t N;  // Number or Rules
-	uint8_t own_names : 1;  // Do Grammar own the names' buffers?
-};
+/**
+ * The Grammar: Rule SOA.
+ *
+ * It is implemented as a SOA as the names are not used often, so there are less
+ * cache miss.
+ */
+typedef struct {
+	const char **names;  ///< Rules' names.
+	pt_expr **es;  ///< Rules' Expressions.
+	int16_t N;  ///< Number of Rules.
+	uint8_t own_names : 1;  ///< Do Grammar own the names' buffers?
+} pt_grammar;
 
+/**
+ * Create a Grammar from a NULL-terminated array of Rules.
+ *
+ * @note Grammar owns the Expressions, and will destroy them on
+ *       `pt_destroy_grammar`.
+ *
+ * @param rules     Grammar Rules.
+ * @param own_names Should Grammar own the names' buffers?
+ * @return The created Grammar.
+ */
 pt_grammar *pt_create_grammar(pt_rule *rules, uint8_t own_names);
+/**
+ * Destroy a Grammar, freeing the memory used.
+ *
+ * @warning Grammar Expressions will all be destroyed as well as the `g` pointer
+ *          itself, as Grammars are supposed to be created by a call to
+ *          `pt_create_grammar`.
+ *
+ * @param g Grammar to be destroyed.
+ */
 void pt_destroy_grammar(pt_grammar *g);
+
+/**
+ * Validate a grammar.
+ *
+ * This checks if a Grammar is well-formed, as described by Ford (2014), and if
+ * Non-terminal indexes (either by name, or numerial index) exist and are
+ * inbounds.
+ *
+ * @todo implement this =P
+ *
+ * @param g Grammar to be validated.
+ * @return ?
+ */
+int pt_validate_grammar(pt_grammar *g);
 
 #endif
 

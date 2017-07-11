@@ -18,7 +18,11 @@
  * Any bugs should be reported to <gilzoide@gmail.com>
  */
 
-/* Turn off Parsing Expression constructor macros */
+/** @file macro-off.h
+ * Turn off Parsing Expression constructor macros
+ *
+ * Include this header to `#undef` the constructor macros defined at @ref macro-on.h
+ */
 
 #undef L
 #undef L_O
@@ -33,6 +37,7 @@
 #undef Q
 #undef AND
 #undef NOT
+#undef C
 #undef SEQ
 #undef OR
 #undef F

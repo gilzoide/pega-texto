@@ -33,9 +33,10 @@ const char *pt_operator_names[] = {
 	"PT_QUANTIFIER",
 	"PT_AND",
 	"PT_NOT",
+	"PT_CAPTURE",
 	"PT_SEQUENCE",
 	"PT_CHOICE",
-	"PT_FUNCTION",
+	"PT_CUSTOM_MATCHER",
 };
 
 #define NEW_EXPR(body)                       \
@@ -117,6 +118,13 @@ pt_expr *pt_create_not(pt_expr *e) {
 	)
 }
 
+pt_expr *pt_create_capture(pt_expr *e) {
+	NEW_EXPR(
+		new_expr->op = PT_CAPTURE;
+		new_expr->data.e = e;
+	)
+}
+
 pt_expr *pt_create_sequence(pt_expr **es, int N) {
 	NEW_EXPR(
 		new_expr->op = PT_SEQUENCE;
@@ -135,7 +143,7 @@ pt_expr *pt_create_choice(pt_expr **es, int N) {
 
 pt_expr *pt_create_custom_matcher(pt_custom_matcher f) {
 	NEW_EXPR(
-		new_expr->op = PT_FUNCTION;
+		new_expr->op = PT_CUSTOM_MATCHER;
 		new_expr->data.matcher = f;
 	)
 }
@@ -151,7 +159,7 @@ void pt_destroy_expr(pt_expr *e) {
 			}
 			break;
 
-		case PT_QUANTIFIER: case PT_AND: case PT_NOT:
+		case PT_QUANTIFIER: case PT_AND: case PT_NOT: case PT_CAPTURE:
 			pt_destroy_expr(e->data.e);
 			break;
 
@@ -162,8 +170,7 @@ void pt_destroy_expr(pt_expr *e) {
 			free(e->data.es);
 			break;
 
-		default:
-			break;
+		default: break;
 	}
 	free(e);
 }

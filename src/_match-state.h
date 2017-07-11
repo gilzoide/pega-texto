@@ -18,37 +18,42 @@
  * Any bugs should be reported to <gilzoide@gmail.com>
  */
 
-/* Auxiliary header for the state of the matching algorithm */
+/** @file _match-state.h
+ * Internal functions for the State Stack, to be used only by the `pt_match`
+ * function.
+ */
 
-#ifndef __PEGA_TEXTO_MATCH_STATE_H__
-#define __PEGA_TEXTO_MATCH_STATE_H__
+#ifndef __PEGA_TEXTO__MATCH_STATE_H__
+#define __PEGA_TEXTO__MATCH_STATE_H__
 
-#include "expr.h"
+#include "match-state.h"
 
-#include <stdlib.h>
-
-/// The State for the Matching algorithm
-typedef struct {
-	pt_expr *e;  // Current expression being matched
-	size_t pos;  // Current position in the stream
-	int reg;  // General purpose register
-} pt_match_state;
-
-/// Dynamic sequencial stack of States
-typedef struct {
-	pt_match_state *states;  // States buffer
-	size_t size;  // Current number of States
-	size_t capacity;  // Capacity of the States buffer
-} pt_match_state_stack;
-
+/**
+ * Initializes the State Stack, `malloc`ing the stack with `initial_capacity`.
+ *
+ * @param s                The state stack to be initialized.
+ * @param initial_capacity The initial stack capacity. If 0, stack is
+ *                         initialized with a default value.
+ * @return 1 if the allocation went well, 0 otherwise
+ */
 int pt_initialize_state_stack(pt_match_state_stack *s, size_t initial_capacity);
+
+/**
+ * Destroy the State Stack, freeing the memory used.
+ *
+ * @param s The state stack to be destroyed.
+ */
 void pt_destroy_state_stack(pt_match_state_stack *s);
 
+/**
+ * Push a State into the State Stack, doubling it's capacity, if needed.
+ *
+ * @param s   The state stack.
+ * @param e   The Parsing Expression to be used for the next iteration.
+ * @param pos The starting position of the stream for next iteration.
+ * @return The newly pushed State.
+ */
 pt_match_state *pt_push_state(pt_match_state_stack *s, pt_expr *e, size_t pos);
-/// Propagate success back until reach a Quantifier or Sequence, incrementing it's position
-pt_match_state *pt_match_succeed(pt_match_state_stack *s, size_t new_pos);
-/// Return to a backtrack point: either Quantifier or Choice
-pt_match_state *pt_match_fail(pt_match_state_stack *s);
 
 #endif
 

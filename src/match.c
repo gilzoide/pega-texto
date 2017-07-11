@@ -19,7 +19,7 @@
  */
 
 #include "match.h"
-#include "match-state.h"
+#include "_match-state.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -32,9 +32,81 @@ static int pt_find_non_terminal_index(const char *name, const char **names) {
 	return i;
 }
 
+/// Propagate success back until reach a Quantifier, Sequence or Not, changing it's position
+pt_match_state *pt_match_succeed(pt_match_state_stack *s, const char *str, size_t new_pos, pt_match_options *opts) {
+	int i, op;
+	if(opts->each_success) {
+		opts->each_success(s, str, new_pos - s->states[s->size - 1].pos, opts->userdata);
+	}
+	for(i = s->size - 2; i >= 0; i--) {
+		op = s->states[i].e->op;
+		switch(op) {
+			case PT_QUANTIFIER:
+			case PT_SEQUENCE:
+				s->states[i].pos = new_pos;
+				goto end;
+
+			case PT_AND:
+				new_pos = s->states[i].pos;
+				break;
+
+			case PT_NOT:
+				s->states[i].reg = -1;
+				goto end;
+		}
+	}
+end:
+	if(i >= 0) {
+		s->size = i + 1;
+		return s->states + i;
+	}
+	else {
+		// aaaaaand ACTION!
+		if(opts->on_success) {
+			opts->on_success(s, str, new_pos, opts->userdata);
+		}
+		s->states[0].pos = new_pos;
+		return NULL;
+	}
+}
+
+/// Return to a backtrack point: either Quantifier or Choice
+pt_match_state *pt_match_fail(pt_match_state_stack *s, const char *str, pt_match_options *opts) {
+	int i, op;
+	if(opts->each_fail) {
+		opts->each_fail(s, str, opts->userdata);
+	}
+	for(i = s->size - 2; i >= 0; i--) {
+		op = s->states[i].e->op;
+		switch(op) {
+			case PT_QUANTIFIER:
+				s->states[i].reg = -(s->states[i].reg);
+			case PT_CHOICE:
+				goto end;
+
+			case PT_NOT:
+				s->states[i].reg = 1;
+				goto end;
+		}
+	}
+end:
+	if(i >= 0) {
+		s->size = i + 1;
+		return s->states + i;
+	}
+	else {
+		// aaaaaand ACTION!
+		if(opts->on_fail) {
+			opts->on_fail(s, str, opts->userdata);
+		}
+		return NULL;
+	}
+}
+
 pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_match_options *opts) {
 	pt_match_state_stack S;
-	if(!pt_initialize_state_stack(&S, 8)) return PT_NO_STACK_MEM;
+	if(opts == NULL) opts = &pt_default_match_options;
+	if(!pt_initialize_state_stack(&S, opts->initial_stack_capacity)) return PT_NO_STACK_MEM;
 
 	// iteration variables
 	pt_match_state *state = pt_push_state(&S, es[0], 0);
@@ -44,6 +116,7 @@ pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_m
 
 	// match loop
 	while(state) {
+		if(opts->each_iteration) opts->each_iteration(&S, str, opts->userdata);
 		ptr = str + state->pos;
 		e = state->e;
 		matched = -1;
@@ -111,7 +184,7 @@ iterate_quantifier:
 				// was succeeding, so fail!
 				else if(state->reg < 0) break;
 				// none, fallthrough
-			case PT_AND:
+			case PT_AND: case PT_CAPTURE:
 				state = pt_push_state(&S, e->data.e, state->pos);
 				continue;
 
@@ -130,7 +203,7 @@ iterate_quantifier:
 				}
 				break;
 
-			case PT_FUNCTION:
+			case PT_CUSTOM_MATCHER:
 				if(e->data.matcher(*ptr)) {
 					matched = 1;
 				}
@@ -140,7 +213,7 @@ iterate_quantifier:
 			default: break;
 		}
 
-		state = matched < 0 ? pt_match_fail(&S) : pt_match_succeed(&S, state->pos + matched);
+		state = matched < 0 ? pt_match_fail(&S, str, opts) : pt_match_succeed(&S, str, state->pos + matched, opts);
 	}
 
 	if(matched >= 0) {
@@ -158,3 +231,4 @@ pt_match_result pt_match_grammar(pt_grammar *g, const char *str, pt_match_option
 	return pt_match(g->es, g->names, str, opts);
 }
 
+pt_match_options pt_default_match_options = {};

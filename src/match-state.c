@@ -18,15 +18,20 @@
  * Any bugs should be reported to <gilzoide@gmail.com>
  */
 
-#include "match-state.h"
+#include "_match-state.h"
 
 int pt_initialize_state_stack(pt_match_state_stack *s, size_t initial_capacity) {
+	if(initial_capacity == 0) initial_capacity = 8;
 	if(s->states = malloc(initial_capacity * sizeof(pt_match_state))) {
 		s->size = 0;
 		s->capacity = initial_capacity;
 		return 1;
 	}
 	else return 0;
+}
+
+void pt_destroy_state_stack(pt_match_state_stack *s) {
+	free(s->states);
 }
 
 pt_match_state *pt_push_state(pt_match_state_stack *s, pt_expr *e, size_t pos) {
@@ -48,51 +53,7 @@ pt_match_state *pt_push_state(pt_match_state_stack *s, pt_expr *e, size_t pos) {
 	return state;
 }
 
-pt_match_state *pt_match_succeed(pt_match_state_stack *s, size_t new_pos) {
-	int i, op;
-	for(i = s->size - 2; i >= 0; i--) {
-		op = s->states[i].e->op;
-		switch(op) {
-			case PT_QUANTIFIER:
-			case PT_SEQUENCE:
-				s->states[i].pos = new_pos;
-				goto end;
-
-			case PT_AND:
-				new_pos = s->states[i].pos;
-				break;
-
-			case PT_NOT:
-				s->states[i].reg = -1;
-				goto end;
-		}
-	}
-end:
-	s->size = i + 1;
-	return i >= 0 ? s->states + i : (s->states[0].pos = new_pos, NULL);
-}
-
-pt_match_state *pt_match_fail(pt_match_state_stack *s) {
-	int i, op;
-	for(i = s->size - 2; i >= 0; i--) {
-		op = s->states[i].e->op;
-		switch(op) {
-			case PT_QUANTIFIER:
-				s->states[i].reg = -(s->states[i].reg);
-			case PT_CHOICE:
-				goto end;
-
-			case PT_NOT:
-				s->states[i].reg = 1;
-				goto end;
-		}
-	}
-end:
-	s->size = i + 1;
+pt_match_state *pt_get_current_state(const pt_match_state_stack *s) {
+	int i = s->size - 1;
 	return i >= 0 ? s->states + i : NULL;
 }
-
-void pt_destroy_state_stack(pt_match_state_stack *s) {
-	free(s->states);
-}
-
