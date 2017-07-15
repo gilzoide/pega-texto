@@ -48,14 +48,13 @@ typedef enum {
  * This contains callbacks to be called, as well as some memory usage control.
  */
 typedef struct {
-	int initial_stack_capacity;  ///< The initial capacity for the stack. If 0, stack capacity will begin at a reasonable default
 	pt_iteration_action each_iteration;  ///< The action to be performed on each iteration
-	pt_capture_action on_capture;  ///< The action to be performed for the captures, when the whole match succeeds
 	pt_success_action on_success;  ///< The action to be performed when the whole match succeeds
 	pt_success_action each_success;  ///< The action to be performed when any match succeeds
 	pt_fail_action on_fail;  ///< The action to be performed when the whole match fails
 	pt_fail_action each_fail;  ///< The action to be performed when the whole match fails
 	void *userdata;  ///< Custom user data for the actions
+	int initial_stack_capacity;  ///< The initial capacity for the stack. If 0, stack capacity will begin at a reasonable default
 } pt_match_options;
 
 /// Default match options: all 0 or NULL =P

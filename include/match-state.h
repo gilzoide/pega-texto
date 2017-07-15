@@ -26,6 +26,7 @@
 #define __PEGA_TEXTO_MATCH_STATE_H__
 
 #include "expr.h"
+#include "action.h"
 
 #include <stdlib.h>
 
@@ -35,13 +36,15 @@
 typedef struct {
 	pt_expr *e;  ///< Current expression being matched.
 	size_t pos;  ///< Current position in the stream.
-	int reg;  ///< General purpose register.
+	int r1;  ///< General purpose register 1.
+	unsigned int r2;  ///< General purpose register 2.
+	unsigned int ac;  ///< Action counter.
 } pt_match_state;
 
 /**
  * Dynamic sequential stack of States.
  */
-typedef struct {
+typedef struct pt_match_state_stack_t {
 	pt_match_state *states;  ///< States buffer.
 	size_t size;  ///< Current number of States.
 	size_t capacity;  ///< Capacity of the States buffer.

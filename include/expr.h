@@ -24,7 +24,7 @@
  * Parsing Expressions can be combined to create PEGs, which can match text.
  *
  * Types of Expressions:
- * - __Literal__ (`"string"`): match a string exactly.
+ * - __Literal__ (`"string"`): match a string literally.
  * - __Set__ (`[chars]`): match any character in a set.
  * - __Range__ (`[c1-c2]`): match a character between a range.
  * - __Any__ (`.`): only fail at end of stream ('\0').
@@ -48,6 +48,8 @@
 #ifndef __PEGA_TEXTO_EXPR_H__
 #define __PEGA_TEXTO_EXPR_H__
 
+#include "action.h"
+
 #include <stdint.h>
 
 /**
@@ -68,7 +70,6 @@ enum pt_operation_t {
 	                            // e^-1 == e?
 	PT_AND,              // &e
 	PT_NOT,              // !e
-	PT_CAPTURE,          // {e} // Captures are used for Capture Actions
 	// N-ary
 	PT_SEQUENCE,         // e1 e2
 	PT_CHOICE,           // e1 / e2
@@ -80,12 +81,12 @@ enum pt_operation_t {
 /// String version of the possible operations.
 extern const char *pt_operator_names[];
 
-/// A function that receives a character (int) and match it (non-zero) or not (0)
+/// A function that receives a character (int) and match it (non-zero) or not (0).
 typedef int(*pt_custom_matcher)(int);
 
-/// Parsing Expressions
+/// Parsing Expressions.
 typedef struct pt_expr_t {
-	/// Expression data, depending on it's operation
+	/// Expression data, depending on it's operation.
 	union {
 		/// Literals, Character Sets, Ranges and Non-Terminal names.
 		const char *characters;
@@ -96,8 +97,9 @@ typedef struct pt_expr_t {
 		/// Custom match function.
 		pt_custom_matcher matcher;
 	} data;
-	int16_t N;  ///< Quantifier, array size for N-ary operations, Non-Terminal index or Literal length
-	uint8_t op;  ///< Operation to be performed
+	pt_success_action action;  ///< Action to be called when the whole match succeeds.
+	int16_t N;  ///< Quantifier, array size for N-ary operations, Non-Terminal index or Literal length.
+	uint8_t op;  ///< Operation to be performed.
 	uint8_t own_characters : 1;  ///< Do Expression own the `characters` buffer?
 } pt_expr;
 
@@ -106,46 +108,54 @@ typedef struct pt_expr_t {
  *
  * @param str            Literal string to be matched.
  * @param own_characters Should Expression own the `characters` buffer?
+ * @param action         Action associated to the Expression.
  */
-pt_expr *pt_create_literal(const char *str, uint8_t own_characters);
+pt_expr *pt_create_literal(const char *str, uint8_t own_characters, pt_success_action action);
 /**
  * Create a Set Expression.
  *
  * @param str            Character set to be matched.
  * @param own_characters Should Expression own the `characters` buffer?
+ * @param action         Action associated to the Expression.
  */
-pt_expr *pt_create_set(const char *str, uint8_t own_characters);
+pt_expr *pt_create_set(const char *str, uint8_t own_characters, pt_success_action action);
 /**
  * Create a Range Expression.
  *
  * @param str            Character range to be matched.
  * @param own_characters Should Expression own the `characters` buffer?
+ * @param action         Action associated to the Expression.
  */
-pt_expr *pt_create_range(const char *str, uint8_t own_characters);
+pt_expr *pt_create_range(const char *str, uint8_t own_characters, pt_success_action action);
 /**
  * Create a Any Expression.
+ *
+ * @param action Action associated to the Expression.
  */
-pt_expr *pt_create_any();
+pt_expr *pt_create_any(pt_success_action action);
 /**
  * Create a Non-terminal Expression, indexing it by the Rule name.
  *
  * @param rule           Rule name.
  * @param own_characters Should Expression own the `characters` buffer?
+ * @param action         Action associated to the Expression.
  */
-pt_expr *pt_create_non_terminal(const char *rule, uint8_t own_characters);
+pt_expr *pt_create_non_terminal(const char *rule, uint8_t own_characters, pt_success_action action);
 /**
  * Create a Non-terminal Expression, indexing it by the Rule numerical index.
  *
- * @param index Rule index.
+ * @param index  Rule index.
+ * @param action Action associated to the Expression.
  */
-pt_expr *pt_create_non_terminal_idx(int index);
+pt_expr *pt_create_non_terminal_idx(int index, pt_success_action action);
 /**
  * Create a Quantifier Expression.
  *
- * @param e Expression.
- * @param N Quantifier.
+ * @param e      Expression.
+ * @param N      Quantifier.
+ * @param action Action associated to the Expression.
  */
-pt_expr *pt_create_quantifier(pt_expr *e, int N);
+pt_expr *pt_create_quantifier(pt_expr *e, int N, pt_success_action action);
 /**
  * Create an And Expression.
  *
@@ -159,31 +169,28 @@ pt_expr *pt_create_and(pt_expr *e);
  */
 pt_expr *pt_create_not(pt_expr *e);
 /**
- * Create a Capture Expression.
- *
- * @param e Expression.
- */
-pt_expr *pt_create_capture(pt_expr *e);
-/**
  * Create a Sequence Expression.
  *
- * @param es `N` sized array of Expressions.
- * @param N  Array size.
+ * @param es     `N` sized array of Expressions.
+ * @param N      Array size.
+ * @param action Action associated to the Expression.
  */
-pt_expr *pt_create_sequence(pt_expr **es, int N);
+pt_expr *pt_create_sequence(pt_expr **es, int N, pt_success_action action);
 /**
  * Create a Choice Expression.
  *
- * @param es `N` sized array of Expressions.
- * @param N  Array size.
+ * @param es     `N` sized array of Expressions.
+ * @param N      Array size.
+ * @param action Action associated to the Expression.
  */
-pt_expr *pt_create_choice(pt_expr **es, int N);
+pt_expr *pt_create_choice(pt_expr **es, int N, pt_success_action action);
 /**
  * Create a Custom Matcher Expression.
  *
- * @param f Custom Matcher function.
+ * @param f      Custom Matcher function.
+ * @param action Action associated to the Expression.
  */
-pt_expr *pt_create_custom_matcher(pt_custom_matcher f);
+pt_expr *pt_create_custom_matcher(pt_custom_matcher f, pt_success_action action);
 
 /**
  * Destroy an Expression, freeing the memory used.
@@ -203,7 +210,7 @@ void pt_destroy_expr(pt_expr *e);
  * This exists on the sole purpose of making the expression constructor macros
  * for Sequences and Choices possible (`macro-on.h`).
  */
-pt_expr *pt__from_nt_array(pt_expr *(*f)(pt_expr **, int), pt_expr **nt_exprs);
+pt_expr *pt__from_nt_array(pt_expr *(*f)(pt_expr **, int, pt_success_action), pt_expr **nt_exprs, pt_success_action);
 
 #endif
 

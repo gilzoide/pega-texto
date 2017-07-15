@@ -25,20 +25,33 @@
  */
 
 #undef L
+#undef L_
 #undef L_O
+#undef L_O_
 #undef S
+#undef S_
 #undef S_O
+#undef S_O_
 #undef R
+#undef R_
 #undef R_O
+#undef R_O_
 #undef ANY
+#undef ANY_
 #undef V
+#undef V_
 #undef V_O
+#undef V_O_
 #undef VI
+#undef VI_
 #undef Q
+#undef Q_
 #undef AND
 #undef NOT
-#undef C
 #undef SEQ
+#undef SEQ_
 #undef OR
+#undef OR_
 #undef F
+#undef F_
 

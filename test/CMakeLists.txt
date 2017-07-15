@@ -31,12 +31,13 @@ run_test(JustInclude "PASS")
 run_test(DestroysExpr "valgrind")
 run_test(DestroysGrammar "valgrind")
 # test each operation apart
-run_test(HelloWorldMatcher "PASS")
+run_test(HelloWorldMatcher "valgrind")
 run_test(PrimaryMatchers "PASS")
 run_test(UnaryMatchers "PASS")
 run_test(N-aryMatchers "PASS")
 run_test(CustomMatchers "PASS")
 # actions
 run_test(SuccessAction "PASS")
+run_test(CountAndSumNumbers "PASS")
 # full tests
 run_test(MatchingParens "PASS")

@@ -25,7 +25,10 @@
 #ifndef __PEGA_TEXTO_ACTION_H__
 #define __PEGA_TEXTO_ACTION_H__
 
-#include "match-state.h"
+#include <stdlib.h>
+
+// Forward declaration
+typedef struct pt_match_state_stack_t pt_match_state_stack;
 
 /**
  * Action to be called on each match iteration.
@@ -39,32 +42,17 @@ typedef void (*pt_iteration_action)(const pt_match_state_stack *, const char *,
                                     void *);
 
 /**
- * Action to be called on captures when the whole match succeeds.
- *
- * Whenever a complete match succeeds, pega-texto will call the captures with
- * the Capture Action specified in the match options.
- *
- * Parameters:
- * - A const pointer for the current State Stack, so you can examine it (if desired)
- * - The original subject string
- * - The start index of the capture
- * - The final index of the capture
- * - User custom data from match options
- */
-typedef void (*pt_capture_action)(const pt_match_state_stack *, const char *,
-                                  size_t, size_t, void *);
-
-/**
  * Action to be called when the whole match succeeds.
  *
  * Parameters:
  * - A const pointer for the current State Stack, so you can examine it (if desired)
  * - The original subject string
- * - The number of characters matched
+ * - The start index of the match/capture
+ * - The final index of the match/capture
  * - User custom data from match options
  */
 typedef void(*pt_success_action)(const pt_match_state_stack *, const char *,
-                                 size_t, void *);
+                                 size_t, size_t, void *);
 
 /**
  * Action to be called when the whole match fails.

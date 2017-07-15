@@ -33,7 +33,6 @@ const char *pt_operator_names[] = {
 	"PT_QUANTIFIER",
 	"PT_AND",
 	"PT_NOT",
-	"PT_CAPTURE",
 	"PT_SEQUENCE",
 	"PT_CHOICE",
 	"PT_CUSTOM_MATCHER",
@@ -47,60 +46,66 @@ const char *pt_operator_names[] = {
 	return new_expr;
 
 
-pt_expr *pt_create_literal(const char *str, uint8_t own_characters) {
+pt_expr *pt_create_literal(const char *str, uint8_t own_characters, pt_success_action action) {
 	NEW_EXPR(
 		new_expr->op = PT_LITERAL;
 		new_expr->data.characters = str;
 		new_expr->N = strlen(str);
 		new_expr->own_characters = own_characters;
+		new_expr->action = action;
 	)
 }
 
-pt_expr *pt_create_set(const char *str, uint8_t own_characters) {
+pt_expr *pt_create_set(const char *str, uint8_t own_characters, pt_success_action action) {
 	NEW_EXPR(
 		new_expr->op = PT_SET;
 		new_expr->data.characters = str;
 		new_expr->own_characters = own_characters;
+		new_expr->action = action;
 	)
 }
 
-pt_expr *pt_create_range(const char *str, uint8_t own_characters) {
-	assert(strlen(str) == 2 && "Character ranges should be pairs");
+pt_expr *pt_create_range(const char *str, uint8_t own_characters, pt_success_action action) {
 	NEW_EXPR(
 		new_expr->op = PT_RANGE;
 		new_expr->data.characters = str;
 		new_expr->own_characters = own_characters;
+		new_expr->action = action;
 	)
 }
 
-pt_expr *pt_create_any() {
+pt_expr *pt_create_any(pt_success_action action) {
 	NEW_EXPR(
 		new_expr->op = PT_ANY;
+		new_expr->action = action;
 	)
 }
 
-pt_expr *pt_create_non_terminal(const char *rule, uint8_t own_characters) {
+pt_expr *pt_create_non_terminal(const char *rule, uint8_t own_characters, pt_success_action action) {
 	NEW_EXPR(
 		new_expr->op = PT_NON_TERMINAL;
 		new_expr->data.characters = rule;
 		new_expr->own_characters = own_characters;
 		new_expr->N = -1;
+		new_expr->action = action;
 	)
 }
 
-pt_expr *pt_create_non_terminal_idx(int index) {
+pt_expr *pt_create_non_terminal_idx(int index, pt_success_action action) {
 	NEW_EXPR(
 		new_expr->op = PT_NON_TERMINAL;
 		new_expr->data.characters = NULL;
 		new_expr->N = index;
+		new_expr->action = action;
 	)
 }
 
-pt_expr *pt_create_quantifier(pt_expr *e, int N) {
+pt_expr *pt_create_quantifier(pt_expr *e, int N, pt_success_action action) {
 	NEW_EXPR(
 		new_expr->op = PT_QUANTIFIER;
 		new_expr->N = N;
 		new_expr->data.e = e;
+		new_expr->action = action;
 	)
 }
 
@@ -118,33 +123,29 @@ pt_expr *pt_create_not(pt_expr *e) {
 	)
 }
 
-pt_expr *pt_create_capture(pt_expr *e) {
-	NEW_EXPR(
-		new_expr->op = PT_CAPTURE;
-		new_expr->data.e = e;
-	)
-}
-
-pt_expr *pt_create_sequence(pt_expr **es, int N) {
+pt_expr *pt_create_sequence(pt_expr **es, int N, pt_success_action action) {
 	NEW_EXPR(
 		new_expr->op = PT_SEQUENCE;
 		new_expr->N = N;
 		new_expr->data.es = es;
+		new_expr->action = action;
 	)
 }
 
-pt_expr *pt_create_choice(pt_expr **es, int N) {
+pt_expr *pt_create_choice(pt_expr **es, int N, pt_success_action action) {
 	NEW_EXPR(
 		new_expr->op = PT_CHOICE;
 		new_expr->N = N;
 		new_expr->data.es = es;
+		new_expr->action = action;
 	)
 }
 
-pt_expr *pt_create_custom_matcher(pt_custom_matcher f) {
+pt_expr *pt_create_custom_matcher(pt_custom_matcher f, pt_success_action action) {
 	NEW_EXPR(
 		new_expr->op = PT_CUSTOM_MATCHER;
 		new_expr->data.matcher = f;
+		new_expr->action = action;
 	)
 }
 
@@ -159,7 +160,7 @@ void pt_destroy_expr(pt_expr *e) {
 			}
 			break;
 
-		case PT_QUANTIFIER: case PT_AND: case PT_NOT: case PT_CAPTURE:
+		case PT_QUANTIFIER: case PT_AND: case PT_NOT:
 			pt_destroy_expr(e->data.e);
 			break;
 
@@ -175,14 +176,14 @@ void pt_destroy_expr(pt_expr *e) {
 	free(e);
 }
 
-pt_expr *pt__from_nt_array(pt_expr *(*f)(pt_expr **, int), pt_expr **nt_exprs) {
+pt_expr *pt__from_nt_array(pt_expr *(*f)(pt_expr **, int, pt_success_action), pt_expr **nt_exprs, pt_success_action action) {
 	int N, byte_size;
 	pt_expr **aux;
 	for(aux = nt_exprs; *aux; aux++);
 	N = aux - nt_exprs;
 	byte_size = N * sizeof(pt_expr *);
 	if(aux = malloc(byte_size)) {
-		return f(memcpy(aux, nt_exprs, byte_size), N);
+		return f(memcpy(aux, nt_exprs, byte_size), N, action);
 	}
 	else {
 		return NULL;

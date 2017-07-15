@@ -26,44 +26,64 @@
 
 /// Look for a name in the array.
 // @warning This doesn't check for NULLs, nor array size: `name` is better be in `names`!
-static int pt_find_non_terminal_index(const char *name, const char **names) {
+static inline int pt_find_non_terminal_index(const char *name, const char **names) {
 	int i;
 	for(i = 0; strcmp(name, names[i]) != 0; i++);
 	return i;
 }
 
 /// Propagate success back until reach a Quantifier, Sequence or Not, changing it's position
-pt_match_state *pt_match_succeed(pt_match_state_stack *s, const char *str, size_t new_pos, pt_match_options *opts) {
+static inline pt_match_state *pt_match_succeed(pt_match_state_stack *s, pt_match_action_stack *a,
+		const char *str, size_t new_pos, pt_match_options *opts) {
 	int i, op;
+	pt_match_state *state = s->states + s->size - 1;
 	if(opts->each_success) {
-		opts->each_success(s, str, new_pos - s->states[s->size - 1].pos, opts->userdata);
+		opts->each_success(s, str, state->pos, new_pos, opts->userdata);
+	}
+	if(state->e->action) {
+		pt_push_action(a, state->e->action, state->pos, new_pos);
 	}
 	for(i = s->size - 2; i >= 0; i--) {
-		op = s->states[i].e->op;
+		state = s->states + i;
+		op = state->e->op;
 		switch(op) {
 			case PT_QUANTIFIER:
 			case PT_SEQUENCE:
-				s->states[i].pos = new_pos;
+				state->r2 = new_pos - state->pos; // mark current match accumulator
+				state->ac = a->size; // keep queried actions
 				goto end;
 
 			case PT_AND:
-				new_pos = s->states[i].pos;
+				new_pos = state->pos; // don't consume input...
+				a->size = state->ac; // ...nor keep queried actions (still succeeds, though)
 				break;
 
 			case PT_NOT:
-				s->states[i].reg = -1;
+				state->r1 = -1; // NOT success = fail
+				a->size = state->ac; // discard queried actions
 				goto end;
+
+			default: // query action, if there is any
+				if(state->e->action) {
+					pt_push_action(a, state->e->action, state->pos, new_pos);
+				}
+				break;
 		}
 	}
 end:
 	if(i >= 0) {
 		s->size = i + 1;
-		return s->states + i;
+		return state;
 	}
 	else {
 		// aaaaaand ACTION!
 		if(opts->on_success) {
-			opts->on_success(s, str, new_pos, opts->userdata);
+			opts->on_success(s, str, 0, new_pos, opts->userdata);
+		}
+		pt_match_action *action;
+		for(i = 0; i < a->size; i++) {
+			action = a->actions + i;
+			action->f(s, str, action->start, action->end, opts->userdata);
 		}
 		s->states[0].pos = new_pos;
 		return NULL;
@@ -71,7 +91,8 @@ end:
 }
 
 /// Return to a backtrack point: either Quantifier or Choice
-pt_match_state *pt_match_fail(pt_match_state_stack *s, const char *str, pt_match_options *opts) {
+static inline pt_match_state *pt_match_fail(pt_match_state_stack *s, pt_match_action_stack *a,
+		const char *str, pt_match_options *opts) {
 	int i, op;
 	if(opts->each_fail) {
 		opts->each_fail(s, str, opts->userdata);
@@ -80,18 +101,19 @@ pt_match_state *pt_match_fail(pt_match_state_stack *s, const char *str, pt_match
 		op = s->states[i].e->op;
 		switch(op) {
 			case PT_QUANTIFIER:
-				s->states[i].reg = -(s->states[i].reg);
+				s->states[i].r1 = -(s->states[i].r1); // mark end of quantifier matching
 			case PT_CHOICE:
 				goto end;
 
 			case PT_NOT:
-				s->states[i].reg = 1;
+				s->states[i].r1 = 1; // NOT fail = success
 				goto end;
 		}
 	}
 end:
 	if(i >= 0) {
 		s->size = i + 1;
+		a->size = s->states[i].ac;
 		return s->states + i;
 	}
 	else {
@@ -105,11 +127,16 @@ end:
 
 pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_match_options *opts) {
 	pt_match_state_stack S;
+	pt_match_action_stack A;
 	if(opts == NULL) opts = &pt_default_match_options;
 	if(!pt_initialize_state_stack(&S, opts->initial_stack_capacity)) return PT_NO_STACK_MEM;
+	if(!pt_initialize_action_stack(&A, opts->initial_stack_capacity)) {
+		pt_destroy_state_stack(&S);
+		return PT_NO_STACK_MEM;
+	}
 
 	// iteration variables
-	pt_match_state *state = pt_push_state(&S, es[0], 0);
+	pt_match_state *state = pt_push_state(&S, es[0], 0, 0);
 	pt_expr *e;
 	const char *ptr;
 	int matched;
@@ -152,53 +179,53 @@ pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_m
 				if(e->N < 0) {
 					e->N = pt_find_non_terminal_index(e->data.characters, names);
 				}
-				state = pt_push_state(&S, es[e->N], state->pos);
+				state = pt_push_state(&S, es[e->N], state->pos, A.size);
 				continue;
 
 			case PT_QUANTIFIER:
 				// "at least N" quantifier
 				if(e->N >= 0) {
-					if(state->reg >= 0) goto iterate_quantifier;
-					else if(-(state->reg) > e->N) matched = 0;
+					if(state->r1 >= 0) goto iterate_quantifier;
+					else if(-(state->r1) > e->N) matched = state->r2;
 				}
 				// "at most N" quantifier
 				else {
-					if(state->reg >= 0) {
-						if(state->reg < -(e->N)) goto iterate_quantifier;
-						else matched = 0;
+					if(state->r1 >= 0) {
+						if(state->r1 < -(e->N)) goto iterate_quantifier;
+						else matched = state->r2;
 					}
-					else if(state->reg >= e->N - 1) matched = 0;
+					else if(state->r1 >= e->N - 1) matched = state->r2;
 				}
 				break;
 iterate_quantifier:
-				state->reg++;
-				state = pt_push_state(&S, e->data.e, state->pos);
+				state->r1++;
+				state = pt_push_state(&S, e->data.e, state->pos + state->r2, A.size);
 				continue;
 
 			case PT_NOT:
 				// was failing, so succeed!
-				if(state->reg > 0) {
+				if(state->r1 > 0) {
 					matched = 0;
 					break;
 				}
 				// was succeeding, so fail!
-				else if(state->reg < 0) break;
+				else if(state->r1 < 0) break;
 				// none, fallthrough
-			case PT_AND: case PT_CAPTURE:
-				state = pt_push_state(&S, e->data.e, state->pos);
+			case PT_AND:
+				state = pt_push_state(&S, e->data.e, state->pos, A.size);
 				continue;
 
 			case PT_SEQUENCE:
-				if(state->reg < e->N) {
-					state = pt_push_state(&S, e->data.es[state->reg++], state->pos);
+				if(state->r1 < e->N) {
+					state = pt_push_state(&S, e->data.es[state->r1++], state->pos + state->r2, A.size);
 					continue;
 				}
-				else matched = 0;
+				else matched = state->r2;
 				break;
 
 			case PT_CHOICE:
-				if(state->reg < e->N) {
-					state = pt_push_state(&S, e->data.es[state->reg++], state->pos);
+				if(state->r1 < e->N) {
+					state = pt_push_state(&S, e->data.es[state->r1++], state->pos, A.size);
 					continue;
 				}
 				break;
@@ -213,13 +240,14 @@ iterate_quantifier:
 			default: break;
 		}
 
-		state = matched < 0 ? pt_match_fail(&S, str, opts) : pt_match_succeed(&S, str, state->pos + matched, opts);
+		state = matched < 0 ? pt_match_fail(&S, &A, str, opts) : pt_match_succeed(&S, &A, str, state->pos + matched, opts);
 	}
 
 	if(matched >= 0) {
 		matched = S.states[0].pos;
 	}
 	pt_destroy_state_stack(&S);
+	pt_destroy_action_stack(&A);
 	return matched;
 }
 

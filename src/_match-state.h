@@ -51,9 +51,56 @@ void pt_destroy_state_stack(pt_match_state_stack *s);
  * @param s   The state stack.
  * @param e   The Parsing Expression to be used for the next iteration.
  * @param pos The starting position of the stream for next iteration.
+ * @param ac  The new Action counter.
  * @return The newly pushed State.
  */
-pt_match_state *pt_push_state(pt_match_state_stack *s, pt_expr *e, size_t pos);
+pt_match_state *pt_push_state(pt_match_state_stack *s, pt_expr *e, size_t pos, size_t ac);
+
+
+/**
+ * Queried actions, to be executed on match success.
+ */
+typedef struct {
+	pt_success_action f;
+	size_t start;
+	size_t end;
+} pt_match_action;
+
+/**
+ * Dynamic sequential stack of Actions.
+ */
+typedef struct {
+	pt_match_action *actions;  ///< Queried Actions buffer.
+	size_t size;  ///< Current number of Queried Actions.
+	size_t capacity;  ///< Capacity of the Queried Actions buffer.
+} pt_match_action_stack;
+
+/**
+ * Initializes the State Stack, `malloc`ing the stack with `initial_capacity`.
+ *
+ * @param s                The state stack to be initialized.
+ * @param initial_capacity The initial stack capacity. If 0, stack is
+ *                         initialized with a default value.
+ * @return 1 if the allocation went well, 0 otherwise
+ */
+int pt_initialize_action_stack(pt_match_action_stack *s, size_t initial_capacity);
+
+/**
+ * Destroy the State Stack, freeing the memory used.
+ *
+ * @param s The state stack to be destroyed.
+ */
+void pt_destroy_action_stack(pt_match_action_stack *s);
+
+/**
+ * Push a State into the State Stack, doubling it's capacity, if needed.
+ *
+ * @param s   The state stack.
+ * @param e   The Parsing Expression to be used for the next iteration.
+ * @param pos The starting position of the stream for next iteration.
+ * @return The newly pushed State.
+ */
+pt_match_action *pt_push_action(pt_match_action_stack *a, pt_success_action f, size_t start, size_t end);
 
 #endif
 

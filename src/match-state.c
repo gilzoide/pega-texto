@@ -34,11 +34,11 @@ void pt_destroy_state_stack(pt_match_state_stack *s) {
 	free(s->states);
 }
 
-pt_match_state *pt_push_state(pt_match_state_stack *s, pt_expr *e, size_t pos) {
+pt_match_state *pt_push_state(pt_match_state_stack *s, pt_expr *e, size_t pos, size_t ac) {
 	pt_match_state *state;
 	// Double capacity, if reached
 	if(s->size == s->capacity) {
-		int new_capacity = s->capacity << 1;
+		size_t new_capacity = s->capacity << 1;
 		if(state = realloc(s->states, new_capacity * sizeof(pt_match_state))) {
 			s->capacity = new_capacity;
 			s->states = state;
@@ -48,7 +48,8 @@ pt_match_state *pt_push_state(pt_match_state_stack *s, pt_expr *e, size_t pos) {
 	state = s->states + (s->size)++;
 	state->e = e;
 	state->pos = pos;
-	state->reg = 0;
+	state->r1 = state->r2 = 0;
+	state->ac = ac;
 
 	return state;
 }
@@ -56,4 +57,37 @@ pt_match_state *pt_push_state(pt_match_state_stack *s, pt_expr *e, size_t pos) {
 pt_match_state *pt_get_current_state(const pt_match_state_stack *s) {
 	int i = s->size - 1;
 	return i >= 0 ? s->states + i : NULL;
+}
+
+int pt_initialize_action_stack(pt_match_action_stack *a, size_t initial_capacity) {
+	if(initial_capacity == 0) initial_capacity = 8;
+	if(a->actions = malloc(initial_capacity * sizeof(pt_match_action))) {
+		a->size = 0;
+		a->capacity = initial_capacity;
+		return 1;
+	}
+	else return 0;
+}
+
+void pt_destroy_action_stack(pt_match_action_stack *a) {
+	free(a->actions);
+}
+
+pt_match_action *pt_push_action(pt_match_action_stack *a, pt_success_action f, size_t start, size_t end) {
+	pt_match_action *action;
+	// Double capacity, if reached
+	if(a->size == a->capacity) {
+		int new_capacity = a->capacity << 1;
+		if(action = realloc(a->actions, new_capacity * sizeof(pt_match_action))) {
+			a->capacity = new_capacity;
+			a->actions = action;
+		}
+		else return NULL;
+	}
+	action = a->actions + (a->size)++;
+	action->f = f;
+	action->start = start;
+	action->end = end;
+
+	return action;
 }

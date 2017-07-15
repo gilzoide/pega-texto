@@ -1,7 +1,8 @@
 #include "test-utils.h"
 #include "macro-on.h"
 
-void print_match(const pt_match_state_stack *s, const char *str, size_t matched, void *data) {
+void print_match(const pt_match_state_stack *s, const char *str, size_t start, size_t end, void *data) {
+	size_t matched = end - start;
 	printf("Matched %d char(s) on \"%s\": \"%.*s\"\nPASS\n", matched, str, matched, str);
 }
 
@@ -14,10 +15,10 @@ void each_iteration(const pt_match_state_stack *s, const char *str, void *data) 
 	printf(" on \"%s\"\n", str + state->pos);
 }
 
-void each_success(const pt_match_state_stack *s, const char *str, size_t matched, void *data) {
+void each_success(const pt_match_state_stack *s, const char *str, size_t start, size_t end, void *data) {
 	int i;
 	for(i = 0; i < s->size - 1; i++) fputc(' ', stdout);
-	printf("#success = matched \"%.*s\"\n", matched, str + pt_get_current_state(s)->pos);
+	printf("#success = matched \"%.*s\"\n", end - start, str + start);
 }
 
 void each_fail(const pt_match_state_stack *s, const char *str, void *data) {
@@ -26,13 +27,17 @@ void each_fail(const pt_match_state_stack *s, const char *str, void *data) {
 	puts("#fail");
 }
 
+void on_capture(const pt_match_state_stack *s, const char *str, size_t start, size_t end, void *data) {
+	printf("#captured %d: %.*s\n", end - start, end - start, str + start);
+}
+
 int main() {
 	pt_expr *e = SEQ(Q(L("a"), 1), Q(L("b"), 1));
 	pt_match_options opts = {
-		.each_iteration = &each_iteration,
-		.on_success = &print_match,
-		.each_success = &each_success,
-		.each_fail = &each_fail,
+		.each_iteration = each_iteration,
+		.on_success = print_match,
+		.each_success = each_success,
+		.each_fail = each_fail,
 	};
 
 	pt_match_expr(e, "aaaabcbb", &opts);
