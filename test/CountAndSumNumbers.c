@@ -21,7 +21,7 @@ void count_and_sum_number(const pt_match_state_stack *s, const char *str, size_t
 
 int main() {
 	// Numbers <- ({%d+} / .)*
-	pt_expr *e = Q(OR(Q_(F(isdigit), 1, (pt_success_action) count_and_sum_number), ANY), 0);
+	pt_expr *e = Q(OR(Q_((pt_success_action) count_and_sum_number, F(isdigit), 1), ANY), 0);
 	count_and_sum cs = {};
 	pt_match_options opts = {
 		.on_success = on_success,

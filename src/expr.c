@@ -113,6 +113,7 @@ pt_expr *pt_create_and(pt_expr *e) {
 	NEW_EXPR(
 		new_expr->op = PT_AND;
 		new_expr->data.e = e;
+		new_expr->action = NULL;
 	)
 }
 
@@ -120,6 +121,7 @@ pt_expr *pt_create_not(pt_expr *e) {
 	NEW_EXPR(
 		new_expr->op = PT_NOT;
 		new_expr->data.e = e;
+		new_expr->action = NULL;
 	)
 }
 

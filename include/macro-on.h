@@ -30,37 +30,37 @@
 
 /// Create a Literal Expression.
 #define L(s)         (pt_create_literal(s, 0, NULL))
-#define L_(s, a)     (pt_create_literal(s, 0, a))
+#define L_(a, s)     (pt_create_literal(s, 0, a))
 /// Create a Literal Expression, owning the string buffer.
 #define L_O(s)       (pt_create_literal(s, 1, NULL))
-#define L_O_(s, a)   (pt_create_literal(s, 1, a))
+#define L_O_(a, s)   (pt_create_literal(s, 1, a))
 /// Create a Set Expression.
 #define S(s)         (pt_create_set(s, 0, NULL))
-#define S_(s, a)     (pt_create_set(s, 0, a))
+#define S_(a, s)     (pt_create_set(s, 0, a))
 /// Create a Set Expression, owning the string buffer.
 #define S_O(s)       (pt_create_set(s, 1, NULL))
-#define S_O_(s, a)   (pt_create_set(s, 1, a))
+#define S_O_(a, s)   (pt_create_set(s, 1, a))
 /// Create a Range Expression.
 #define R(s)         (pt_create_range(s, 0, NULL))
-#define R_(s, a)     (pt_create_range(s, 0, a))
+#define R_(a, s)     (pt_create_range(s, 0, a))
 /// Create a Range Expression, owning the string buffer.
 #define R_O(s)       (pt_create_range(s, 1, NULL))
-#define R_O_(s, a)   (pt_create_range(s, 1, a))
+#define R_O_(a, s)   (pt_create_range(s, 1, a))
 /// Create a Any Expression.
 #define ANY          (pt_create_any(NULL))
 #define ANY_(a)      (pt_create_any(a))
 /// Create a Non-terminal Expression, indexing it by the Rule name.
 #define V(r)         (pt_create_non_terminal(r, 0, NULL))
-#define V_(r, a)     (pt_create_non_terminal(r, 0, a))
+#define V_(a, r)     (pt_create_non_terminal(r, 0, a))
 /// Create a Non-terminal Expression, indexing it by the Rule name, owning the string buffer.
 #define V_O(r)       (pt_create_non_terminal(r, 1, NULL))
-#define V_O_(r, a)   (pt_create_non_terminal(r, 1, a))
+#define V_O_(a, r)   (pt_create_non_terminal(r, 1, a))
 /// Create a Non-terminal Expression, indexing it by the Rule numerical index.
 #define VI(i)        (pt_create_non_terminal_idx(i, NULL))
-#define VI_(i, a)    (pt_create_non_terminal_idx(i, a))
+#define VI_(a, i)    (pt_create_non_terminal_idx(i, a))
 /// Create a Quantifier Expression.
 #define Q(e, N)      (pt_create_quantifier(e, N, NULL))
-#define Q_(e, N, a)  (pt_create_quantifier(e, N, a))
+#define Q_(a, e, N)  (pt_create_quantifier(e, N, a))
 /// Create an And Expression.
 #define AND(e)       (pt_create_and(e))
 /// Create a Not Expression.
@@ -73,5 +73,5 @@
 #define OR_(a, ...)  (pt__from_nt_array(&pt_create_choice,   ((pt_expr*[]){__VA_ARGS__, NULL}), a))
 /// Create a Custom Matcher Expression.
 #define F(f)         (pt_create_custom_matcher(f, NULL))
-#define F_(f, a)     (pt_create_custom_matcher(f, a))
+#define F_(a, f)     (pt_create_custom_matcher(f, a))
 
