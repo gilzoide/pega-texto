@@ -20,8 +20,6 @@
 
 /** @file macro-on.h
  * Turn on Parsing Expression constructor macros.
- *
- * @todo TODO: find a better way for actions for SEQ and OR.
  */
 
 #ifndef NULL
@@ -74,4 +72,12 @@
 /// Create a Custom Matcher Expression.
 #define F(f)         (pt_create_custom_matcher(f, NULL))
 #define F_(a, f)     (pt_create_custom_matcher(f, a))
+
+/* These are complex Expressions that are widely used.
+ * As macros, they're cost-free abstractions, so cool!
+ */
+
+/// Create a `!e .` (Any but `e`) Expression
+#define BUT(e)       (SEQ(NOT(e), ANY))
+#define BUT_(a, e)   (SEQ_(a, NOT(e), ANY))
 

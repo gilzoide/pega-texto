@@ -46,7 +46,7 @@ const char *pt_operator_names[] = {
 	return new_expr;
 
 
-pt_expr *pt_create_literal(const char *str, uint8_t own_characters, pt_success_action action) {
+pt_expr *pt_create_literal(const char *str, uint8_t own_characters, pt_expression_action action) {
 	NEW_EXPR(
 		new_expr->op = PT_LITERAL;
 		new_expr->data.characters = str;
@@ -56,7 +56,7 @@ pt_expr *pt_create_literal(const char *str, uint8_t own_characters, pt_success_a
 	)
 }
 
-pt_expr *pt_create_set(const char *str, uint8_t own_characters, pt_success_action action) {
+pt_expr *pt_create_set(const char *str, uint8_t own_characters, pt_expression_action action) {
 	NEW_EXPR(
 		new_expr->op = PT_SET;
 		new_expr->data.characters = str;
@@ -65,7 +65,7 @@ pt_expr *pt_create_set(const char *str, uint8_t own_characters, pt_success_actio
 	)
 }
 
-pt_expr *pt_create_range(const char *str, uint8_t own_characters, pt_success_action action) {
+pt_expr *pt_create_range(const char *str, uint8_t own_characters, pt_expression_action action) {
 	NEW_EXPR(
 		new_expr->op = PT_RANGE;
 		new_expr->data.characters = str;
@@ -74,14 +74,14 @@ pt_expr *pt_create_range(const char *str, uint8_t own_characters, pt_success_act
 	)
 }
 
-pt_expr *pt_create_any(pt_success_action action) {
+pt_expr *pt_create_any(pt_expression_action action) {
 	NEW_EXPR(
 		new_expr->op = PT_ANY;
 		new_expr->action = action;
 	)
 }
 
-pt_expr *pt_create_non_terminal(const char *rule, uint8_t own_characters, pt_success_action action) {
+pt_expr *pt_create_non_terminal(const char *rule, uint8_t own_characters, pt_expression_action action) {
 	NEW_EXPR(
 		new_expr->op = PT_NON_TERMINAL;
 		new_expr->data.characters = rule;
@@ -91,7 +91,7 @@ pt_expr *pt_create_non_terminal(const char *rule, uint8_t own_characters, pt_suc
 	)
 }
 
-pt_expr *pt_create_non_terminal_idx(int index, pt_success_action action) {
+pt_expr *pt_create_non_terminal_idx(int index, pt_expression_action action) {
 	NEW_EXPR(
 		new_expr->op = PT_NON_TERMINAL;
 		new_expr->data.characters = NULL;
@@ -100,7 +100,7 @@ pt_expr *pt_create_non_terminal_idx(int index, pt_success_action action) {
 	)
 }
 
-pt_expr *pt_create_quantifier(pt_expr *e, int N, pt_success_action action) {
+pt_expr *pt_create_quantifier(pt_expr *e, int N, pt_expression_action action) {
 	NEW_EXPR(
 		new_expr->op = PT_QUANTIFIER;
 		new_expr->N = N;
@@ -125,7 +125,7 @@ pt_expr *pt_create_not(pt_expr *e) {
 	)
 }
 
-pt_expr *pt_create_sequence(pt_expr **es, int N, pt_success_action action) {
+pt_expr *pt_create_sequence(pt_expr **es, int N, pt_expression_action action) {
 	NEW_EXPR(
 		new_expr->op = PT_SEQUENCE;
 		new_expr->N = N;
@@ -134,7 +134,7 @@ pt_expr *pt_create_sequence(pt_expr **es, int N, pt_success_action action) {
 	)
 }
 
-pt_expr *pt_create_choice(pt_expr **es, int N, pt_success_action action) {
+pt_expr *pt_create_choice(pt_expr **es, int N, pt_expression_action action) {
 	NEW_EXPR(
 		new_expr->op = PT_CHOICE;
 		new_expr->N = N;
@@ -143,7 +143,7 @@ pt_expr *pt_create_choice(pt_expr **es, int N, pt_success_action action) {
 	)
 }
 
-pt_expr *pt_create_custom_matcher(pt_custom_matcher f, pt_success_action action) {
+pt_expr *pt_create_custom_matcher(pt_custom_matcher f, pt_expression_action action) {
 	NEW_EXPR(
 		new_expr->op = PT_CUSTOM_MATCHER;
 		new_expr->data.matcher = f;
@@ -178,7 +178,7 @@ void pt_destroy_expr(pt_expr *e) {
 	free(e);
 }
 
-pt_expr *pt__from_nt_array(pt_expr *(*f)(pt_expr **, int, pt_success_action), pt_expr **nt_exprs, pt_success_action action) {
+pt_expr *pt__from_nt_array(pt_expr *(*f)(pt_expr **, int, pt_expression_action), pt_expr **nt_exprs, pt_expression_action action) {
 	int N, byte_size;
 	pt_expr **aux;
 	for(aux = nt_exprs; *aux; aux++);

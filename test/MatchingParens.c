@@ -3,11 +3,11 @@
 
 int main() {
 	pt_rule R[] = {
-		/* { "Axiom", SEQ(L("("), Q(OR(SEQ(NOT(S("()")), ANY), V("Axiom")), 0), L(")")) }, */
+		/* { "Axiom", SEQ(L("("), Q(OR(BUT(S("()")), V("Axiom")), 0), L(")")) }, // OneLiner */
 		{ "Axiom", V("Balanced") },
 		{ "Balanced", SEQ(L("("), Q(V("MaybeBalanced"), 0), L(")")) },
 		{ "MaybeBalanced", OR(V("NotParen"), V("Balanced")) },
-		{ "NotParen", SEQ(NOT(S("()")), ANY) },
+		{ "NotParen", BUT(S("()")) },
 		{ NULL, NULL },
 	};
 	pt_grammar *g = pt_create_grammar(R, 0);

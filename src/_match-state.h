@@ -61,7 +61,7 @@ pt_match_state *pt_push_state(pt_match_state_stack *s, pt_expr *e, size_t pos, s
  * Queried actions, to be executed on match success.
  */
 typedef struct {
-	pt_success_action f;
+	pt_expression_action f;
 	size_t start;
 	size_t end;
 } pt_match_action;
@@ -100,7 +100,7 @@ void pt_destroy_action_stack(pt_match_action_stack *s);
  * @param pos The starting position of the stream for next iteration.
  * @return The newly pushed State.
  */
-pt_match_action *pt_push_action(pt_match_action_stack *a, pt_success_action f, size_t start, size_t end);
+pt_match_action *pt_push_action(pt_match_action_stack *a, pt_expression_action f, size_t start, size_t end);
 
 #endif
 

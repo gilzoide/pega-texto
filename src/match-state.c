@@ -73,7 +73,7 @@ void pt_destroy_action_stack(pt_match_action_stack *a) {
 	free(a->actions);
 }
 
-pt_match_action *pt_push_action(pt_match_action_stack *a, pt_success_action f, size_t start, size_t end) {
+pt_match_action *pt_push_action(pt_match_action_stack *a, pt_expression_action f, size_t start, size_t end) {
 	pt_match_action *action;
 	// Double capacity, if reached
 	if(a->size == a->capacity) {

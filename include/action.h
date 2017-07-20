@@ -31,6 +31,21 @@
 typedef struct pt_match_state_stack_t pt_match_state_stack;
 
 /**
+ * Action to be called on an Expression, after the whole match succeeds.
+ *
+ * This is the action to be set to an Expression individually, and will be
+ * called only if the whole match succeeds, in the order the Expressions were
+ * matched.
+ *
+ * Parameters:
+ * - The original subject string
+ * - The start index of the match/capture
+ * - The final index of the match/capture
+ * - User custom data from match options
+ */
+typedef void (*pt_expression_action)(const char *, size_t, size_t, void *);
+
+/**
  * Action to be called on each match iteration.
  *
  * Parameters:

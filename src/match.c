@@ -83,7 +83,7 @@ end:
 		pt_match_action *action;
 		for(i = 0; i < a->size; i++) {
 			action = a->actions + i;
-			action->f(s, str, action->start, action->end, opts->userdata);
+			action->f(str, action->start, action->end, opts->userdata);
 		}
 		s->states[0].pos = new_pos;
 		return NULL;
