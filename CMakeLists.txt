@@ -25,5 +25,5 @@ if(COMPILE_EXAMPLES)
 endif()
 
 # Install headers
-file(GLOB headers "include/*.h")
+file(GLOB headers "include/pega-texto/*.h")
 install(FILES ${headers} DESTINATION "include/${CMAKE_PROJECT_NAME}")

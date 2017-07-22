@@ -9,7 +9,7 @@ void each_iteration(const pt_match_state_stack *s, const char *str, void *data) 
 	int i;
 	for(i = 0; i < s->size - 1; i++) fputc(' ', stdout);
 	pt_match_state *state = pt_get_current_state(s);
-	printf("%s", pt_operator_names[state->e->op]);
+	printf("%s", pt_operation_names[state->e->op]);
 	if(state->e->op == PT_LITERAL) printf(" \"%s\"", state->e->data.characters);
 	printf(" on \"%s\"\n", str + state->pos);
 }

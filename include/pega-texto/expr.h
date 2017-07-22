@@ -53,7 +53,7 @@
 /**
  * Operations for constructing Parsing Expressions.
  */
-enum pt_operation_t {
+typedef enum {
 	// Primary
 	PT_LITERAL,          // "string"
 	PT_SET,              // [chars]
@@ -74,10 +74,10 @@ enum pt_operation_t {
 	// Custom match by function
 	PT_CUSTOM_MATCHER,   // function(c) // If return 0, match fails
 	                                    // If return nonzero, match succeeds, advance 1
-};
+} pt_operation;
 
 /// String version of the possible operations.
-extern const char *pt_operator_names[];
+extern const char *pt_operation_names[];
 
 /// A function that receives a character (int) and match it (non-zero) or not (0).
 typedef int(*pt_custom_matcher)(int);

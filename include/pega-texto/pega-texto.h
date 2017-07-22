@@ -30,6 +30,7 @@
 #include "grammar.h"
 #include "match.h"
 #include "match-state.h"
+#include "validate.h"
 
 #endif
 

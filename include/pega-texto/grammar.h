@@ -70,29 +70,5 @@ pt_grammar *pt_create_grammar(pt_rule *rules, uint8_t own_names);
  */
 void pt_destroy_grammar(pt_grammar *g);
 
-
-typedef enum {
-	PT_VALIDATE_SUCCESS = 0,
-	PT_VALIDATE_NULL_STRING,
-	PT_VALIDATE_RANGE_BUFFER,
-	PT_VALIDATE_INVALID_RANGE,
-	PT_VALIDATE_OUT_OF_BOUNDS,
-	PT_VALIDATE_UNDEFINED_RULE,
-} pt_validate_result;
-
-/**
- * Validate a Grammar.
- *
- * This checks if a Grammar is well-formed, as described by Ford (2014), and if
- * Non-terminal indexes (either by name, or numerical index) exist and are
- * inbounds.
- *
- * @todo implement this =P
- *
- * @param g Grammar to be validated.
- * @return ?
- */
-int pt_grammar_validate(pt_grammar *g);
-
 #endif
 

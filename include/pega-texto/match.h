@@ -38,8 +38,10 @@
  * is considered a successful match.
  */
 typedef enum {
-	PT_NO_STACK_MEM = -2,  ///< Error while allocating memory for the State/Action Stack.
-	PT_NO_MATCH = -1,  ///< Subject string didn't match the given PEG.
+	/// Subject string didn't match the given PEG.
+	PT_NO_MATCH = -1,
+	/// Error while allocating memory for the State/Action Stack.
+	PT_NO_STACK_MEM = -2,
 } pt_match_result;
 
 /**
