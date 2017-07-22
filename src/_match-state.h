@@ -26,7 +26,7 @@
 #ifndef __PEGA_TEXTO__MATCH_STATE_H__
 #define __PEGA_TEXTO__MATCH_STATE_H__
 
-#include "match-state.h"
+#include <pega-texto/match-state.h>
 
 /**
  * Initializes the State Stack, `malloc`ing the stack with `initial_capacity`.

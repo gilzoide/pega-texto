@@ -18,7 +18,7 @@
  * Any bugs should be reported to <gilzoide@gmail.com>
  */
 
-#include "match.h"
+#include <pega-texto/match.h>
 #include "_match-state.h"
 
 #include <stdlib.h>
@@ -34,7 +34,7 @@ static inline int pt_find_non_terminal_index(const char *name, const char **name
 
 /// Propagate success back until reach a Quantifier, Sequence or Not, changing it's position
 static inline pt_match_state *pt_match_succeed(pt_match_state_stack *s, pt_match_action_stack *a,
-		const char *str, size_t new_pos, pt_match_options *opts) {
+		int *matched, const char *str, size_t new_pos, pt_match_options *opts) {
 	int i, op;
 	pt_match_state *state = s->states + s->size - 1;
 	if(opts->each_success) {
@@ -65,7 +65,10 @@ static inline pt_match_state *pt_match_succeed(pt_match_state_stack *s, pt_match
 
 			default: // query action, if there is any
 				if(state->e->action) {
-					pt_push_action(a, state->e->action, state->pos, new_pos);
+					if(pt_push_action(a, state->e->action, state->pos, new_pos) == NULL) {
+						*matched = PT_NO_STACK_MEM;
+						return NULL;
+					}
 				}
 				break;
 		}
@@ -126,20 +129,23 @@ end:
 }
 
 pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_match_options *opts) {
+	int matched;
 	pt_match_state_stack S;
 	pt_match_action_stack A;
 	if(opts == NULL) opts = &pt_default_match_options;
-	if(!pt_initialize_state_stack(&S, opts->initial_stack_capacity)) return PT_NO_STACK_MEM;
+	if(!pt_initialize_state_stack(&S, opts->initial_stack_capacity)) {
+		matched = PT_NO_STACK_MEM;
+		goto err_state_stack;
+	}
 	if(!pt_initialize_action_stack(&A, opts->initial_stack_capacity)) {
-		pt_destroy_state_stack(&S);
-		return PT_NO_STACK_MEM;
+		matched = PT_NO_STACK_MEM;
+		goto err_action_stack;
 	}
 
 	// iteration variables
 	pt_match_state *state = pt_push_state(&S, es[0], 0, 0);
 	pt_expr *e;
 	const char *ptr;
-	int matched;
 
 	// match loop
 	while(state) {
@@ -240,14 +246,18 @@ iterate_quantifier:
 			default: break;
 		}
 
-		state = matched < 0 ? pt_match_fail(&S, &A, str, opts) : pt_match_succeed(&S, &A, str, state->pos + matched, opts);
+		state = matched < 0
+				? pt_match_fail(&S, &A, str, opts)
+				: pt_match_succeed(&S, &A, &matched, str, state->pos + matched, opts);
 	}
 
 	if(matched >= 0) {
 		matched = S.states[0].pos;
 	}
-	pt_destroy_state_stack(&S);
 	pt_destroy_action_stack(&A);
+err_action_stack:
+	pt_destroy_state_stack(&S);
+err_state_stack:
 	return matched;
 }
 

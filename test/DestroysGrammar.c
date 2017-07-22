@@ -1,5 +1,5 @@
-#include <pega-texto.h>
-#include <macro-on.h>
+#include <pega-texto/pega-texto.h>
+#include <pega-texto/macro-on.h>
 
 #include <ctype.h>
 #include <string.h>

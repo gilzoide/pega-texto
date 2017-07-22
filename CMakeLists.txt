@@ -1,8 +1,15 @@
 cmake_minimum_required(VERSION 2.6)
-project(pega-texto)
+set(PROJECT_VERSION 0.1.0)
+if(${CMAKE_VERSION} VERSION_GREATER 3.0)
+	cmake_policy(SET CMP0048 NEW)
+	project(pega-texto VERSION ${PROJECT_VERSION})
+else()
+	project(pega-texto)
+endif()
 
-# Compile
+# Build stuff
 add_subdirectory(src)
+add_subdirectory(pkg-config)
 
 # Test
 option(ENABLE_TESTS "Enable tests to be built and run with `make test`" OFF)

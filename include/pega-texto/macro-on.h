@@ -20,6 +20,10 @@
 
 /** @file macro-on.h
  * Turn on Parsing Expression constructor macros.
+ *
+ * The `*_O` variants own the character buffer, so #pt_destroy_expr frees it.
+ *
+ * The `*_` variants set the action to be performed on a match (see @ref pt_expression_action)
  */
 
 #ifndef NULL

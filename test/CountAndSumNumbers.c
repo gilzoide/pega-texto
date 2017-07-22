@@ -1,5 +1,4 @@
 #include "test-utils.h"
-#include "macro-on.h"
 
 #include <ctype.h>
 

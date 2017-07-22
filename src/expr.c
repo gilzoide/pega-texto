@@ -18,7 +18,7 @@
  * Any bugs should be reported to <gilzoide@gmail.com>
  */
 
-#include "expr.h"
+#include <pega-texto/expr.h>
 
 #include <stdlib.h>
 #include <assert.h>

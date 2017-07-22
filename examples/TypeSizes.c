@@ -1,4 +1,4 @@
-#include "pega-texto.h"
+#include <pega-texto/pega-texto.h>
 #include <stdio.h>
 
 #define PRINT_SIZE(s) \

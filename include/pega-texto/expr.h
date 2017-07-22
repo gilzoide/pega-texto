@@ -36,10 +36,8 @@
  *   notation.
  * - __And__ (`&e`): match Expression without consuming the input.
  * - __Not__ (`!e`): match only if input doesn't match `e`.
- * - __Capture__ (`{e}`): match if `e` matches, and call a Capture Action on it
- *   if the whole match succeeds.
- * - __Sequence__ (`e1 e2`): match if all Expressions match in sequence.
- * - __Choice__ (`e1 / e2`): match either one of the Expressions, trying from
+ * - __Sequence__ (`e1 e2 ...`): match if all Expressions match in sequence.
+ * - __Choice__ (`e1 / e2 / ...`): match either one of the Expressions, trying from
  *   the first one to the last.
  * - __Custom Matcher__: match if function `matcher` applied to next character
  *   returns non-zero.

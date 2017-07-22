@@ -27,7 +27,7 @@
 
 #include <stdlib.h>
 
-// Forward declaration
+/// Forward declaration
 typedef struct pt_match_state_stack_t pt_match_state_stack;
 
 /**
@@ -78,6 +78,24 @@ typedef void(*pt_success_action)(const pt_match_state_stack *, const char *,
  * - User custom data from match options
  */
 typedef void(*pt_fail_action)(const pt_match_state_stack *, const char *, void *);
+
+
+/**
+ * @example FindIncludes.c
+ * Simple example of a #pt_expression_action that prints the matched input.
+ *
+ * @verbatim
+#include "pega-texto.h"
+#include "macro-on.h"
+#include "readfile.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <assert.h>
+Found 7 includes
+@endverbatim
+ * is the result of applying the program on it's code.
+ */
 
 #endif
 

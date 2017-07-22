@@ -1,7 +1,8 @@
 #ifndef __PEGA_TEXTO_TEST_UTILS_H__
 #define __PEGA_TEXTO_TEST_UTILS_H__
 
-#include "pega-texto.h"
+#include <pega-texto/pega-texto.h>
+#include <pega-texto/macro-on.h>
 #include <stdlib.h>
 #include <stdio.h>
 

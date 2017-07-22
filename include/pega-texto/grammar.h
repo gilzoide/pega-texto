@@ -28,7 +28,7 @@
 #include "expr.h"
 
 /**
- * A Rule for the Grammar: `Name <- Expr`
+ * A Rule for the Grammar: `Name <- Expr`.
  */
 typedef struct {
 	const char *name;  ///< Rule name.
@@ -44,7 +44,7 @@ typedef struct {
 typedef struct {
 	const char **names;  ///< Rules' names.
 	pt_expr **es;  ///< Rules' Expressions.
-	int16_t N;  ///< Number of Rules.
+	uint16_t N;  ///< Number of Rules.
 	uint8_t own_names : 1;  ///< Do Grammar own the names' buffers?
 } pt_grammar;
 
@@ -70,11 +70,21 @@ pt_grammar *pt_create_grammar(pt_rule *rules, uint8_t own_names);
  */
 void pt_destroy_grammar(pt_grammar *g);
 
+
+typedef enum {
+	PT_VALIDATE_SUCCESS = 0,
+	PT_VALIDATE_NULL_STRING,
+	PT_VALIDATE_RANGE_BUFFER,
+	PT_VALIDATE_INVALID_RANGE,
+	PT_VALIDATE_OUT_OF_BOUNDS,
+	PT_VALIDATE_UNDEFINED_RULE,
+} pt_validate_result;
+
 /**
- * Validate a grammar.
+ * Validate a Grammar.
  *
  * This checks if a Grammar is well-formed, as described by Ford (2014), and if
- * Non-terminal indexes (either by name, or numerial index) exist and are
+ * Non-terminal indexes (either by name, or numerical index) exist and are
  * inbounds.
  *
  * @todo implement this =P
@@ -82,7 +92,7 @@ void pt_destroy_grammar(pt_grammar *g);
  * @param g Grammar to be validated.
  * @return ?
  */
-int pt_validate_grammar(pt_grammar *g);
+int pt_grammar_validate(pt_grammar *g);
 
 #endif
 

@@ -1,5 +1,4 @@
 #include "test-utils.h"
-#include "macro-on.h"
 
 void print_match(const pt_match_state_stack *s, const char *str, size_t start, size_t end, void *data) {
 	size_t matched = end - start;
