@@ -4,7 +4,7 @@
  * Print the ocurrences along with a count
  */
 
-#include <pega-texto/pega-texto.h>
+#include <pega-texto.h>
 #include <pega-texto/macro-on.h>
 
 #include "readfile.h"
@@ -14,10 +14,11 @@
 #include <ctype.h>
 #include <assert.h>
 
-void print_includes(const char *str, size_t begin, size_t end, void *data) {
+pt_data print_includes(const char *str, size_t begin, size_t end, int argc, pt_data *argv, void *data) {
 	int *count = data;
 	printf("%.*s\n", end - begin, str + begin);
 	(*count)++;
+	return PT_NULL_DATA;
 }
 
 int main(int argc, char **argv) {
@@ -42,7 +43,7 @@ int main(int argc, char **argv) {
 
 	int include_count = 0;
 	pt_match_options opts = { .userdata = &include_count };
-	assert(pt_match_grammar(g, str, &opts) >= 0 && "Error on parse: is the string valid?");
+	assert(pt_match_grammar(g, str, &opts).matched >= 0 && "Error on parse: is the string valid?");
 	printf("Found %d includes\n", include_count);
 
 	pt_destroy_grammar(g);

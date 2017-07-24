@@ -39,5 +39,7 @@ run_test(CustomMatchers "PASS")
 # actions
 run_test(SuccessAction "PASS")
 run_test(CountAndSumNumbers "PASS")
+# validation
+run_test(GrammarValidation "PASS")
 # full tests
 run_test(MatchingParens "PASS")

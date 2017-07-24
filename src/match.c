@@ -20,6 +20,7 @@
 
 #include <pega-texto/match.h>
 #include "_match-state.h"
+#include "_action.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -32,26 +33,28 @@ static inline int pt_find_non_terminal_index(const char *name, const char **name
 	return i;
 }
 
-/// Propagate success back until reach a Quantifier, Sequence or Not, changing it's position
-static inline pt_match_state *pt_match_succeed(pt_match_state_stack *s, pt_match_action_stack *a,
+/// Propagate success back until reach a Quantifier, Sequence, And or Not, changing it's position
+static pt_match_state *pt_match_succeed(pt_match_state_stack *s, pt_match_action_stack *a,
 		int *matched, const char *str, size_t new_pos, pt_match_options *opts) {
-	int i, op;
+	int i;
 	pt_match_state *state = s->states + s->size - 1;
 	if(opts->each_success) {
-		opts->each_success(s, str, state->pos, new_pos, opts->userdata);
+		opts->each_success(s, a, str, state->pos, new_pos, opts->userdata);
 	}
 	if(state->e->action) {
-		pt_push_action(a, state->e->action, state->pos, new_pos);
+		if(pt_push_action(a, state->e->action, state->pos, new_pos) == NULL) {
+			*matched = PT_NO_STACK_MEM;
+			return NULL;
+		}
 	}
 	for(i = s->size - 2; i >= 0; i--) {
 		state = s->states + i;
-		op = state->e->op;
-		switch(op) {
+		switch(state->e->op) {
 			case PT_QUANTIFIER:
 			case PT_SEQUENCE:
 				state->r2 = new_pos - state->pos; // mark current match accumulator
 				state->ac = a->size; // keep queried actions
-				goto end;
+				goto backtrack;
 
 			case PT_AND:
 				new_pos = state->pos; // don't consume input...
@@ -61,7 +64,7 @@ static inline pt_match_state *pt_match_succeed(pt_match_state_stack *s, pt_match
 			case PT_NOT:
 				state->r1 = -1; // NOT success = fail
 				a->size = state->ac; // discard queried actions
-				goto end;
+				goto backtrack;
 
 			default: // query action, if there is any
 				if(state->e->action) {
@@ -73,63 +76,57 @@ static inline pt_match_state *pt_match_succeed(pt_match_state_stack *s, pt_match
 				break;
 		}
 	}
-end:
-	if(i >= 0) {
-		s->size = i + 1;
-		return state;
+	// for ended normally: no more states left
+	// aaaaaand ACTION!
+	if(opts->on_success) {
+		opts->on_success(s, a, str, 0, new_pos, opts->userdata);
 	}
-	else {
-		// aaaaaand ACTION!
-		if(opts->on_success) {
-			opts->on_success(s, str, 0, new_pos, opts->userdata);
-		}
-		pt_match_action *action;
-		for(i = 0; i < a->size; i++) {
-			action = a->actions + i;
-			action->f(str, action->start, action->end, opts->userdata);
-		}
-		s->states[0].pos = new_pos;
-		return NULL;
-	}
+	*matched = new_pos;
+	return NULL;
+
+backtrack:
+	s->size = i + 1;
+	return state;
 }
 
-/// Return to a backtrack point: either Quantifier or Choice
-static inline pt_match_state *pt_match_fail(pt_match_state_stack *s, pt_match_action_stack *a,
+/// Return to a backtrack point: either Quantifier, Choice or Not
+static pt_match_state *pt_match_fail(pt_match_state_stack *s, pt_match_action_stack *a,
 		const char *str, pt_match_options *opts) {
-	int i, op;
+	int i;
+	pt_match_state *state;
 	if(opts->each_fail) {
-		opts->each_fail(s, str, opts->userdata);
+		opts->each_fail(s, a, str, opts->userdata);
 	}
 	for(i = s->size - 2; i >= 0; i--) {
-		op = s->states[i].e->op;
-		switch(op) {
+		state = s->states + i;
+		switch(state->e->op) {
 			case PT_QUANTIFIER:
-				s->states[i].r1 = -(s->states[i].r1); // mark end of quantifier matching
+				state->r1 = -(state->r1); // mark end of quantifier matching
 			case PT_CHOICE:
-				goto end;
+				goto backtrack;
 
 			case PT_NOT:
-				s->states[i].r1 = 1; // NOT fail = success
-				goto end;
+				state->r1 = 1; // NOT fail = success
+				goto backtrack;
 		}
 	}
-end:
-	if(i >= 0) {
-		s->size = i + 1;
-		a->size = s->states[i].ac;
-		return s->states + i;
+	// for ended normally: no more states left
+	// aaaaaand ACTION!
+	if(opts->on_fail) {
+		opts->on_fail(s, a, str, opts->userdata);
 	}
-	else {
-		// aaaaaand ACTION!
-		if(opts->on_fail) {
-			opts->on_fail(s, str, opts->userdata);
-		}
-		return NULL;
-	}
+	return NULL;
+
+backtrack:
+	// rewind stacks to backtrack point
+	s->size = i + 1;
+	a->size = state->ac;
+	return s->states + i;
 }
 
 pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_match_options *opts) {
 	int matched;
+	pt_data action_result = {};
 	pt_match_state_stack S;
 	pt_match_action_stack A;
 	if(opts == NULL) opts = &pt_default_match_options;
@@ -149,7 +146,7 @@ pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_m
 
 	// match loop
 	while(state) {
-		if(opts->each_iteration) opts->each_iteration(&S, str, opts->userdata);
+		if(opts->each_iteration) opts->each_iteration(&S, &A, str, opts->userdata);
 		ptr = str + state->pos;
 		e = state->e;
 		matched = -1;
@@ -251,14 +248,15 @@ iterate_quantifier:
 				: pt_match_succeed(&S, &A, &matched, str, state->pos + matched, opts);
 	}
 
-	if(matched >= 0) {
-		matched = S.states[0].pos;
+	if(matched >= 0 && A.size > 0) {
+		action_result = pt_run_actions(&A, str, opts->userdata);
 	}
+
 	pt_destroy_action_stack(&A);
 err_action_stack:
 	pt_destroy_state_stack(&S);
 err_state_stack:
-	return matched;
+	return (pt_match_result){matched, action_result};
 }
 
 pt_match_result pt_match_expr(pt_expr *e, const char *str, pt_match_options *opts) {

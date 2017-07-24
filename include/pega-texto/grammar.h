@@ -25,7 +25,7 @@
 #ifndef __PEGA_TEXTO_GRAMMAR_H__
 #define __PEGA_TEXTO_GRAMMAR_H__
 
-#include "expr.h"
+#include "pega-texto/expr.h"
 
 /**
  * A Rule for the Grammar: `Name <- Expr`.

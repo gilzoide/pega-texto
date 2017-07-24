@@ -58,24 +58,6 @@ pt_match_state *pt_push_state(pt_match_state_stack *s, pt_expr *e, size_t pos, s
 
 
 /**
- * Queried actions, to be executed on match success.
- */
-typedef struct {
-	pt_expression_action f;
-	size_t start;
-	size_t end;
-} pt_match_action;
-
-/**
- * Dynamic sequential stack of Actions.
- */
-typedef struct {
-	pt_match_action *actions;  ///< Queried Actions buffer.
-	size_t size;  ///< Current number of Queried Actions.
-	size_t capacity;  ///< Capacity of the Queried Actions buffer.
-} pt_match_action_stack;
-
-/**
  * Initializes the State Stack, `malloc`ing the stack with `initial_capacity`.
  *
  * @param s                The state stack to be initialized.

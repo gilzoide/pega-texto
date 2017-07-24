@@ -4,10 +4,15 @@ pega-texto
 
 A runtime engine for [Parsing Expression Grammars (PEG)](http://bford.info/packrat/) in C.
 
-In __pega-texto__, PEGs are just expression arrays, and can be easily combined
-or rearranged dynamically (even while parsing!). You can also provide a single
-expression (which, for C, is the same as a 1 element array) for simple
-pattern-matching.
+In __pega-texto__, PEGs are just Expression arrays, and can be easily combined
+or rearranged dynamically. You can also provide a single expression (which, for
+C, is the same as a 1 element array) for simple pattern-matching.
+
+To use the values matched, each Expression may have a user defined Action
+function that produce a value. Each Action receives the values produced by
+Actions executed by inner matched Expressions, folding them into a single value
+down the stack (yup, recursion!); you don't have to worry about creating your
+own stack!
 
 
 Build
@@ -32,4 +37,10 @@ Test
 From build directory, after building:
 
 	$ make test
+
+Documentation
+-------------
+Everything is documented with [Doxygen](http://www.stack.nl/~dimitri/doxygen/).
+
+@todo put the generated docs on github-pages =]
 

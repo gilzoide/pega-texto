@@ -7,16 +7,18 @@ typedef struct {
 	int sum;
 } count_and_sum;
 
-void on_success(const pt_match_state_stack *s, const char *str, size_t start, size_t end, void *data) {
+void on_success(const pt_match_state_stack *s, const pt_match_action_stack *a,
+                const char *str, size_t start, size_t end, void *data) {
 	puts("Numbers:");
 }
 
-void count_and_sum_number(const char *str, size_t start, size_t end, void *_data) {
+pt_data count_and_sum_number(const char *str, size_t start, size_t end, int argc, pt_data *argv, void *_data) {
 	count_and_sum *data = (count_and_sum *) _data;
 	int num = atoi(str + start);
 	printf("%d\n", num);
 	data->count++;
 	data->sum += num;
+	return (pt_data){};
 }
 
 int main() {
@@ -28,7 +30,8 @@ int main() {
 		.userdata = &cs,
 	};
 
-	if(pt_match_expr(e, "857ac5\n2+3=5", &opts) > 0) {
+	pt_match_result res = pt_match_expr(e, "857ac5\n2+3=5", &opts);
+	if(res.matched > 0) {
 		printf("Found %d numbers with sum = %d\nPASS\n", cs.count, cs.sum);
 	}
 	else puts("FAIL");

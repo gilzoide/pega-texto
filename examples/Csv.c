@@ -1,7 +1,7 @@
-/* A CSV file parser =]
+/* A CSV file parser
  */
 
-#include <pega-texto/pega-texto.h>
+#include <pega-texto.h>
 #include <pega-texto/macro-on.h>
 
 #include "readfile.h"
@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
 	};
 	pt_grammar *g = pt_create_grammar(R, 0);
 
-	assert(pt_match_grammar(g, str, NULL) >= 0 && "Error on parse: is the CSV file valid?");
+	assert(pt_match_grammar(g, str, NULL).matched >= 0 && "Error on parse: is the CSV file valid?");
 
 	pt_destroy_grammar(g);
 	free(str);

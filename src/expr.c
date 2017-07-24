@@ -24,7 +24,7 @@
 #include <assert.h>
 #include <string.h>
 
-const char *pt_operation_names[] = {
+const char * const pt_operation_names[] = {
 	"PT_LITERAL",
 	"PT_SET",
 	"PT_RANGE",

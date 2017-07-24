@@ -64,49 +64,51 @@ static inline int pt_is_nullable(const pt_grammar *g, const pt_expr *e) {
 }
 
 /// Validates a single expression in the Grammar, to be called recursively.
-static int pt_expr_in_grammar_validate(pt_grammar *g, pt_expr *e, uint16_t *rule) {
+static int pt_validate_expr_in_grammar(pt_grammar *g, pt_expr *e, uint16_t *rule, uint8_t *visited_rules) {
 	int i, res;
-	uint16_t cur_rule;
-	switch(e->op) {
-		case PT_RANGE:
-			if(strlen(e->data.characters) < 2) return PT_VALIDATE_RANGE_BUFFER;
-			else if(e->data.characters[0] > e->data.characters[1]) return PT_VALIDATE_INVALID_RANGE;
-			break;
+	uint16_t cur_rule = *rule;
+	if(visited_rules[cur_rule] == 0) {
+		visited_rules[cur_rule] = 1;
+		switch(e->op) {
+			case PT_RANGE:
+				if(strlen(e->data.characters) < 2) return PT_VALIDATE_RANGE_BUFFER;
+				else if(e->data.characters[0] > e->data.characters[1]) return PT_VALIDATE_INVALID_RANGE;
+				break;
 
-		case PT_NON_TERMINAL:
-			if(e->N < 0) { 
-				if((e->N = pt_find_non_terminal_index(e->data.characters, g->names, g->N)) == -1) {
-					return PT_VALIDATE_UNDEFINED_RULE;
+			case PT_NON_TERMINAL:
+				if(e->N < 0) { 
+					if((e->N = pt_find_non_terminal_index(e->data.characters, g->names, g->N)) == -1) {
+						return PT_VALIDATE_UNDEFINED_RULE;
+					}
 				}
-			}
-			else {
-				if(e->N >= g->N) return PT_VALIDATE_OUT_OF_BOUNDS;
-			}
-			cur_rule = *rule;
-			*rule = e->N;
-			if((res = pt_expr_in_grammar_validate(g, g->es[e->N], rule)) != PT_VALIDATE_SUCCESS) {
-				return res;
-			}
-			*rule = cur_rule;
-			break;
-
-		case PT_QUANTIFIER:
-			if((res = pt_expr_in_grammar_validate(g, e->data.e, rule)) != PT_VALIDATE_SUCCESS) {
-				return res;
-			}
-			else if(e->N == 0 && pt_is_nullable(g, e->data.e)) return PT_VALIDATE_LOOP_EMPTY_STRING;
-			break;
-
-		case PT_AND: case PT_NOT:
-			return pt_expr_in_grammar_validate(g, e->data.e, rule);
-
-		case PT_SEQUENCE: case PT_CHOICE:
-			for(i = 0; i < e->N; i++) {
-				if((res = pt_expr_in_grammar_validate(g, e->data.es[i], rule)) != PT_VALIDATE_SUCCESS) {
+				else {
+					if(e->N >= g->N) return PT_VALIDATE_OUT_OF_BOUNDS;
+				}
+				*rule = e->N;
+				if((res = pt_validate_expr_in_grammar(g, g->es[e->N], rule, visited_rules)) != PT_VALIDATE_SUCCESS) {
 					return res;
 				}
-			}
-			break;
+				*rule = cur_rule;
+				break;
+
+			case PT_QUANTIFIER:
+				if((res = pt_validate_expr_in_grammar(g, e->data.e, rule, visited_rules)) != PT_VALIDATE_SUCCESS) {
+					return res;
+				}
+				else if(e->N == 0 && pt_is_nullable(g, e->data.e)) return PT_VALIDATE_LOOP_EMPTY_STRING;
+				break;
+
+			case PT_AND: case PT_NOT:
+				return pt_validate_expr_in_grammar(g, e->data.e, rule, visited_rules);
+
+			case PT_SEQUENCE: case PT_CHOICE:
+				for(i = 0; i < e->N; i++) {
+					if((res = pt_validate_expr_in_grammar(g, e->data.es[i], rule, visited_rules)) != PT_VALIDATE_SUCCESS) {
+						return res;
+					}
+				}
+				break;
+		}
 	}
 	return PT_VALIDATE_SUCCESS;
 }
@@ -114,7 +116,9 @@ static int pt_expr_in_grammar_validate(pt_grammar *g, pt_expr *e, uint16_t *rule
 pt_validate_result pt_grammar_validate(pt_grammar *g, pt_validate_behaviour bhv) {
 	pt_validate_result res = {};
 	if(bhv != PT_VALIDATE_SKIP) {
-		res.status = pt_expr_in_grammar_validate(g, g->es[0], &res.rule);
+		uint8_t visited_rules[g->N];
+		memset(visited_rules, 0, g->N * sizeof(uint8_t));
+		res.status = pt_validate_expr_in_grammar(g, g->es[0], &res.rule, visited_rules);
 		if(res.status != PT_VALIDATE_SUCCESS && bhv & PT_VALIDATE_PRINT_ERROR) {
 			fprintf(stderr, "[pt_grammar_validate] Error on rule \"%s\": %s\n",
 					g->names[res.rule], pt_validate_codes_description[res.status]);
@@ -124,7 +128,7 @@ pt_validate_result pt_grammar_validate(pt_grammar *g, pt_validate_behaviour bhv)
 	return res;
 }
 
-const char *pt_validate_codes_description[] = {
+const char * const pt_validate_codes_description[] = {
 	"No errors on grammar",
 	"Range buffer must have at least 2 characters",
 	"Range characters must be numerically ordered",

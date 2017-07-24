@@ -25,7 +25,7 @@
 #ifndef __PEGA_TEXTO_VALIDATE_H__
 #define __PEGA_TEXTO_VALIDATE_H__
 
-#include "grammar.h"
+#include "pega-texto/grammar.h"
 
 /**
  * Possible status codes for Grammar validation.
@@ -44,11 +44,7 @@ typedef enum {
  *
  * @see pt_validate_codes
  */
-extern const char *pt_validate_codes_description[];
-
-#ifndef PT_VALIDATE_BEHAVIOUR
-# define PT_VALIDATE_BEHAVIOUR PT_VALIDATE_DEFAULT
-#endif
+extern const char * const pt_validate_codes_description[];
 
 /**
  * Behaviours for Grammar validation.
@@ -66,11 +62,11 @@ typedef enum {
 	 */
 	PT_VALIDATE_SKIP = 0b001,
 	/**
-	 * Prints an error message if Grammar is invalid.
+	 * Print an error message on `stderr` if Grammar is invalid.
 	 */
 	PT_VALIDATE_PRINT_ERROR = 0b010,
 	/**
-	 * Abort program if Grammar is invalid, printing an error message on stderr.
+	 * Abort program if Grammar is invalid, printing an error message on `stderr`.
 	 *
 	 * May be useful for Debug builds.
 	 */
@@ -78,7 +74,7 @@ typedef enum {
 } pt_validate_behaviour;
 
 /**
- * Validation result: a {status code, rule index} pair.
+ * Validation result: a {status code, invalid rule index (if there is one)} pair.
  *
  * If status code is different from PT_VALIDATE_SUCCESS, `rule` will contain the
  * rule index in which the problem was found.
@@ -86,20 +82,21 @@ typedef enum {
  * @see pt_validate_codes
  */
 typedef struct {
-	uint8_t status;
-	uint16_t rule;
+	uint8_t status;  ///< Status code.
+	uint16_t rule;  ///< Rule index.
 } pt_validate_result;
 
 /**
  * Validate a Grammar.
  *
- * This checks if a Grammar is well-formed, as described by Ford (2014), and if
- * Non-terminal indexes (either by name, or numerical index) exist and are
- * inbounds.
+ * This checks if a Grammar is well-formed, as described by
+ * [Ford (2014)](https://pdos.csail.mit.edu/~baford/packrat/popl04/peg-popl04.pdf),
+ * and if Non-terminal indexes (either by name or numerical index) exist and
+ * are inbounds.
  *
  * @param g   Grammar to be validated.
  * @param bhv Validation behaviour
- * @return Validate result: a {status code, rule indes} pair.
+ * @return Validate result: a {status code, invalid rule index (if there is one)} pair.
  */
 pt_validate_result pt_grammar_validate(pt_grammar *g, pt_validate_behaviour bhv);
 

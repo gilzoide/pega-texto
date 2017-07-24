@@ -1,0 +1,39 @@
+/*
+ * Copyright 2017 Gil Barbosa Reis <gilzoide@gmail.com>
+ * This file is part of pega-texto.
+ * 
+ * Pega-texto is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Pega-texto is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with pega-texto.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Any bugs should be reported to <gilzoide@gmail.com>
+ */
+
+/** @file pega-texto.h
+ * Main include file.
+ */
+
+#ifndef __PEGA_TEXTO_H__
+#define __PEGA_TEXTO_H__
+
+#include "pega-texto/action.h"
+#include "pega-texto/data.h"
+#include "pega-texto/expr.h"
+#include "pega-texto/grammar.h"
+#include "pega-texto/match.h"
+#include "pega-texto/match-state.h"
+#include "pega-texto/validate.h"
+
+#define PT_VERSION "@PROJECT_VERSION@"
+
+#endif
+

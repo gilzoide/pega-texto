@@ -25,23 +25,36 @@
 #ifndef __PEGA_TEXTO_MATCH_H__
 #define __PEGA_TEXTO_MATCH_H__
 
-#include "expr.h"
-#include "grammar.h"
-#include "action.h"
+#include "pega-texto/action.h"
+#include "pega-texto/data.h"
+#include "pega-texto/expr.h"
+#include "pega-texto/grammar.h"
 
 #include <stdlib.h>
 
 /**
- * Result of the `pt_match*` functions.
+ * Match result: a {matched chars/error code, action result} pair.
  *
- * This is used only for easing the error handling, as any non-negative result
- * is considered a successful match.
+ * This is returned by the `pt_match*` functions.
  */
-typedef enum {
-	/// Subject string didn't match the given PEG.
-	PT_NO_MATCH = -1,
-	/// Error while allocating memory for the State/Action Stack.
-	PT_NO_STACK_MEM = -2,
+typedef struct {
+	/**
+	 * If positive, represents the number of characters matched;
+	 * otherwise, it's a error code.
+	 */
+	enum {
+		/// Subject string didn't match the given PEG.
+		PT_NO_MATCH = -1,
+		/// Error while allocating memory for the State/Action Stack.
+		PT_NO_STACK_MEM = -2,
+	} matched;
+	/**
+	 * Resulting data from the last top-level Action.
+	 *
+	 * If you need a single result for all top-level Actions, just create an
+	 * outer one that folds them (which will always be the last top-level one).
+	 */
+	pt_data data;
 } pt_match_result;
 
 /**
@@ -78,8 +91,7 @@ extern pt_match_options pt_default_match_options;
  * @param str   Subject string to match.
  * @param opts  Match options. If NULL, pega-texto will use the default value
  *              @ref pt_default_match_options.
- * @return Number of characters matched, if non-negative. If negative, it's an
- *         error code.
+ * @return Number of matched characters/error code, result of Action folding.
  */
 pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_match_options *opts);
 /**
@@ -91,8 +103,7 @@ pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_m
  * @param e    Expression.
  * @param str  Subject string to match.
  * @param opts Match options. If NULL, pega-texto will use the default value
- * @return Number of characters matched, if non-negative. If negative, it's an
- *         error code.
+ * @return Number of matched characters/error code, result of Action folding.
  */
 pt_match_result pt_match_expr(pt_expr *e, const char *str, pt_match_options *opts);
 /**
@@ -103,8 +114,7 @@ pt_match_result pt_match_expr(pt_expr *e, const char *str, pt_match_options *opt
  * @param g    Grammar.
  * @param str  Subject string to match.
  * @param opts Match options. If NULL, pega-texto will use the default value
- * @return Number of characters matched, if non-negative. If negative, it's an
- *         error code.
+ * @return Number of matched characters/error code, result of Action folding.
  */
 pt_match_result pt_match_grammar(pt_grammar *g, const char *str, pt_match_options *opts);
 

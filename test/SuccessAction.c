@@ -1,11 +1,11 @@
 #include "test-utils.h"
 
-void print_match(const pt_match_state_stack *s, const char *str, size_t start, size_t end, void *data) {
+void print_match(const pt_match_state_stack *s, const pt_match_action_stack *a, const char *str, size_t start, size_t end, void *data) {
 	size_t matched = end - start;
 	printf("Matched %d char(s) on \"%s\": \"%.*s\"\nPASS\n", matched, str, matched, str);
 }
 
-void each_iteration(const pt_match_state_stack *s, const char *str, void *data) {
+void each_iteration(const pt_match_state_stack *s, const pt_match_action_stack *a, const char *str, void *data) {
 	int i;
 	for(i = 0; i < s->size - 1; i++) fputc(' ', stdout);
 	pt_match_state *state = pt_get_current_state(s);
@@ -14,20 +14,16 @@ void each_iteration(const pt_match_state_stack *s, const char *str, void *data) 
 	printf(" on \"%s\"\n", str + state->pos);
 }
 
-void each_success(const pt_match_state_stack *s, const char *str, size_t start, size_t end, void *data) {
+void each_success(const pt_match_state_stack *s, const pt_match_action_stack *a, const char *str, size_t start, size_t end, void *data) {
 	int i;
 	for(i = 0; i < s->size - 1; i++) fputc(' ', stdout);
 	printf("#success = matched \"%.*s\"\n", end - start, str + start);
 }
 
-void each_fail(const pt_match_state_stack *s, const char *str, void *data) {
+void each_fail(const pt_match_state_stack *s, const pt_match_action_stack *a, const char *str, void *data) {
 	int i;
 	for(i = 0; i < s->size - 1; i++) fputc(' ', stdout);
 	puts("#fail");
-}
-
-void on_capture(const pt_match_state_stack *s, const char *str, size_t start, size_t end, void *data) {
-	printf("#captured %d: %.*s\n", end - start, end - start, str + start);
 }
 
 int main() {

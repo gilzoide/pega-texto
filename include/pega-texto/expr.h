@@ -46,7 +46,7 @@
 #ifndef __PEGA_TEXTO_EXPR_H__
 #define __PEGA_TEXTO_EXPR_H__
 
-#include "action.h"
+#include "pega-texto/action.h"
 
 #include <stdint.h>
 
@@ -77,7 +77,7 @@ typedef enum {
 } pt_operation;
 
 /// String version of the possible operations.
-extern const char *pt_operation_names[];
+extern const char * const pt_operation_names[];
 
 /// A function that receives a character (int) and match it (non-zero) or not (0).
 typedef int(*pt_custom_matcher)(int);

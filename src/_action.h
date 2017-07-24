@@ -18,19 +18,16 @@
  * Any bugs should be reported to <gilzoide@gmail.com>
  */
 
-/** @file pega-texto.h
- * Main include file.
+#ifndef __PEGA_TEXTO__ACTION_H__
+#define __PEGA_TEXTO__ACTION_H__
+
+#include <pega-texto/action.h>
+
+/**
+ * Run all actions in the Action Stack in the right way, folding them into
+ * one value.
  */
-
-#ifndef __PEGA_TEXTO_H__
-#define __PEGA_TEXTO_H__
-
-#include "action.h"
-#include "expr.h"
-#include "grammar.h"
-#include "match.h"
-#include "match-state.h"
-#include "validate.h"
+pt_data pt_run_actions(pt_match_action_stack *a, const char *str, void *userdata);
 
 #endif
 

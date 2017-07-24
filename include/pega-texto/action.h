@@ -25,6 +25,8 @@
 #ifndef __PEGA_TEXTO_ACTION_H__
 #define __PEGA_TEXTO_ACTION_H__
 
+#include "pega-texto/data.h"
+
 #include <stdlib.h>
 
 /// Forward declaration
@@ -37,23 +39,61 @@ typedef struct pt_match_state_stack_t pt_match_state_stack;
  * called only if the whole match succeeds, in the order the Expressions were
  * matched.
  *
+ * Expression Actions fold inner Actions' result into a single value.
+ *
  * Parameters:
  * - The original subject string
  * - The start index of the match/capture
  * - The final index of the match/capture
+ * - Number of #pt_data arguments 
+ * - #pt_data arguments, processed on inner Actions. This array is static and
+*    __will not__ exist after the Action returns.
  * - User custom data from match options
+ * Return:
+ *   Anything you want.
+ *   This result will be used as argument for other actions below in the stack.
+ *
+ * @sa @ref InfixCalculator.c
  */
-typedef void (*pt_expression_action)(const char *, size_t, size_t, void *);
+typedef pt_data(*pt_expression_action)(const char *,
+                                       size_t,
+									   size_t,
+									   int,
+									   pt_data *,
+									   void *);
+
+
+/**
+ * Queried actions, to be executed on match success.
+ */
+typedef struct {
+	pt_expression_action f;  ///< Action function.
+	size_t start;  ///< Start point of the match.
+	size_t end;  ///< End point of the match.
+} pt_match_action;
+
+/**
+ * Dynamic sequential stack of Actions.
+ */
+typedef struct {
+	pt_match_action *actions;  ///< Queried Actions buffer.
+	size_t size;  ///< Current number of Queried Actions.
+	size_t capacity;  ///< Capacity of the Queried Actions buffer.
+} pt_match_action_stack;
+
 
 /**
  * Action to be called on each match iteration.
  *
  * Parameters:
  * - A const pointer for the current State Stack, so you can examine it (if desired)
+ * - A const pointer for the current Action Stack, so you can examine it (if desired)
  * - The original subject string
  * - User custom data from match options
  */
-typedef void (*pt_iteration_action)(const pt_match_state_stack *, const char *,
+typedef void (*pt_iteration_action)(const pt_match_state_stack *,
+                                    const pt_match_action_stack *,
+                                    const char *,
                                     void *);
 
 /**
@@ -61,32 +101,40 @@ typedef void (*pt_iteration_action)(const pt_match_state_stack *, const char *,
  *
  * Parameters:
  * - A const pointer for the current State Stack, so you can examine it (if desired)
+ * - A const pointer for the current Action Stack, so you can examine it (if desired)
  * - The original subject string
  * - The start index of the match/capture
  * - The final index of the match/capture
  * - User custom data from match options
  */
-typedef void(*pt_success_action)(const pt_match_state_stack *, const char *,
-                                 size_t, size_t, void *);
+typedef void(*pt_success_action)(const pt_match_state_stack *,
+                                 const pt_match_action_stack *,
+                                 const char *,
+                                 size_t,
+                                 size_t,
+                                 void *);
 
 /**
  * Action to be called when the whole match fails.
  *
  * Parameters:
  * - A const pointer for the current State Stack, so you can examine it (if desired)
+ * - A const pointer for the current Action Stack, so you can examine it (if desired)
  * - The original subject string
  * - User custom data from match options
  */
-typedef void(*pt_fail_action)(const pt_match_state_stack *, const char *, void *);
-
+typedef void(*pt_fail_action)(const pt_match_state_stack *,
+                              const pt_match_action_stack *,
+							  const char *,
+                              void *);
 
 /**
  * @example FindIncludes.c
  * Simple example of a #pt_expression_action that prints the matched input.
  *
  * @verbatim
-#include "pega-texto.h"
-#include "macro-on.h"
+#include <pega-texto.h>
+#include <pega-texto/macro-on.h>
 #include "readfile.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -96,6 +144,13 @@ Found 7 includes
 @endverbatim
  * is the result of applying the program on it's code.
  */
+
+/**
+ * @example InfixCalculator.c
+ * #pt_expression_action example that folds inner Actions' results into one.
+ */
+
+
 
 #endif
 

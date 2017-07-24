@@ -25,8 +25,8 @@
 #ifndef __PEGA_TEXTO_MATCH_STATE_H__
 #define __PEGA_TEXTO_MATCH_STATE_H__
 
-#include "expr.h"
-#include "action.h"
+#include "pega-texto/expr.h"
+#include "pega-texto/action.h"
 
 #include <stdlib.h>
 
