@@ -118,7 +118,9 @@ pt_validate_result pt_grammar_validate(pt_grammar *g, pt_validate_behaviour bhv)
 	if(bhv != PT_VALIDATE_SKIP) {
 		uint8_t visited_rules[g->N];
 		memset(visited_rules, 0, g->N * sizeof(uint8_t));
-		res.status = pt_validate_expr_in_grammar(g, g->es[0], &res.rule, visited_rules);
+		res.status = g == NULL
+			         ? PT_VALIDATE_NULL
+				     : pt_validate_expr_in_grammar(g, g->es[0], &res.rule, visited_rules);
 		if(res.status != PT_VALIDATE_SUCCESS && bhv & PT_VALIDATE_PRINT_ERROR) {
 			fprintf(stderr, "[pt_grammar_validate] Error on rule \"%s\": %s\n",
 					g->names[res.rule], pt_validate_codes_description[res.status]);
@@ -130,6 +132,7 @@ pt_validate_result pt_grammar_validate(pt_grammar *g, pt_validate_behaviour bhv)
 
 const char * const pt_validate_codes_description[] = {
 	"No errors on grammar",
+	"Grammar is a NULL pointer",
 	"Range buffer must have at least 2 characters",
 	"Range characters must be numerically ordered",
 	"Non-terminal index is out of Grammar bounds",

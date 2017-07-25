@@ -20,6 +20,8 @@
 
 /** @file match.h
  * Matching algorithm for the Parsing Expression Grammars.
+ *
+ * @todo Better parsing error handling.
  */
 
 #ifndef __PEGA_TEXTO_MATCH_H__

@@ -32,6 +32,7 @@
  */
 typedef enum {
 	PT_VALIDATE_SUCCESS = 0,  ///< No errors on validation
+	PT_VALIDATE_NULL,  ///< Grammar is a NULL pointer
 	PT_VALIDATE_RANGE_BUFFER,  ///< Range buffer must have at least 2 characters
 	PT_VALIDATE_INVALID_RANGE,  ///< Range characters must be numerically ordered
 	PT_VALIDATE_OUT_OF_BOUNDS,  ///< Non-terminal index is out of Grammar bounds

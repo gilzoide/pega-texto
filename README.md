@@ -2,7 +2,8 @@ pega-texto
 ==========
 [![Build Status](https://travis-ci.org/gilzoide/pega-texto.svg?branch=master)](https://travis-ci.org/gilzoide/pega-texto)
 
-A runtime engine for [Parsing Expression Grammars (PEG)](http://bford.info/packrat/) in C.
+A runtime engine for [Parsing Expression Grammars (PEG)](http://bford.info/packrat/)
+in C, heavily inspired by [LPeg](http://www.inf.puc-rio.br/~roberto/lpeg/).
 
 In __pega-texto__, PEGs are just Expression arrays, and can be easily combined
 or rearranged dynamically. You can also provide a single expression (which, for
