@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
 	 * Sexp <- (List / Atom) Spaces
 	 * List <- "(" Spaces Sexp* ")"
 	 * Atom <- (!("(" / ")" / Space) .)+
-	 * Spaces <- (Space)*
+	 * Spaces <- Space*
 	 * Space <- Comment / \s
 	 * Comment <- ";" [^\n]*
 	 */

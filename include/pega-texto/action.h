@@ -31,6 +31,7 @@
 
 /// Forward declaration
 typedef struct pt_match_state_stack_t pt_match_state_stack;
+typedef struct pt_match_result_t pt_match_result;
 
 /**
  * Action to be called on an Expression, after the whole match succeeds.
@@ -127,6 +128,21 @@ typedef void(*pt_fail_action)(const pt_match_state_stack *,
                               const pt_match_action_stack *,
 							  const char *,
                               void *);
+
+/**
+ * Action to be called when the match algorithm ends, either with success or failure.
+ *
+ * Parameters:
+ * - A const pointer for the current State Stack, so you can examine it (if desired)
+ * - A const pointer for the current Action Stack, so you can examine it (if desired)
+ * - The original subject string
+ * - User custom data from match options
+ */
+typedef void(*pt_end_action)(const pt_match_state_stack *,
+                             const pt_match_action_stack *,
+                             const char *,
+                             pt_match_result,
+                             void *);
 
 /**
  * @example FindIncludes.c

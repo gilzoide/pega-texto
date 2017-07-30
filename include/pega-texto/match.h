@@ -39,7 +39,7 @@
  *
  * This is returned by the `pt_match*` functions.
  */
-typedef struct {
+typedef struct pt_match_result_t {
 	/**
 	 * If positive, represents the number of characters matched;
 	 * otherwise, it's a error code.
@@ -66,9 +66,8 @@ typedef struct {
  */
 typedef struct {
 	pt_iteration_action each_iteration;  ///< The action to be performed on each iteration
-	pt_success_action on_success;  ///< The action to be performed when the whole match succeeds
+	pt_end_action on_end;  ///< The action to be performed when the match algorithm ends
 	pt_success_action each_success;  ///< The action to be performed when any match succeeds
-	pt_fail_action on_fail;  ///< The action to be performed when the whole match fails
 	pt_fail_action each_fail;  ///< The action to be performed when the whole match fails
 	void *userdata;  ///< Custom user data for the actions
 	int initial_stack_capacity;  ///< The initial capacity for the stack. If 0, stack capacity will begin at a reasonable default

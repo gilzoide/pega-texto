@@ -7,11 +7,6 @@ typedef struct {
 	int sum;
 } count_and_sum;
 
-void on_success(const pt_match_state_stack *s, const pt_match_action_stack *a,
-                const char *str, size_t start, size_t end, void *data) {
-	puts("Numbers:");
-}
-
 pt_data count_and_sum_number(const char *str, size_t start, size_t end, int argc, pt_data *argv, void *_data) {
 	count_and_sum *data = (count_and_sum *) _data;
 	int num = atoi(str + start);
@@ -26,7 +21,6 @@ int main() {
 	pt_expr *e = Q(OR(Q_(&count_and_sum_number, F(isdigit), 1), ANY), 0);
 	count_and_sum cs = {};
 	pt_match_options opts = {
-		.on_success = on_success,
 		.userdata = &cs,
 	};
 

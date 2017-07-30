@@ -77,10 +77,6 @@ static pt_match_state *pt_match_succeed(pt_match_state_stack *s, pt_match_action
 		}
 	}
 	// for ended normally: no more states left
-	// aaaaaand ACTION!
-	if(opts->on_success) {
-		opts->on_success(s, a, str, 0, new_pos, opts->userdata);
-	}
 	*matched = new_pos;
 	return NULL;
 
@@ -111,10 +107,6 @@ static pt_match_state *pt_match_fail(pt_match_state_stack *s, pt_match_action_st
 		}
 	}
 	// for ended normally: no more states left
-	// aaaaaand ACTION!
-	if(opts->on_fail) {
-		opts->on_fail(s, a, str, opts->userdata);
-	}
 	return NULL;
 
 backtrack:
@@ -251,6 +243,9 @@ iterate_quantifier:
 	if(matched >= 0 && A.size > 0) {
 		action_result = pt_run_actions(&A, str, opts->userdata);
 	}
+	if(opts->on_end) {
+		opts->on_end(&S, &A, str, (pt_match_result){matched, action_result}, opts->userdata);
+	}
 
 	pt_destroy_action_stack(&A);
 err_action_stack:
@@ -268,3 +263,4 @@ pt_match_result pt_match_grammar(pt_grammar *g, const char *str, pt_match_option
 }
 
 pt_match_options pt_default_match_options = {};
+

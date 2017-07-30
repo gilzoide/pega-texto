@@ -10,7 +10,7 @@ or rearranged dynamically. You can also provide a single expression (which, for
 C, is the same as a 1 element array) for simple pattern-matching.
 
 To use the values matched, each Expression may have a user defined Action
-function that produce a value. Each Action receives the values produced by
+function that produces a value. Each Action receives the values produced by
 Actions executed by inner matched Expressions, folding them into a single value
 down the stack (yup, recursion!); you don't have to worry about creating your
 own stack!
