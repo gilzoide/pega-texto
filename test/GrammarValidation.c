@@ -5,7 +5,7 @@
 
 int test(pt_rule R[], int expected_output) {
 	pt_grammar *g = pt_create_grammar(R, 0);
-	pt_validate_result res = pt_grammar_validate(g, PT_VALIDATE_DEFAULT);
+	pt_validate_result res = pt_validate_grammar(g, PT_VALIDATE_DEFAULT);
 	pt_destroy_grammar(g);
 
 	if(res.status == expected_output) return 1;

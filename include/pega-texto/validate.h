@@ -32,7 +32,9 @@
  */
 typedef enum {
 	PT_VALIDATE_SUCCESS = 0,  ///< No errors on validation
-	PT_VALIDATE_NULL,  ///< Grammar is a NULL pointer
+	PT_VALIDATE_NULL_GRAMMAR,  ///< Grammar is a NULL pointer
+	PT_VALIDATE_EMPTY_GRAMMAR,  ///< Grammar doesn't present any Rules
+	PT_VALIDATE_NULL_POINTER,  ///< NULL pointer as Expression data
 	PT_VALIDATE_RANGE_BUFFER,  ///< Range buffer must have at least 2 characters
 	PT_VALIDATE_INVALID_RANGE,  ///< Range characters must be numerically ordered
 	PT_VALIDATE_OUT_OF_BOUNDS,  ///< Non-terminal index is out of Grammar bounds
@@ -99,7 +101,7 @@ typedef struct {
  * @param bhv Validation behaviour
  * @return Validate result: a {status code, invalid rule index (if there is one)} pair.
  */
-pt_validate_result pt_grammar_validate(pt_grammar *g, pt_validate_behaviour bhv);
+pt_validate_result pt_validate_grammar(pt_grammar *g, pt_validate_behaviour bhv);
 
 
 #endif

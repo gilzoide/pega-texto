@@ -18,23 +18,28 @@
  * Any bugs should be reported to <gilzoide@gmail.com>
  */
 
-/** @file pega-texto.h
- * Main include file.
+/** @file re.h
+ * Regex-like syntax for creating Grammars.
+ *
+ * @todo Explain the syntax
+ * @todo Explain Action call order
+ * @todo Example
+ * @todo Error handling
  */
 
-#ifndef __PEGA_TEXTO_H__
-#define __PEGA_TEXTO_H__
+#ifndef __PEGA_TEXTO_RE_H__
+#define __PEGA_TEXTO_RE_H__
 
-#include "pega-texto/action.h"
-#include "pega-texto/data.h"
-#include "pega-texto/expr.h"
 #include "pega-texto/grammar.h"
-#include "pega-texto/match.h"
-#include "pega-texto/match-state.h"
-#include "pega-texto/re.h"
-#include "pega-texto/validate.h"
 
-#define PT_VERSION "@PROJECT_VERSION@"
+/**
+ * Create a Grammar from a string, formated using a regex-like syntax.
+ *
+ * @param str Grammar definition string.
+ * @param ... Expression Actions, in order the marked expressions are matched.
+ * @return The created Grammar, or NULL on any errors.
+ */
+pt_grammar *pt_create_grammar_from_string(const char *str, ...);
 
 #endif
 

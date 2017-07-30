@@ -1,0 +1,34 @@
+Grammar <- S Definition+ !.
+Definition <- Identifier Arrow Exp
+
+Exp <- Seq ("/" S Seq)*
+Seq <- Prefix+
+Prefix <- ([&!] S)? Suffixed
+Suffixed <- Primary Suffix?
+Suffix <- [+*?] S
+        / "^" Number
+
+Primary <- "(" S Exp ")" S
+         / "{" S Exp "}" S
+         / Defined
+         / Literal
+         / Class
+         / "." S
+         / Identifier !Arrow
+
+Literal <- '"' (!'"' Character)* '"' S
+         / "'" (!"'" Character)* "'" S
+Class <- "[" "^"? Item (!"]" Item)* "]" S
+Item <- Defined / Range / Character
+Range <- . "-" [^]]
+Character <- "\\" [abfnrtv'"\[\]\\]
+           / "\\" [0-2][0-7][0-7]
+           / "\\" [0-7][0-7]?
+           / .
+Defined <- "\\" [wWaAcCdDgGlLpPsSuUxX] S
+
+S <- (\s / "#" [^\n]*)*
+Identifier <- [A-Za-z_][A-Za-z0-9_-]* S
+Arrow <- "<-" S
+Number <- [+-]? [0-9]+ S
+

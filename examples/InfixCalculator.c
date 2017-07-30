@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
 		{ NULL, NULL },
 	};
 	pt_grammar *g = pt_create_grammar(R, 0);
-	pt_grammar_validate(g, PT_VALIDATE_ABORT);
+	pt_validate_grammar(g, PT_VALIDATE_ABORT);
 
 	pt_match_result res = pt_match_grammar(g, argv[1], NULL);
 	if(res.matched >= 0) {
