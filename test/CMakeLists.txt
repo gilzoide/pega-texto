@@ -41,8 +41,5 @@ run_test(SuccessAction "PASS")
 run_test(CountAndSumNumbers "PASS")
 # validation
 run_test(GrammarValidation "PASS")
-# re
-file(COPY "re_grammar.txt" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
-run_test(Re "valgrind")
 # full tests
 run_test(MatchingParens "PASS")

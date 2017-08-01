@@ -31,7 +31,6 @@
 #include "pega-texto/grammar.h"
 #include "pega-texto/match.h"
 #include "pega-texto/match-state.h"
-#include "pega-texto/re.h"
 #include "pega-texto/validate.h"
 
 #define PT_VERSION "@PROJECT_VERSION@"

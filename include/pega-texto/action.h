@@ -40,7 +40,7 @@ typedef struct pt_match_result_t pt_match_result;
  * called only if the whole match succeeds, in the order the Expressions were
  * matched.
  *
- * Expression Actions fold inner Actions' result into a single value.
+ * Expression Actions reduce inner Actions' result into a single value.
  *
  * Parameters:
  * - The original subject string
@@ -55,6 +55,8 @@ typedef struct pt_match_result_t pt_match_result;
  *   This result will be used as argument for other actions below in the stack.
  *
  * @sa @ref InfixCalculator.c
+ * @sa @ref Lisp.c
+ * @sa @ref Re.c
  */
 typedef pt_data(*pt_expression_action)(const char *,
                                        size_t,
@@ -170,6 +172,12 @@ Found 7 includes
  * @example Lisp.c
  * #pt_expression_action example that folds a Lisp-like nested parentheses
  * language into nested Cons lists.
+ */
+
+/**
+ * @example Re.c
+ * Complex #pt_expression_action example that creates PEGs using a Regex-like
+ * syntax, and then matches the syntax described by itself.
  */
 
 #endif

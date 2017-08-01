@@ -1,39 +1,19 @@
-/*
- * Copyright 2017 Gil Barbosa Reis <gilzoide@gmail.com>
- * This file is part of pega-texto.
- * 
- * Pega-texto is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * Pega-texto is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public License
- * along with pega-texto.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Any bugs should be reported to <gilzoide@gmail.com>
+/* Regex-like syntax for creating pega-texto PEGs, parsed using pega-texto itself.
+ * Creates the parser for this language from a textual self representation,
+ * and then match itself.
  */
 
-#include <pega-texto/re.h>
-#include <pega-texto/match.h>
-#include <pega-texto/validate.h>
+#include <pega-texto.h>
 #include <pega-texto/macro-on.h>
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <ctype.h>
 #include <string.h>
 #include <stdarg.h>
 #include <assert.h>
 
-#ifdef NDEBUG
-# define BHV PT_VALIDATE_SKIP
-#else
-# define BHV PT_VALIDATE_ABORT
-#endif
+// Parser Actions
 
 pt_data tonumber(const char *str, size_t start, size_t end, int argc, pt_data *argv, void *data) {
 	return (pt_data){ .i = atoi(str + start) };
@@ -241,7 +221,7 @@ pt_data maybe_choice(const char *str, size_t start, size_t end, int argc, pt_dat
 	return (pt_data){ .p = e };
 }
 
-pt_grammar *pt_create_grammar_from_string(const char *str, ...) {
+pt_grammar *create_grammar_from_string(const char *str, ...) {
 	/* Grammar <- S Definition+ !.
 	 * Definition <- Identifier Arrow Exp
 	 *
@@ -313,7 +293,7 @@ pt_grammar *pt_create_grammar_from_string(const char *str, ...) {
 		{ NULL, NULL },
 	};
 	pt_grammar *re = pt_create_grammar(rules, 0);
-	pt_validate_grammar(re, BHV);
+	pt_validate_grammar(re, PT_VALIDATE_ABORT);
 
 	// Expression Actions
 	va_list actions;
@@ -331,6 +311,64 @@ pt_grammar *pt_create_grammar_from_string(const char *str, ...) {
 	return g;
 }
 
-#include <pega-texto/macro-off.h>
-#undef BHV
+char *readfile(const char *filename) {
+	FILE *fp = fopen(filename, "r");
+	assert(fp != NULL && "Error reading file");
+	fseek(fp, 0, SEEK_END);
+	long size = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+	char *buffer = malloc((size + 1) * sizeof(char));
+	assert(buffer && "[readfile] Couldn't malloc buffer");
+	fread(buffer, sizeof(char), size, fp);
+	buffer[size] = '\0';
+	fclose(fp);
+	return buffer;
+}
 
+int main(int argc, char **argv) {
+	char re_grammar[] =
+"Grammar <- S Definition+ !. \n"
+"Definition <- Identifier Arrow Exp \n"
+
+"Exp <- Seq (\"/\" S Seq)* \n"
+"Seq <- Prefix+ \n"
+"Prefix <- ([&!] S)? Suffixed \n"
+"Suffixed <- Primary Suffix? \n"
+"Suffix <- [+*?] S \n"
+"        / \"^\" Number \n"
+
+"Primary <- \"(\" S Exp \")\" S \n"
+"         / \"{\" S Exp \"}\" S \n"
+"         / Defined \n"
+"         / Literal \n"
+"         / Class \n"
+"         / \".\" S \n"
+"         / Identifier !Arrow \n"
+
+"Literal <- \'\"\' (!\'\"\' Character)* \'\"\' S \n"
+"         / \"\'\" (!\"\'\" Character)* \"\'\" S \n"
+"Class <- \"[\" \"^\"? Item (!\"]\" Item)* \"]\" S \n"
+"Item <- Defined / Range / Character \n"
+"Range <- . \"-\" [^]] \n"
+"Character <- \"\\\\\" [abfnrtv\'\"\\[\\]\\\\] \n"
+"           / \"\\\\\" [0-2][0-7][0-7] \n"
+"           / \"\\\\\" [0-7][0-7]? \n"
+"           / . \n"
+"Defined <- \"\\\\\" [wWaAcCdDgGlLpPsSuUxX] S \n"
+
+"S <- (\\s / \"#\" [^\\n]*)* \n"
+"Identifier <- [A-Za-z_][A-Za-z0-9_-]* S \n"
+"Arrow <- \"<-\" S \n"
+"Number <- [+-]? [0-9]+ S";
+
+	pt_grammar *g = create_grammar_from_string(re_grammar);
+	pt_validate_grammar(g, PT_VALIDATE_ABORT);
+
+	// Try to match itself
+	puts(pt_match_grammar(g, re_grammar, NULL).matched >= 0
+	     ? "PASS"
+		 : "FAIL");
+
+	pt_destroy_grammar(g);
+	return 0;
+}
