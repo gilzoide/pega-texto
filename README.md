@@ -12,8 +12,7 @@ C, is the same as a 1 element array) for simple pattern-matching.
 To use the values matched, each Expression may have a user defined Action
 function that produces a value. Each Action receives as parameter the values
 produced by Actions executed by inner matched Expressions, reducing them into a
-single value down the stack (yup, recursion!); you don't have to worry about
-creating your own stack!
+single value down the stack (yup, recursion)!
 
 
 Build
@@ -45,4 +44,10 @@ Documentation
 Everything is documented with [Doxygen](http://www.stack.nl/~dimitri/doxygen/).
 
 @todo put the generated docs on github-pages =]
+
+
+Change log
+----------
++ 1.1.0 - Added basic error handling support.
++ 1.0.0 - Expressions, Grammars, parsing, validation, actions.
 

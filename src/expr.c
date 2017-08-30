@@ -36,6 +36,7 @@ const char * const pt_operation_names[] = {
 	"PT_SEQUENCE",
 	"PT_CHOICE",
 	"PT_CUSTOM_MATCHER",
+	"PT_ERROR",
 };
 
 #define NEW_EXPR(body)                       \
@@ -51,7 +52,7 @@ pt_expr *pt_create_literal(const char *str, uint8_t own_characters, pt_expressio
 		new_expr->op = PT_LITERAL;
 		new_expr->data.characters = str;
 		new_expr->N = strlen(str);
-		new_expr->own_characters = own_characters;
+		new_expr->own_memory = own_characters;
 		new_expr->action = action;
 	)
 }
@@ -60,7 +61,7 @@ pt_expr *pt_create_set(const char *str, uint8_t own_characters, pt_expression_ac
 	NEW_EXPR(
 		new_expr->op = PT_SET;
 		new_expr->data.characters = str;
-		new_expr->own_characters = own_characters;
+		new_expr->own_memory = own_characters;
 		new_expr->action = action;
 	)
 }
@@ -69,7 +70,7 @@ pt_expr *pt_create_range(const char *str, uint8_t own_characters, pt_expression_
 	NEW_EXPR(
 		new_expr->op = PT_RANGE;
 		new_expr->data.characters = str;
-		new_expr->own_characters = own_characters;
+		new_expr->own_memory = own_characters;
 		new_expr->action = action;
 	)
 }
@@ -85,7 +86,7 @@ pt_expr *pt_create_non_terminal(const char *rule, uint8_t own_characters, pt_exp
 	NEW_EXPR(
 		new_expr->op = PT_NON_TERMINAL;
 		new_expr->data.characters = rule;
-		new_expr->own_characters = own_characters;
+		new_expr->own_memory = own_characters;
 		new_expr->N = -1;
 		new_expr->action = action;
 	)
@@ -105,6 +106,7 @@ pt_expr *pt_create_quantifier(pt_expr *e, int N, pt_expression_action action) {
 		new_expr->op = PT_QUANTIFIER;
 		new_expr->N = N;
 		new_expr->data.e = e;
+		new_expr->own_memory = 1;
 		new_expr->action = action;
 	)
 }
@@ -113,6 +115,7 @@ pt_expr *pt_create_and(pt_expr *e) {
 	NEW_EXPR(
 		new_expr->op = PT_AND;
 		new_expr->data.e = e;
+		new_expr->own_memory = 1;
 		new_expr->action = NULL;
 	)
 }
@@ -121,6 +124,7 @@ pt_expr *pt_create_not(pt_expr *e) {
 	NEW_EXPR(
 		new_expr->op = PT_NOT;
 		new_expr->data.e = e;
+		new_expr->own_memory = 1;
 		new_expr->action = NULL;
 	)
 }
@@ -151,19 +155,33 @@ pt_expr *pt_create_custom_matcher(pt_custom_matcher f, pt_expression_action acti
 	)
 }
 
+pt_expr *pt_create_error(int code, pt_expr *sync) {
+	NEW_EXPR(
+		new_expr->op = PT_ERROR;
+		new_expr->N = code;
+		new_expr->data.e = sync;
+		new_expr->own_memory = 1;
+		new_expr->action = NULL;
+	)
+}
+
 void pt_destroy_expr(pt_expr *e) {
 	int i;
 	switch(e->op) {
 		case PT_NON_TERMINAL:
-			if(!e->data.characters) break;
+			if(!e->data.characters) {
+				break;
+			}
 		case PT_LITERAL: case PT_SET: case PT_RANGE:
-			if(e->own_characters) {
+			if(e->own_memory) {
 				free((void *) e->data.characters);
 			}
 			break;
 
-		case PT_QUANTIFIER: case PT_AND: case PT_NOT:
-			pt_destroy_expr(e->data.e);
+		case PT_QUANTIFIER: case PT_AND: case PT_NOT: case PT_ERROR:
+			if(e->own_memory) {
+				pt_destroy_expr(e->data.e);
+			}
 			break;
 
 		case PT_SEQUENCE: case PT_CHOICE:

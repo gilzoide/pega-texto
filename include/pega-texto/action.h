@@ -60,10 +60,24 @@ typedef struct pt_match_result_t pt_match_result;
  */
 typedef pt_data(*pt_expression_action)(const char *,
                                        size_t,
-									   size_t,
-									   int,
-									   pt_data *,
-									   void *);
+                                       size_t,
+                                       int,
+                                       pt_data *,
+                                       void *);
+
+/**
+ * Action to be called when an Error Expression is matched (on syntatic errors).
+ *
+ * Parameters:
+ * - The original subject string
+ * - The position where the error was encountered
+ * - The error code
+ * - User custom data from match options
+ */
+typedef void(*pt_error_action)(const char *,
+                               size_t,
+                               int,
+                               void *);
 
 
 /**
@@ -100,7 +114,7 @@ typedef void (*pt_iteration_action)(const pt_match_state_stack *,
                                     void *);
 
 /**
- * Action to be called when the whole match succeeds.
+ * Action to be called when a match succeeds.
  *
  * Parameters:
  * - A const pointer for the current State Stack, so you can examine it (if desired)
@@ -118,7 +132,7 @@ typedef void(*pt_success_action)(const pt_match_state_stack *,
                                  void *);
 
 /**
- * Action to be called when the whole match fails.
+ * Action to be called when a match fails.
  *
  * Parameters:
  * - A const pointer for the current State Stack, so you can examine it (if desired)
@@ -128,7 +142,7 @@ typedef void(*pt_success_action)(const pt_match_state_stack *,
  */
 typedef void(*pt_fail_action)(const pt_match_state_stack *,
                               const pt_match_action_stack *,
-							  const char *,
+                              const char *,
                               void *);
 
 /**

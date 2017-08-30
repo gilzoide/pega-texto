@@ -28,7 +28,9 @@
 static int pt_safely_find_non_terminal_index(const char *name, const char **names, int N) {
 	int i;
 	for(i = 0; i < N; i++) {
-		if(strcmp(name, names[i]) == 0) return i;
+		if(strcmp(name, names[i]) == 0) {
+			return i;
+		}
 	}
 	return -1;
 }
@@ -59,6 +61,8 @@ static int pt_is_nullable(const pt_grammar *g, const pt_expr *e) {
 				}
 			}
 			break;
+
+		default: break;
 	}
 	return 0;
 }
@@ -71,20 +75,28 @@ int pt_validate_expr_in_grammar(pt_grammar *g, pt_expr *e, uint16_t *rule, uint8
 
 	switch(e->op) {
 		case PT_RANGE:
-			if(e->data.characters == NULL) return PT_VALIDATE_NULL_POINTER;
-			else if(strlen(e->data.characters) < 2) return PT_VALIDATE_RANGE_BUFFER;
-			else if(e->data.characters[0] > e->data.characters[1]) return PT_VALIDATE_INVALID_RANGE;
+			if(e->data.characters == NULL) {
+				return PT_VALIDATE_NULL_POINTER;
+			}
+			else if(strlen(e->data.characters) < 2) {
+				return PT_VALIDATE_RANGE_BUFFER;
+			}
+			else if(e->data.characters[0] > e->data.characters[1]) {
+				return PT_VALIDATE_INVALID_RANGE;
+			}
 			break;
 
 		case PT_NON_TERMINAL:
 			if(e->N < 0) {
-				if(e->data.characters == NULL) return PT_VALIDATE_NULL_POINTER;
+				if(e->data.characters == NULL) {
+					return PT_VALIDATE_NULL_POINTER;
+				}
 				else if((e->N = pt_safely_find_non_terminal_index(e->data.characters, g->names, g->N)) == -1) {
 					return PT_VALIDATE_UNDEFINED_RULE;
 				}
 			}
-			else {
-				if(e->N >= g->N) return PT_VALIDATE_OUT_OF_BOUNDS;
+			else if(e->N >= g->N) {
+				return PT_VALIDATE_OUT_OF_BOUNDS;
 			}
 			// Only visit non-terminal if it wasn't yet been visited
 			if(visited_rules[e->N] == 0) {
@@ -97,23 +109,46 @@ int pt_validate_expr_in_grammar(pt_grammar *g, pt_expr *e, uint16_t *rule, uint8
 			break;
 
 		case PT_QUANTIFIER:
-			if(e->data.e == NULL) return PT_VALIDATE_NULL_POINTER;
+			if(e->data.e == NULL) {
+				return PT_VALIDATE_NULL_POINTER;
+			}
 			else if((res = pt_validate_expr_in_grammar(g, e->data.e, rule, visited_rules)) != PT_VALIDATE_SUCCESS) {
 				return res;
 			}
-			else if(e->N == 0 && pt_is_nullable(g, e->data.e)) return PT_VALIDATE_LOOP_EMPTY_STRING;
+			else if(e->N == 0 && pt_is_nullable(g, e->data.e)) {
+				return PT_VALIDATE_LOOP_EMPTY_STRING;
+			}
 			break;
 
 		case PT_AND: case PT_NOT:
-			if(e->data.e == NULL) return PT_VALIDATE_NULL_POINTER;
-			else return pt_validate_expr_in_grammar(g, e->data.e, rule, visited_rules);
+			if(e->data.e == NULL) {
+				return PT_VALIDATE_NULL_POINTER;
+			}
+			else {
+				return pt_validate_expr_in_grammar(g, e->data.e, rule, visited_rules);
+			}
 
 		case PT_SEQUENCE: case PT_CHOICE:
-			if(e->data.es == NULL) return PT_VALIDATE_NULL_POINTER;
+			if(e->data.es == NULL) {
+				return PT_VALIDATE_NULL_POINTER;
+			}
 			for(i = 0; i < e->N; i++) {
-				if(e->data.es[i] == NULL) return PT_VALIDATE_NULL_POINTER;
+				if(e->data.es[i] == NULL) {
+					return PT_VALIDATE_NULL_POINTER;
+				}
 				else if((res = pt_validate_expr_in_grammar(g, e->data.es[i], rule, visited_rules)) != PT_VALIDATE_SUCCESS) {
 					return res;
+				}
+			}
+			break;
+
+		case PT_ERROR:
+			if(e->data.e != NULL) {
+				if(pt_is_nullable(g, e->data.e)) {
+					return PT_VALIDATE_LOOP_EMPTY_STRING;
+				}
+				else {
+					return pt_validate_expr_in_grammar(g, e->data.e, rule, visited_rules);
 				}
 			}
 			break;
@@ -124,8 +159,12 @@ int pt_validate_expr_in_grammar(pt_grammar *g, pt_expr *e, uint16_t *rule, uint8
 pt_validate_result pt_validate_grammar(pt_grammar *g, pt_validate_behaviour bhv) {
 	pt_validate_result res = {};
 	if(bhv != PT_VALIDATE_SKIP) {
-		if(g == NULL) res.status = PT_VALIDATE_NULL_GRAMMAR;
-		else if(g->N == 0) res.status = PT_VALIDATE_EMPTY_GRAMMAR;
+		if(g == NULL) {
+			res.status = PT_VALIDATE_NULL_GRAMMAR;
+		}
+		else if(g->N == 0) {
+			res.status = PT_VALIDATE_EMPTY_GRAMMAR;
+		}
 		else {
 			uint8_t visited_rules[g->N];
 			memset(visited_rules, 0, g->N * sizeof(uint8_t));
@@ -137,7 +176,9 @@ pt_validate_result pt_validate_grammar(pt_grammar *g, pt_validate_behaviour bhv)
 				fprintf(stderr, " on rule \"%s\"", g->names[res.rule]);
 			}
 			fprintf(stderr, ": %s\n", pt_validate_codes_description[res.status]);
-			if(bhv == PT_VALIDATE_ABORT) exit(res.status);
+			if(bhv == PT_VALIDATE_ABORT) {
+				exit(res.status);
+			}
 		}
 	}
 	return res;

@@ -38,7 +38,9 @@ pt_grammar *pt_create_grammar(pt_rule *rules, uint8_t own_names) {
 		}
 		// malloc error
 		else {
-			if(g->es) free(g->es);
+			if(g->es) {
+				free(g->es);
+			}
 			free(g);
 			g = NULL;
 		}

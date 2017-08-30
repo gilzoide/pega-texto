@@ -30,6 +30,9 @@
 
 #include <stdlib.h>
 
+/// Default initial stack capacity.
+#define PT_DEFAULT_INITIAL_STACK_CAPACITY 8
+
 /**
  * A State on the Matching algorithm.
  */

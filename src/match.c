@@ -66,6 +66,10 @@ static pt_match_state *pt_match_succeed(pt_match_state_stack *s, pt_match_action
 				a->size = state->ac; // discard queried actions
 				goto backtrack;
 
+			case PT_ERROR:
+				pt_destroy_expr(s->states[i + 1].e);  // destroy the syncronization expression wrapper
+				break;
+
 			default: // query action, if there is any
 				if(state->e->action) {
 					if(pt_push_action(a, state->e->action, state->pos, new_pos) == NULL) {
@@ -104,6 +108,10 @@ static pt_match_state *pt_match_fail(pt_match_state_stack *s, pt_match_action_st
 			case PT_NOT:
 				state->r1 = 1; // NOT fail = success
 				goto backtrack;
+
+			case PT_ERROR:
+				pt_destroy_expr(s->states[i + 1].e);  // destroy the syncronization expression wrapper
+				break;
 		}
 	}
 	// for ended normally: no more states left
@@ -116,12 +124,32 @@ backtrack:
 	return s->states + i;
 }
 
+/// An error was found: push a wrapper of the syncronization Expression, if there is any
+#include <pega-texto/macro-on.h>
+static pt_match_state *pt_match_error(pt_match_state_stack *s, pt_match_action_stack *a) {
+	pt_match_state *state = pt_get_current_state(s);
+	if(state->e->data.e) {
+		pt_expr *but_expr = BUT(state->e->data.e);
+		// don't double free the sync Expression, as Error Expression owns it
+		but_expr->data.es[0]->own_memory = 0;
+		state = pt_push_state(s, Q(but_expr, 0), state->pos, a->size);
+		return state;
+	}
+	else {
+		return NULL;
+	}
+}
+#include <pega-texto/macro-off.h>
+
 pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_match_options *opts) {
 	int matched;
+	int matched_error = 0;
 	pt_data action_result = {};
 	pt_match_state_stack S;
 	pt_match_action_stack A;
-	if(opts == NULL) opts = &pt_default_match_options;
+	if(opts == NULL) {
+		opts = &pt_default_match_options;
+	}
 	if(!pt_initialize_state_stack(&S, opts->initial_stack_capacity)) {
 		matched = PT_NO_STACK_MEM;
 		goto err_state_stack;
@@ -138,10 +166,12 @@ pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_m
 
 	// match loop
 	while(state) {
-		if(opts->each_iteration) opts->each_iteration(&S, &A, str, opts->userdata);
+		if(opts->each_iteration) {
+			opts->each_iteration(&S, &A, str, opts->userdata);
+		}
 		ptr = str + state->pos;
 		e = state->e;
-		matched = -1;
+		matched = PT_NO_MATCH;
 
 		switch(e->op) {
 			// Primary
@@ -180,16 +210,26 @@ pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_m
 			case PT_QUANTIFIER:
 				// "at least N" quantifier
 				if(e->N >= 0) {
-					if(state->r1 >= 0) goto iterate_quantifier;
-					else if(-(state->r1) > e->N) matched = state->r2;
+					if(state->r1 >= 0) {
+						goto iterate_quantifier;
+					}
+					else if(-(state->r1) > e->N) {
+						matched = state->r2;
+					}
 				}
 				// "at most N" quantifier
 				else {
 					if(state->r1 >= 0) {
-						if(state->r1 < -(e->N)) goto iterate_quantifier;
-						else matched = state->r2;
+						if(state->r1 < -(e->N)) {
+							goto iterate_quantifier;
+						}
+						else {
+							matched = state->r2;
+						}
 					}
-					else if(state->r1 >= e->N - 1) matched = state->r2;
+					else if(state->r1 >= e->N - 1) {
+						matched = state->r2;
+					}
 				}
 				break;
 iterate_quantifier:
@@ -204,18 +244,23 @@ iterate_quantifier:
 					break;
 				}
 				// was succeeding, so fail!
-				else if(state->r1 < 0) break;
+				else if(state->r1 < 0) {
+					break;
+				}
 				// none, fallthrough
 			case PT_AND:
 				state = pt_push_state(&S, e->data.e, state->pos, A.size);
 				continue;
 
+			// N-ary
 			case PT_SEQUENCE:
 				if(state->r1 < e->N) {
 					state = pt_push_state(&S, e->data.es[state->r1++], state->pos + state->r2, A.size);
 					continue;
 				}
-				else matched = state->r2;
+				else {
+					matched = state->r2;
+				}
 				break;
 
 			case PT_CHOICE:
@@ -225,22 +270,35 @@ iterate_quantifier:
 				}
 				break;
 
+			// Others
 			case PT_CUSTOM_MATCHER:
 				if(e->data.matcher(*ptr)) {
 					matched = 1;
 				}
 				break;
 
+			case PT_ERROR:
+				// mark that a syntactic error ocurred, so even syncing we remember this
+				matched_error = 1;
+				if(opts->on_error) {
+					opts->on_error(str, state->pos, e->N, opts->userdata);
+				}
+				matched = PT_MATCHED_ERROR;
+				break;
+
 			// Unknown operation: always fail
 			default: break;
 		}
 
-		state = matched < 0
-				? pt_match_fail(&S, &A, str, opts)
-				: pt_match_succeed(&S, &A, &matched, str, state->pos + matched, opts);
+		state = matched == PT_NO_MATCH ? pt_match_fail(&S, &A, str, opts)
+		      : matched == PT_MATCHED_ERROR ? pt_match_error(&S, &A)
+		      : pt_match_succeed(&S, &A, &matched, str, state->pos + matched, opts);
 	}
 
-	if(matched >= 0 && A.size > 0) {
+	if(matched_error) {
+		matched = PT_MATCHED_ERROR;
+	}
+	else if(matched >= 0 && A.size > 0) {
 		action_result = pt_run_actions(&A, str, opts->userdata);
 	}
 	if(opts->on_end) {

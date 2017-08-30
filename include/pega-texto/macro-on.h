@@ -76,6 +76,8 @@
 /// Create a Custom Matcher Expression.
 #define F(f)         (pt_create_custom_matcher(f, NULL))
 #define F_(a, f)     (pt_create_custom_matcher(f, a))
+/// Create an Error Expression.
+#define E(c, s)      (pt_create_error(c, s))
 
 /* These are complex Expressions that are widely used.
  * As macros, they're cost-free abstractions, so cool!

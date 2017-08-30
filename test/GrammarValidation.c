@@ -39,6 +39,10 @@ int main() {
 		test((pt_rule[]){
 			{ "(&.)*", Q(AND(ANY), 0) },
 			{ NULL, NULL },
+		}, PT_VALIDATE_LOOP_EMPTY_STRING) &&
+		test((pt_rule[]){
+			{ "loop empty error", E(0, NOT(ANY)) },
+			{ NULL, NULL },
 		}, PT_VALIDATE_LOOP_EMPTY_STRING)
 		? "PASS" : "FAIL");
 	return 0;

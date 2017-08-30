@@ -49,6 +49,8 @@ typedef struct pt_match_result_t {
 		PT_NO_MATCH = -1,
 		/// Error while allocating memory for the State/Action Stack.
 		PT_NO_STACK_MEM = -2,
+		/// Matched an Error Expression.
+		PT_MATCHED_ERROR = -3,
 	} matched;
 	/**
 	 * Resulting data from the last top-level Action.
@@ -69,6 +71,7 @@ typedef struct {
 	pt_end_action on_end;  ///< The action to be performed when the match algorithm ends
 	pt_success_action each_success;  ///< The action to be performed when any match succeeds
 	pt_fail_action each_fail;  ///< The action to be performed when the whole match fails
+	pt_error_action on_error;  ///< The action to be performed when a syntactic error is found
 	void *userdata;  ///< Custom user data for the actions
 	int initial_stack_capacity;  ///< The initial capacity for the stack. If 0, stack capacity will begin at a reasonable default
 } pt_match_options;

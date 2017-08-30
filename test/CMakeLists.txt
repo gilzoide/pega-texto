@@ -41,5 +41,7 @@ run_test(SuccessAction "PASS")
 run_test(CountAndSumNumbers "PASS")
 # validation
 run_test(GrammarValidation "PASS")
+# syntatic error
+run_test(SyntacticError "valgrind")
 # full tests
 run_test(MatchingParens "PASS")

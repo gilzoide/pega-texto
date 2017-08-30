@@ -28,7 +28,9 @@ int main() {
 	if(res.matched > 0) {
 		printf("Found %d numbers with sum = %d\nPASS\n", cs.count, cs.sum);
 	}
-	else puts("FAIL");
+	else {
+		puts("FAIL");
+	}
 
 	pt_destroy_expr(e);
 	return 0;

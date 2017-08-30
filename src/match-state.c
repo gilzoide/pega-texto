@@ -20,14 +20,19 @@
 
 #include "_match-state.h"
 
+
 int pt_initialize_state_stack(pt_match_state_stack *s, size_t initial_capacity) {
-	if(initial_capacity == 0) initial_capacity = 8;
+	if(initial_capacity == 0) {
+		initial_capacity = PT_DEFAULT_INITIAL_STACK_CAPACITY;
+	}
 	if(s->states = malloc(initial_capacity * sizeof(pt_match_state))) {
 		s->size = 0;
 		s->capacity = initial_capacity;
 		return 1;
 	}
-	else return 0;
+	else {
+		return 0;
+	}
 }
 
 void pt_destroy_state_stack(pt_match_state_stack *s) {
@@ -43,7 +48,9 @@ pt_match_state *pt_push_state(pt_match_state_stack *s, pt_expr *e, size_t pos, s
 			s->capacity = new_capacity;
 			s->states = state;
 		}
-		else return NULL;
+		else {
+			return NULL;
+		}
 	}
 	state = s->states + (s->size)++;
 	state->e = e;
@@ -60,13 +67,17 @@ pt_match_state *pt_get_current_state(const pt_match_state_stack *s) {
 }
 
 int pt_initialize_action_stack(pt_match_action_stack *a, size_t initial_capacity) {
-	if(initial_capacity == 0) initial_capacity = 8;
+	if(initial_capacity == 0) {
+		initial_capacity = PT_DEFAULT_INITIAL_STACK_CAPACITY;
+	}
 	if(a->actions = malloc(initial_capacity * sizeof(pt_match_action))) {
 		a->size = 0;
 		a->capacity = initial_capacity;
 		return 1;
 	}
-	else return 0;
+	else {
+		return 0;
+	}
 }
 
 void pt_destroy_action_stack(pt_match_action_stack *a) {
@@ -82,7 +93,9 @@ pt_match_action *pt_push_action(pt_match_action_stack *a, pt_expression_action f
 			a->capacity = new_capacity;
 			a->actions = action;
 		}
-		else return NULL;
+		else {
+			return NULL;
+		}
 	}
 	action = a->actions + (a->size)++;
 	action->f = f;

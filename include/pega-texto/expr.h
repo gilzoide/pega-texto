@@ -41,6 +41,8 @@
  *   the first one to the last.
  * - __Custom Matcher__: match if function `matcher` applied to next character
  *   returns non-zero.
+ * - __Error__: represents a syntactic error, with optional syncronization.
+ *   Every error has a numeric code, which should all differ.
  */
 
 #ifndef __PEGA_TEXTO_EXPR_H__
@@ -74,6 +76,7 @@ typedef enum {
 	// Custom match by function
 	PT_CUSTOM_MATCHER,   // function(c) // If return 0, match fails
 	                                    // If return nonzero, match succeeds, advance 1
+	PT_ERROR,            // ERROR // Represents a syntactic error
 } pt_operation;
 
 /// String version of the possible operations.
@@ -88,7 +91,7 @@ typedef struct pt_expr_t {
 	union {
 		/// Literals, Character Sets, Ranges and Non-Terminal names.
 		const char *characters;
-		/// Quantifier, And & Not: operand.
+		/// Quantifier, And & Not: operand, Error sync Expression.
 		struct pt_expr_t *e;
 		/// N-ary operators: a N-array of operands.
 		struct pt_expr_t **es;
@@ -96,9 +99,9 @@ typedef struct pt_expr_t {
 		pt_custom_matcher matcher;
 	} data;
 	pt_expression_action action;  ///< Action to be called when the whole match succeeds.
-	int16_t N;  ///< Quantifier, array size for N-ary operations, Non-Terminal index or Literal length.
+	int16_t N;  ///< Quantifier, array size for N-ary operations, Non-Terminal index or Literal length, Error code.
 	uint8_t op;  ///< Operation to be performed.
-	uint8_t own_characters : 1;  ///< Do Expression own the `characters` buffer?
+	uint8_t own_memory : 1;  ///< Do Expression own the `characters` or `e` buffer?
 } pt_expr;
 
 /**
@@ -189,6 +192,17 @@ pt_expr *pt_create_choice(pt_expr **es, int N, pt_expression_action action);
  * @param action Action associated to the Expression.
  */
 pt_expr *pt_create_custom_matcher(pt_custom_matcher f, pt_expression_action action);
+/**
+ * Create an Error Expression.
+ *
+ * @warning As syncronization is done using a combination of a Quantifier and
+ *          the syncronization Expression, it __must not__ accept empty string.
+ *          This is checked for in #pt_validate_grammar.
+ *
+ * @param code Numeric error code.
+ * @param sync Syncronization Expression, may be `NULL` if no syncing is wanted.
+ */
+pt_expr *pt_create_error(int code, pt_expr *sync);
 
 /**
  * Destroy an Expression, freeing the memory used.

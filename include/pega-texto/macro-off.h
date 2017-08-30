@@ -54,6 +54,7 @@
 #undef OR_
 #undef F
 #undef F_
+#undef E
 #undef BUT
 #undef BUT_
 
