@@ -24,6 +24,13 @@
 #include <stdio.h>
 #include <string.h>
 
+// Auxiliary structure for keeping validations per Rule, to avoid Cycles between
+// Non-texminals.
+typedef struct {
+	uint8_t was_visited : 1;
+	uint8_t is_nullable_visited : 1;
+} pt_validation_per_rule;
+
 /// Look for a name in the array.
 static int pt_safely_find_non_terminal_index(const char *name, const char **names, int N) {
 	int i;
@@ -35,43 +42,63 @@ static int pt_safely_find_non_terminal_index(const char *name, const char **name
 	return -1;
 }
 
+// Forward declaration.
+static int pt_validate_expr_in_grammar(pt_grammar *g, pt_expr *e, uint16_t *rule, pt_validation_per_rule *visited_rules);
+
 /// Is an Expression Nullable (does it accept the empty string)?
-static int pt_is_nullable(const pt_grammar *g, const pt_expr *e) {
+static int pt_is_nullable(pt_grammar *g, pt_expr *e, uint16_t *rule, pt_validation_per_rule *visited_rules) {
 	int i, res;
+	uint16_t cur_rule = *rule;
+	visited_rules[cur_rule].is_nullable_visited = 1;
+
 	switch(e->op) {
 		case PT_AND: case PT_NOT:
-			return 1;
+			return PT_VALIDATE_LOOP_EMPTY_STRING;
 
 		case PT_QUANTIFIER:
-			return e->N <= 0;
+			return e->N <= 0 ? PT_VALIDATE_LOOP_EMPTY_STRING : PT_VALIDATE_SUCCESS;
 
 		case PT_NON_TERMINAL:
-			return pt_is_nullable(g, g->es[e->N]);
+			// Only visit non-terminal if it hasn't yet been visited
+			if(visited_rules[e->N].is_nullable_visited == 0) {
+				*rule = e->N;
+				if((res = pt_validate_expr_in_grammar(g, e->data.e, rule, visited_rules)) != PT_VALIDATE_SUCCESS) {
+					return res;
+				}
+				*rule = cur_rule;
+				if((res = pt_is_nullable(g, g->es[e->N], rule, visited_rules)) != PT_VALIDATE_SUCCESS) {
+					return res;
+				}
+			}
+			break;
 
 		case PT_SEQUENCE:
-			for(res = i = 0; i < e->N; i++) {
-				res |= pt_is_nullable(g, e->data.es[i]);
+			for(i = 0; i < e->N; i++) {
+				res = pt_is_nullable(g, e->data.es[i], rule, visited_rules);
+				if(res == PT_VALIDATE_SUCCESS || res != PT_VALIDATE_LOOP_EMPTY_STRING) {
+					return res;
+				}
 			}
-			return !res;
-
+			return PT_VALIDATE_LOOP_EMPTY_STRING;
+		
 		case PT_CHOICE:
 			for(i = 0; i < e->N; i++) {
-				if(res = pt_is_nullable(g, e->data.es[i])) {
-					return 1;
+				if((res = pt_is_nullable(g, e->data.es[i], rule, visited_rules)) != PT_VALIDATE_SUCCESS) {
+					return res;
 				}
 			}
 			break;
 
 		default: break;
 	}
-	return 0;
+	return PT_VALIDATE_SUCCESS;
 }
 
 /// Validates a single expression in the Grammar, to be called recursively.
-int pt_validate_expr_in_grammar(pt_grammar *g, pt_expr *e, uint16_t *rule, uint8_t *visited_rules) {
+static int pt_validate_expr_in_grammar(pt_grammar *g, pt_expr *e, uint16_t *rule, pt_validation_per_rule *visited_rules) {
 	int i, res;
 	uint16_t cur_rule = *rule;
-	visited_rules[cur_rule] = 1;
+	visited_rules[cur_rule].was_visited = 1;
 
 	switch(e->op) {
 		case PT_RANGE:
@@ -98,8 +125,8 @@ int pt_validate_expr_in_grammar(pt_grammar *g, pt_expr *e, uint16_t *rule, uint8
 			else if(e->N >= g->N) {
 				return PT_VALIDATE_OUT_OF_BOUNDS;
 			}
-			// Only visit non-terminal if it wasn't yet been visited
-			if(visited_rules[e->N] == 0) {
+			// Only visit non-terminal if it hasn't yet been visited
+			if(visited_rules[e->N].was_visited == 0) {
 				*rule = e->N;
 				if((res = pt_validate_expr_in_grammar(g, g->es[e->N], rule, visited_rules)) != PT_VALIDATE_SUCCESS) {
 					return res;
@@ -115,7 +142,7 @@ int pt_validate_expr_in_grammar(pt_grammar *g, pt_expr *e, uint16_t *rule, uint8
 			else if((res = pt_validate_expr_in_grammar(g, e->data.e, rule, visited_rules)) != PT_VALIDATE_SUCCESS) {
 				return res;
 			}
-			else if(e->N == 0 && pt_is_nullable(g, e->data.e)) {
+			else if(e->N == 0 && pt_is_nullable(g, e->data.e, rule, visited_rules)) {
 				return PT_VALIDATE_LOOP_EMPTY_STRING;
 			}
 			break;
@@ -144,11 +171,11 @@ int pt_validate_expr_in_grammar(pt_grammar *g, pt_expr *e, uint16_t *rule, uint8
 
 		case PT_ERROR:
 			if(e->data.e != NULL) {
-				if(pt_is_nullable(g, e->data.e)) {
-					return PT_VALIDATE_LOOP_EMPTY_STRING;
+				if((res = pt_validate_expr_in_grammar(g, e->data.e, rule, visited_rules)) != PT_VALIDATE_SUCCESS) {
+					return res;
 				}
-				else {
-					return pt_validate_expr_in_grammar(g, e->data.e, rule, visited_rules);
+				else if(pt_is_nullable(g, e->data.e, rule, visited_rules)) {
+					return PT_VALIDATE_LOOP_EMPTY_STRING;
 				}
 			}
 			break;
@@ -166,8 +193,8 @@ pt_validate_result pt_validate_grammar(pt_grammar *g, pt_validate_behaviour bhv)
 			res.status = PT_VALIDATE_EMPTY_GRAMMAR;
 		}
 		else {
-			uint8_t visited_rules[g->N];
-			memset(visited_rules, 0, g->N * sizeof(uint8_t));
+			pt_validation_per_rule visited_rules[g->N];
+			memset(visited_rules, 0, g->N * sizeof(pt_validation_per_rule));
 			res.status = pt_validate_expr_in_grammar(g, g->es[0], &res.rule, visited_rules);
 		}
 		if(res.status != PT_VALIDATE_SUCCESS && bhv & PT_VALIDATE_PRINT_ERROR) {

@@ -41,6 +41,10 @@ int main() {
 			{ NULL, NULL },
 		}, PT_VALIDATE_LOOP_EMPTY_STRING) &&
 		test((pt_rule[]){
+			{ "A", SEQ(ANY, V("B")) },
+			{ "B", Q(V("A"), 0) },
+		}, PT_VALIDATE_SUCCESS) &&
+		test((pt_rule[]){
 			{ "loop empty error", E(0, NOT(ANY)) },
 			{ NULL, NULL },
 		}, PT_VALIDATE_LOOP_EMPTY_STRING)
