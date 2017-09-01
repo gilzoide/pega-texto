@@ -24,8 +24,7 @@
 #include <stdio.h>
 #include <string.h>
 
-// Auxiliary structure for keeping validations per Rule, to avoid Cycles between
-// Non-texminals.
+// Auxiliary structure for keeping validations per Rule, to avoid Cycles between non-terminals.
 typedef struct {
 	uint8_t was_visited : 1;
 	uint8_t is_nullable_visited : 1;
@@ -59,13 +58,16 @@ static int pt_is_nullable(pt_grammar *g, pt_expr *e, uint16_t *rule, pt_validati
 			return e->N <= 0 ? PT_VALIDATE_LOOP_EMPTY_STRING : PT_VALIDATE_SUCCESS;
 
 		case PT_NON_TERMINAL:
-			// Only visit non-terminal if it hasn't yet been visited
-			if(visited_rules[e->N].is_nullable_visited == 0) {
+			// Maybe non-terminal wasn't seen yet: validate it first (to correct this)
+			if(e->N < 0) {
 				*rule = e->N;
 				if((res = pt_validate_expr_in_grammar(g, e->data.e, rule, visited_rules)) != PT_VALIDATE_SUCCESS) {
 					return res;
 				}
 				*rule = cur_rule;
+			}
+			// Only visit non-terminal if it hasn't yet been visited
+			if(visited_rules[e->N].is_nullable_visited == 0) {
 				if((res = pt_is_nullable(g, g->es[e->N], rule, visited_rules)) != PT_VALIDATE_SUCCESS) {
 					return res;
 				}
