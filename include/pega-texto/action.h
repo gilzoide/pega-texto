@@ -48,8 +48,9 @@ typedef struct pt_match_result_t pt_match_result;
  * - The final index of the match/capture
  * - Number of #pt_data arguments 
  * - #pt_data arguments, processed on inner Actions. This array is static and
-*    __will not__ exist after the Action returns.
+ *   __will not__ exist after the Action returns.
  * - User custom data from match options
+ *
  * Return:
  *   Anything you want.
  *   This result will be used as argument for other actions below in the stack.

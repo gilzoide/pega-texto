@@ -101,48 +101,50 @@ pt_expr *pt_create_non_terminal_idx(int index, pt_expression_action action) {
 	)
 }
 
-pt_expr *pt_create_quantifier(pt_expr *e, int N, pt_expression_action action) {
+pt_expr *pt_create_quantifier(pt_expr *e, int N, uint8_t own_expression, pt_expression_action action) {
 	NEW_EXPR(
 		new_expr->op = PT_QUANTIFIER;
 		new_expr->N = N;
 		new_expr->data.e = e;
-		new_expr->own_memory = 1;
+		new_expr->own_memory = own_expression;
 		new_expr->action = action;
 	)
 }
 
-pt_expr *pt_create_and(pt_expr *e) {
+pt_expr *pt_create_and(pt_expr *e, uint8_t own_expression) {
 	NEW_EXPR(
 		new_expr->op = PT_AND;
 		new_expr->data.e = e;
-		new_expr->own_memory = 1;
+		new_expr->own_memory = own_expression;
 		new_expr->action = NULL;
 	)
 }
 
-pt_expr *pt_create_not(pt_expr *e) {
+pt_expr *pt_create_not(pt_expr *e, uint8_t own_expression) {
 	NEW_EXPR(
 		new_expr->op = PT_NOT;
 		new_expr->data.e = e;
-		new_expr->own_memory = 1;
+		new_expr->own_memory = own_expression;
 		new_expr->action = NULL;
 	)
 }
 
-pt_expr *pt_create_sequence(pt_expr **es, int N, pt_expression_action action) {
+pt_expr *pt_create_sequence(pt_expr **es, int N, uint8_t own_expressions, pt_expression_action action) {
 	NEW_EXPR(
 		new_expr->op = PT_SEQUENCE;
 		new_expr->N = N;
 		new_expr->data.es = es;
+		new_expr->own_memory = own_expressions;
 		new_expr->action = action;
 	)
 }
 
-pt_expr *pt_create_choice(pt_expr **es, int N, pt_expression_action action) {
+pt_expr *pt_create_choice(pt_expr **es, int N, uint8_t own_expressions, pt_expression_action action) {
 	NEW_EXPR(
 		new_expr->op = PT_CHOICE;
 		new_expr->N = N;
 		new_expr->data.es = es;
+		new_expr->own_memory = own_expressions;
 		new_expr->action = action;
 	)
 }
@@ -155,55 +157,63 @@ pt_expr *pt_create_custom_matcher(pt_custom_matcher f, pt_expression_action acti
 	)
 }
 
-pt_expr *pt_create_error(int code, pt_expr *sync) {
+pt_expr *pt_create_error(int code, pt_expr *sync, uint8_t own_expression) {
 	NEW_EXPR(
 		new_expr->op = PT_ERROR;
 		new_expr->N = code;
 		new_expr->data.e = sync;
-		new_expr->own_memory = 1;
+		new_expr->own_memory = own_expression;
 		new_expr->action = NULL;
 	)
 }
 
 void pt_destroy_expr(pt_expr *e) {
-	int i;
-	switch(e->op) {
-		case PT_NON_TERMINAL:
-			if(!e->data.characters) {
+	if(e) {
+		int i;
+		switch(e->op) {
+			case PT_NON_TERMINAL:
+				if(!e->data.characters) {
+					break;
+				}
+			case PT_LITERAL: case PT_SET: case PT_RANGE:
+				if(e->own_memory) {
+					free((void *) e->data.characters);
+				}
 				break;
-			}
-		case PT_LITERAL: case PT_SET: case PT_RANGE:
-			if(e->own_memory) {
-				free((void *) e->data.characters);
-			}
-			break;
 
-		case PT_QUANTIFIER: case PT_AND: case PT_NOT: case PT_ERROR:
-			if(e->own_memory) {
-				pt_destroy_expr(e->data.e);
-			}
-			break;
+			case PT_QUANTIFIER: case PT_AND: case PT_NOT: case PT_ERROR:
+				if(e->own_memory) {
+					pt_destroy_expr(e->data.e);
+				}
+				break;
 
-		case PT_SEQUENCE: case PT_CHOICE:
-			for(i = 0; i < e->N; i++) {
-				pt_destroy_expr(e->data.es[i]);
-			}
-			free(e->data.es);
-			break;
+			case PT_SEQUENCE: case PT_CHOICE:
+				if(e->own_memory) {
+					for(i = 0; i < e->N; i++) {
+						pt_destroy_expr(e->data.es[i]);
+					}
+					free(e->data.es);
+				}
+				break;
 
-		default: break;
+			default: break;
+		}
+		free(e);
 	}
-	free(e);
 }
 
-pt_expr *pt__from_nt_array(pt_expr *(*f)(pt_expr **, int, pt_expression_action), pt_expr **nt_exprs, pt_expression_action action) {
+pt_expr *pt__from_nt_array(pt_expr *(*f)(pt_expr **, int, uint8_t, pt_expression_action), pt_expr **nt_exprs, uint8_t own_expressions, pt_expression_action action) {
 	int N, byte_size;
 	pt_expr **aux;
 	for(aux = nt_exprs; *aux; aux++);
 	N = aux - nt_exprs;
 	byte_size = N * sizeof(pt_expr *);
-	if(aux = malloc(byte_size)) {
-		return f(memcpy(aux, nt_exprs, byte_size), N, action);
+	// Don't even create the `es` buffer if there are no Expressions at all.
+	if(N == 0) {
+		return f(NULL, N, own_expressions, action);
+	}
+	else if(aux = malloc(byte_size)) {
+		return f(memcpy(aux, nt_exprs, byte_size), N, own_expressions, action);
 	}
 	else {
 		return NULL;

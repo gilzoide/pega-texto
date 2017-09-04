@@ -46,15 +46,26 @@
 #undef VI_
 #undef Q
 #undef Q_
+#undef Q_NO
+#undef Q_NO_
 #undef AND
+#undef AND_NO
 #undef NOT
+#undef NOT_NO
 #undef SEQ
 #undef SEQ_
+#undef SEQ_NO
+#undef SEQ_NO_
 #undef OR
 #undef OR_
+#undef OR_NO
+#undef OR_NO_
 #undef F
 #undef F_
 #undef E
+#undef E_NO
 #undef BUT
 #undef BUT_
+#undef BUT_NO
+#undef BUT_NO_
 

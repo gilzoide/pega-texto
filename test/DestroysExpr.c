@@ -13,6 +13,9 @@ int main() {
 		L_O(strdup("just use the `*_O` macros =]")),
 		V("Memory management is important in C, be careful with"),
 		V_O(strdup("which memory you say you own")),
+		OR(NULL), // empty Choice
+		OR_NO(NULL), // another empty Choice
+		NULL, // even NULL pointers are handled nicely
 	};
 
 	int i;

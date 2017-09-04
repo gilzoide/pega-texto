@@ -101,7 +101,7 @@ typedef struct pt_expr_t {
 	pt_expression_action action;  ///< Action to be called when the whole match succeeds.
 	int16_t N;  ///< Quantifier, array size for N-ary operations, Non-Terminal index or Literal length, Error code.
 	uint8_t op;  ///< Operation to be performed.
-	uint8_t own_memory : 1;  ///< Do Expression own the `characters` or `e` buffer?
+	uint8_t own_memory : 1;  ///< Do Expression own the `characters`, `e` or `es` data buffer?
 } pt_expr;
 
 /**
@@ -152,39 +152,44 @@ pt_expr *pt_create_non_terminal_idx(int index, pt_expression_action action);
 /**
  * Create a Quantifier Expression.
  *
- * @param e      Expression.
- * @param N      Quantifier.
- * @param action Action associated to the Expression.
+ * @param e              Expression.
+ * @param N              Quantifier.
+ * @param own_expression Should Expression own the `e` buffer?
+ * @param action         Action associated to the Expression.
  */
-pt_expr *pt_create_quantifier(pt_expr *e, int N, pt_expression_action action);
+pt_expr *pt_create_quantifier(pt_expr *e, int N, uint8_t own_expression, pt_expression_action action);
 /**
  * Create an And Expression.
  *
- * @param e Expression.
+ * @param e              Expression.
+ * @param own_expression Should Expression own the `e` buffer?
  */
-pt_expr *pt_create_and(pt_expr *e);
+pt_expr *pt_create_and(pt_expr *e, uint8_t own_expression);
 /**
  * Create a Not Expression.
  *
- * @param e Expression.
+ * @param e              Expression.
+ * @param own_expression Should Expression own the `e` buffer?
  */
-pt_expr *pt_create_not(pt_expr *e);
+pt_expr *pt_create_not(pt_expr *e, uint8_t own_expression);
 /**
  * Create a Sequence Expression.
  *
- * @param es     `N` sized array of Expressions.
- * @param N      Array size.
- * @param action Action associated to the Expression.
+ * @param es              `N` sized array of Expressions.
+ * @param N               Array size.
+ * @param own_expressions Should Expression own the `es` buffer?
+ * @param action          Action associated to the Expression.
  */
-pt_expr *pt_create_sequence(pt_expr **es, int N, pt_expression_action action);
+pt_expr *pt_create_sequence(pt_expr **es, int N, uint8_t own_expressions, pt_expression_action action);
 /**
  * Create a Choice Expression.
  *
- * @param es     `N` sized array of Expressions.
- * @param N      Array size.
- * @param action Action associated to the Expression.
+ * @param es              `N` sized array of Expressions.
+ * @param N               Array size.
+ * @param own_expressions Should Expression own the `es` buffer?
+ * @param action          Action associated to the Expression.
  */
-pt_expr *pt_create_choice(pt_expr **es, int N, pt_expression_action action);
+pt_expr *pt_create_choice(pt_expr **es, int N, uint8_t own_expressions, pt_expression_action action);
 /**
  * Create a Custom Matcher Expression.
  *
@@ -199,17 +204,18 @@ pt_expr *pt_create_custom_matcher(pt_custom_matcher f, pt_expression_action acti
  *          the syncronization Expression, it __must not__ accept empty string.
  *          This is checked for in #pt_validate_grammar.
  *
- * @param code Numeric error code.
- * @param sync Syncronization Expression, may be `NULL` if no syncing is wanted.
+ * @param code           Numeric error code.
+ * @param sync           Syncronization Expression, may be `NULL` if no syncing is wanted.
+ * @param own_expression Should Expression own the `e` buffer?
  */
-pt_expr *pt_create_error(int code, pt_expr *sync);
+pt_expr *pt_create_error(int code, pt_expr *sync, uint8_t own_expression);
 
 /**
  * Destroy an Expression, freeing the memory used.
  *
- * @warning Every subexpression for unary or N-ary operations will also be
- *          freed.
- * @warning The pointer `e` itself will also be freed, as Expressions are
+ * It is safe to pass a `NULL` pointer here.
+ *
+ * @warning The passed Expression itself will also be freed, as Expressions are
  *          supposed to be created by the `pt_create_*` functions.
  *
  * @param e Expression to be destroyed.
@@ -222,7 +228,7 @@ void pt_destroy_expr(pt_expr *e);
  * This exists on the sole purpose of making the expression constructor macros
  * for Sequences and Choices possible (`macro-on.h`).
  */
-pt_expr *pt__from_nt_array(pt_expr *(*f)(pt_expr **, int, pt_expression_action), pt_expr **nt_exprs, pt_expression_action);
+pt_expr *pt__from_nt_array(pt_expr *(*f)(pt_expr **, int, uint8_t, pt_expression_action), pt_expr **nt_exprs, uint8_t own_expressions, pt_expression_action);
 
 #endif
 

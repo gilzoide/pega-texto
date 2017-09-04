@@ -49,20 +49,21 @@ pt_grammar *pt_create_grammar(pt_rule *rules, uint8_t own_names) {
 }
 
 void pt_destroy_grammar(pt_grammar *g) {
-	int i;
-	// expressions
-	for(i = 0; i < g->N; i++) {
-		pt_destroy_expr(g->es[i]);
-	}
-	free(g->es);
-	// names
-	if(g->own_names) {
+	if(g) {
+		int i;
+		// expressions
 		for(i = 0; i < g->N; i++) {
-			free((void *) g->names[i]);
+			pt_destroy_expr(g->es[i]);
 		}
+		free(g->es);
+		// names
+		if(g->own_names) {
+			for(i = 0; i < g->N; i++) {
+				free((void *) g->names[i]);
+			}
+		}
+		free(g->names);
+		free(g);
 	}
-	free(g->names);
-	
-	free(g);
 }
 

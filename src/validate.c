@@ -60,17 +60,17 @@ static int pt_is_nullable(pt_grammar *g, pt_expr *e, uint16_t *rule, pt_validati
 		case PT_NON_TERMINAL:
 			// Maybe non-terminal wasn't seen yet: validate it first (to correct this)
 			if(e->N < 0) {
-				*rule = e->N;
-				if((res = pt_validate_expr_in_grammar(g, e->data.e, rule, visited_rules)) != PT_VALIDATE_SUCCESS) {
+				if((res = pt_validate_expr_in_grammar(g, e, rule, visited_rules)) != PT_VALIDATE_SUCCESS) {
 					return res;
 				}
-				*rule = cur_rule;
 			}
 			// Only visit non-terminal if it hasn't yet been visited
 			if(visited_rules[e->N].is_nullable_visited == 0) {
+				*rule = e->N;
 				if((res = pt_is_nullable(g, g->es[e->N], rule, visited_rules)) != PT_VALIDATE_SUCCESS) {
 					return res;
 				}
+				*rule = cur_rule;
 			}
 			break;
 

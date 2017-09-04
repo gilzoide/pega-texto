@@ -48,6 +48,9 @@ Everything is documented with [Doxygen](http://www.stack.nl/~dimitri/doxygen/).
 
 Change log
 ----------
++ 1.2.0 - Macros for Expressions to not own memory buffers, empty `SEQ` and
+  `OR` Expressions don't allocate a 0-byte buffer anymore, fixed validation
+  error on Non-terminal cycles.
 + 1.1.1 - Fixed validation error on Non-terminal cycles.
 + 1.1.0 - Added basic error handling support.
 + 1.0.0 - Expressions, Grammars, parsing, validation, actions.

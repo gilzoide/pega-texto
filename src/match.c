@@ -129,9 +129,8 @@ backtrack:
 static pt_match_state *pt_match_error(pt_match_state_stack *s, pt_match_action_stack *a) {
 	pt_match_state *state = pt_get_current_state(s);
 	if(state->e->data.e) {
-		pt_expr *but_expr = BUT(state->e->data.e);
 		// don't double free the sync Expression, as Error Expression owns it
-		but_expr->data.es[0]->own_memory = 0;
+		pt_expr *but_expr = BUT_NO(state->e->data.e);
 		state = pt_push_state(s, Q(but_expr, 0), state->pos, a->size);
 		return state;
 	}

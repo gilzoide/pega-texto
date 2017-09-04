@@ -26,5 +26,8 @@ int main() {
 	if(g = pt_create_grammar(R2, 1)) {
 		pt_destroy_grammar(g);
 	}
+
+	// Nothing
+	pt_destroy_grammar(NULL);
 	return 0;
 }

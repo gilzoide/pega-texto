@@ -48,7 +48,9 @@ typedef union {
 	void *p;
 } pt_data;
 
-/// Facility to return a "whatever" #pt_data
+/**
+ * Facility to return a "whatever" #pt_data
+ */
 #define PT_NULL_DATA ((pt_data){})
 
 #endif

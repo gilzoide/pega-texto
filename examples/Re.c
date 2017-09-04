@@ -121,7 +121,7 @@ pt_data char_class(const char *str, size_t start, size_t end, int argc, pt_data 
 			for(i = 0; i < argc; i++) {
 				es[i] = argv[i].p;
 			}
-			e = pt_create_choice(es, argc, NULL);
+			e = pt_create_choice(es, argc, 1, NULL);
 		}
 	}
 	else {
@@ -197,7 +197,7 @@ pt_data maybe_seq(const char *str, size_t start, size_t end, int argc, pt_data *
 			for(i = 0; i < argc; i++) {
 				es[i] = argv[i].p;
 			}
-			e = pt_create_sequence(es, argc, NULL);
+			e = pt_create_sequence(es, argc, 1, NULL);
 		}
 	}
 	return (pt_data){ .p = e };
@@ -215,7 +215,7 @@ pt_data maybe_choice(const char *str, size_t start, size_t end, int argc, pt_dat
 			for(i = 0; i < argc; i++) {
 				es[i] = argv[i].p;
 			}
-			e = pt_create_choice(es, argc, NULL);
+			e = pt_create_choice(es, argc, 1, NULL);
 		}
 	}
 	return (pt_data){ .p = e };

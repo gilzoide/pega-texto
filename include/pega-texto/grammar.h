@@ -62,6 +62,8 @@ pt_grammar *pt_create_grammar(pt_rule *rules, uint8_t own_names);
 /**
  * Destroy a Grammar, freeing the memory used.
  *
+ * It is safe to pass a `NULL` pointer here.
+ *
  * @warning Grammar Expressions will all be destroyed as well as the `g` pointer
  *          itself, as Grammars are supposed to be created by a call to
  *          `pt_create_grammar`.
