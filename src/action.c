@@ -110,7 +110,7 @@ pt_data pt_run_actions(pt_match_action_stack *a, const char *s, void *userdata) 
 	// find the Action sequence
 	int i, visited = 0;
 	for(i = 0; i < a->size; i++) pt_calculate_action_sequence(i, &visited);
-	// and Fold It, 'til there is no Actions left
+	// and Fold It, 'til there are no Actions left
 	pt_fold_result res;
 	for(i = 0; i < a->size; i += res.visited) {
 		res = pt_fold_actions(i);

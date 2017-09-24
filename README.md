@@ -12,7 +12,7 @@ C, is the same as a 1 element array) for simple pattern-matching.
 To use the values matched, each Expression may have a user defined Action
 function that produces a value. Each Action receives as parameter the values
 produced by Actions executed by inner matched Expressions, reducing them into a
-single value down the stack (yup, recursion)!
+single value down the stack.
 
 
 Build
@@ -42,12 +42,15 @@ From build directory, after building:
 Documentation
 -------------
 Everything is documented with [Doxygen](http://www.stack.nl/~dimitri/doxygen/).
+Check out the [Tutorial](tutorial.md).
 
 @todo put the generated docs on github-pages =]
 
 
 Change log
 ----------
++ 1.2.1 - Fixed validation error on empty `SEQ` and `OR` Expressions, which
+  are valid with a `NULL` pointer.
 + 1.2.0 - Macros for Expressions to not own memory buffers, empty `SEQ` and
   `OR` Expressions don't allocate a 0-byte buffer anymore, fixed validation
   error on Non-terminal cycles.

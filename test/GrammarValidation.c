@@ -21,6 +21,10 @@ int main() {
 			{ NULL, NULL },
 		}, PT_VALIDATE_SUCCESS) &&
 		test((pt_rule[]){
+            { "empty SEQ", OR(NULL) },
+			{ NULL, NULL },
+		}, PT_VALIDATE_SUCCESS) &&
+		test((pt_rule[]){
 			{ "1 char @ Range", R("a") },
 			{ NULL, NULL },
 		}, PT_VALIDATE_RANGE_BUFFER) &&

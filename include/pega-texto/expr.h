@@ -86,15 +86,15 @@ extern const char * const pt_operation_names[];
 typedef int(*pt_custom_matcher)(int);
 
 /// Parsing Expressions.
-typedef struct pt_expr_t {
+typedef struct pt_expr {
 	/// Expression data, depending on it's operation.
 	union {
 		/// Literals, Character Sets, Ranges and Non-Terminal names.
 		const char *characters;
 		/// Quantifier, And & Not: operand, Error sync Expression.
-		struct pt_expr_t *e;
+		struct pt_expr *e;
 		/// N-ary operators: a N-array of operands.
-		struct pt_expr_t **es;
+		struct pt_expr **es;
 		/// Custom match function.
 		pt_custom_matcher matcher;
 	} data;
@@ -215,7 +215,7 @@ pt_expr *pt_create_error(int code, pt_expr *sync, uint8_t own_expression);
  *
  * It is safe to pass a `NULL` pointer here.
  *
- * @warning The passed Expression itself will also be freed, as Expressions are
+ * @warning The passed pointer itself will also be freed, as Expressions are
  *          supposed to be created by the `pt_create_*` functions.
  *
  * @param e Expression to be destroyed.
@@ -226,7 +226,7 @@ void pt_destroy_expr(pt_expr *e);
  * Function for creating Sequences and Choices from NULL-terminated arrays.
  *
  * This exists on the sole purpose of making the expression constructor macros
- * for Sequences and Choices possible (`macro-on.h`).
+ * for Sequences and Choices possible (pega-texto/macro-on.h).
  */
 pt_expr *pt__from_nt_array(pt_expr *(*f)(pt_expr **, int, uint8_t, pt_expression_action), pt_expr **nt_exprs, uint8_t own_expressions, pt_expression_action);
 

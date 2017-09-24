@@ -30,8 +30,8 @@
 #include <stdlib.h>
 
 /// Forward declaration
-typedef struct pt_match_state_stack_t pt_match_state_stack;
-typedef struct pt_match_result_t pt_match_result;
+typedef struct pt_match_state_stack pt_match_state_stack;
+typedef struct pt_match_result pt_match_result;
 
 /**
  * Action to be called on an Expression, after the whole match succeeds.
@@ -109,10 +109,10 @@ typedef struct {
  * - The original subject string
  * - User custom data from match options
  */
-typedef void (*pt_iteration_action)(const pt_match_state_stack *,
-                                    const pt_match_action_stack *,
-                                    const char *,
-                                    void *);
+typedef void(*pt_iteration_action)(const pt_match_state_stack *,
+                                   const pt_match_action_stack *,
+                                   const char *,
+                                   void *);
 
 /**
  * Action to be called when a match succeeds.

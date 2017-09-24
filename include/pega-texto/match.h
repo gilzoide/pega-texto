@@ -37,10 +37,10 @@
  *
  * This is returned by the `pt_match*` functions.
  */
-typedef struct pt_match_result_t {
+typedef struct pt_match_result {
 	/**
 	 * If positive, represents the number of characters matched;
-	 * otherwise, it's a error code.
+	 * otherwise, it's an error code.
 	 */
 	enum {
 		/// Subject string didn't match the given PEG.
@@ -78,7 +78,7 @@ typedef struct {
 extern pt_match_options pt_default_match_options;
 
 /**
- * Try to match the string `str` with a PEG.
+ * Try to match the string `str` with a PEG composed by Expressions and their names.
  *
  * @warning This function doesn't check for ill-formed grammars, so it's advised
  *          that you validate it before running the match algorithm.
@@ -100,7 +100,7 @@ pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_m
  * Try to match the string `str` with a PEG composed by an unamed single Expression.
  *
  * This is useful for simple pattern matching against a single Expression.
- * Calls @ref pt_match internally, so all of its caveats apply.
+ * Calls #pt_match internally, so all of its caveats apply.
  *
  * @param e    Expression.
  * @param str  Subject string to match.
@@ -111,7 +111,7 @@ pt_match_result pt_match_expr(pt_expr *e, const char *str, pt_match_options *opt
 /**
  * Try to match the string `str` with a PEG.
  *
- * Calls @ref pt_match internally, so all of its caveats apply.
+ * Calls #pt_match internally, so all of its caveats apply.
  *
  * @param g    Grammar.
  * @param str  Subject string to match.

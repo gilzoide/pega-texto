@@ -47,7 +47,7 @@ typedef struct {
 /**
  * Dynamic sequential stack of States.
  */
-typedef struct pt_match_state_stack_t {
+typedef struct pt_match_state_stack {
 	pt_match_state *states;  ///< States buffer.
 	size_t size;  ///< Current number of States.
 	size_t capacity;  ///< Capacity of the States buffer.

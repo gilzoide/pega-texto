@@ -158,7 +158,8 @@ static int pt_validate_expr_in_grammar(pt_grammar *g, pt_expr *e, uint16_t *rule
 			}
 
 		case PT_SEQUENCE: case PT_CHOICE:
-			if(e->data.es == NULL) {
+            // NULL pointer is valid if there are zero Expressions
+			if(e->data.es == NULL && e->N != 0) {
 				return PT_VALIDATE_NULL_POINTER;
 			}
 			for(i = 0; i < e->N; i++) {
