@@ -44,8 +44,8 @@ typedef struct pt_match_result pt_match_result;
  *
  * Parameters:
  * - The original subject string
- * - The start index of the match/capture
- * - The final index of the match/capture
+ * - Start index of the match/capture
+ * - Final index of the match/capture
  * - Number of #pt_data arguments 
  * - #pt_data arguments, processed on inner Actions. This array is static and
  *   __will not__ exist after the Action returns.
@@ -71,8 +71,8 @@ typedef pt_data(*pt_expression_action)(const char *,
  *
  * Parameters:
  * - The original subject string
- * - The position where the error was encountered
- * - The error code
+ * - Position where the error was encountered
+ * - Error code
  * - User custom data from match options
  */
 typedef void(*pt_error_action)(const char *,
@@ -121,8 +121,8 @@ typedef void(*pt_iteration_action)(const pt_match_state_stack *,
  * - A const pointer for the current State Stack, so you can examine it (if desired)
  * - A const pointer for the current Action Stack, so you can examine it (if desired)
  * - The original subject string
- * - The start index of the match/capture
- * - The final index of the match/capture
+ * - Start index of the match/capture
+ * - Final index of the match/capture
  * - User custom data from match options
  */
 typedef void(*pt_success_action)(const pt_match_state_stack *,

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.6)
-set(PROJECT_VERSION 1.2.1)
+set(PROJECT_VERSION 1.2.2)
 if(${CMAKE_VERSION} VERSION_GREATER 3.0)
 	cmake_policy(SET CMP0048 NEW)
 	project(pega-texto VERSION ${PROJECT_VERSION})
@@ -12,6 +12,7 @@ set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG")
 add_definitions(-DPROJECT_VERSION="${PROJECT_VERSION}")
 
 # Build stuff
+option(BUILD_SHARED_LIBS "Build as a shared library" ON)
 add_subdirectory(src)
 add_subdirectory(pkg-config)
 

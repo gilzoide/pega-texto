@@ -49,6 +49,8 @@ typedef struct pt_match_result {
 		PT_NO_STACK_MEM = -2,
 		/// Matched an Error Expression.
 		PT_MATCHED_ERROR = -3,
+		/// Provided string is a NULL pointer.
+		PT_NULL_INPUT = -4,
 	} matched;
 	/**
 	 * Resulting data from the last top-level Action.

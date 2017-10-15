@@ -28,7 +28,7 @@
  * - __Set__ (`[chars]`): match any character in a set.
  * - __Range__ (`[c1-c2]`): match a character between a range.
  * - __Any__ (`.`): only fail at end of stream ('\0').
- * - __Non-terminal__ (`Non-terminal-name`): match the expression in a given
+ * - __Non-terminal__ (`Non-terminal-name or index`): match the expression in a given
  *   index in the grammar.
  * - __Quantifier__ (`e^N`): If N is non-negative, match N or more occurrences
  *   of `e`. If N is negative, match at most `|N|` occurrences of `e`. In
@@ -37,12 +37,13 @@
  * - __And__ (`&e`): match Expression without consuming the input.
  * - __Not__ (`!e`): match only if input doesn't match `e`.
  * - __Sequence__ (`e1 e2 ...`): match if all Expressions match in sequence.
+ *   An empty Sequence will always match.
  * - __Choice__ (`e1 / e2 / ...`): match either one of the Expressions, trying from
- *   the first one to the last.
+ *   the first one to the last. An empty Choice will always fail.
  * - __Custom Matcher__: match if function `matcher` applied to next character
  *   returns non-zero.
  * - __Error__: represents a syntactic error, with optional syncronization.
- *   Every error has a numeric code, which should all differ.
+ *   Every error has a numeric code, which should probably all differ.
  */
 
 #ifndef __PEGA_TEXTO_EXPR_H__

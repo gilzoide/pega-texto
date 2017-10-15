@@ -49,6 +49,7 @@ Check out the [Tutorial](tutorial.md).
 
 Change log
 ----------
++ 1.2.2 - Added `NULL` string check on match.
 + 1.2.1 - Fixed validation error on empty `SEQ` and `OR` Expressions, which
   are valid with a `NULL` pointer.
 + 1.2.0 - Macros for Expressions to not own memory buffers, empty `SEQ` and

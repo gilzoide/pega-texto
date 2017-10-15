@@ -1,6 +1,7 @@
 include(FindPkgConfig)
 
-if(PKG_CONFIG_FOUND)
+# only build/install if `pkg-config` is available and if building shared lib
+if(PKG_CONFIG_FOUND AND BUILD_SHARED_LIBS)
 	set(_output pega-texto.pc)
 	configure_file(pega-texto.pc.in ${_output} @ONLY)
 	# find out where to put the .pc file

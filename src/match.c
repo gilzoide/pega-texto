@@ -124,7 +124,7 @@ backtrack:
 	return s->states + i;
 }
 
-/// An error was found: push a wrapper of the syncronization Expression, if there is any
+/// An error was found: push a wrapper of the syncronization Expression, if there is one
 #include <pega-texto/macro-on.h>
 static pt_match_state *pt_match_error(pt_match_state_stack *s, pt_match_action_stack *a) {
 	pt_match_state *state = pt_get_current_state(s);
@@ -146,6 +146,10 @@ pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_m
 	pt_data action_result = {};
 	pt_match_state_stack S;
 	pt_match_action_stack A;
+	if(str == NULL) {
+		matched = PT_NULL_INPUT;
+		goto err_null_input;
+	}
 	if(opts == NULL) {
 		opts = &pt_default_match_options;
 	}
@@ -308,6 +312,7 @@ iterate_quantifier:
 err_action_stack:
 	pt_destroy_state_stack(&S);
 err_state_stack:
+err_null_input:
 	return (pt_match_result){matched, action_result};
 }
 
