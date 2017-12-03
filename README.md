@@ -41,10 +41,9 @@ From build directory, after building:
 
 Documentation
 -------------
-Everything is documented with [Doxygen](http://www.stack.nl/~dimitri/doxygen/).
+The API is documented using [Doxygen](http://www.stack.nl/~dimitri/doxygen/)
+and is available at [github pages](https://gilzoide.github.io/pega-texto/).
 Check out the [Tutorial](tutorial.md).
-
-@todo put the generated docs on github-pages =]
 
 
 Change log

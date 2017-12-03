@@ -53,5 +53,3 @@ dkms.conf
 
 # Build folder
 build/
-# Doxygen output
-docs/
