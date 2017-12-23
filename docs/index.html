@@ -80,6 +80,7 @@ $ make
 <p>The API is documented using <a href="http://www.stack.nl/~dimitri/doxygen/">Doxygen</a> and is available at <a href="https://gilzoide.github.io/pega-texto/">github pages</a>. Check out the <a class="el" href="md_tutorial.html">Tutorial</a>.</p>
 <h2>Change log </h2>
 <ul>
+<li>1.2.3 - Fixed validation error code emmited when <code>pt_is_nullable</code> returned true, as it may find an error other than <code>PT_VALIDATE_LOOP_EMPTY_STRING</code>.</li>
 <li>1.2.2 - Added <code>NULL</code> string check on match.</li>
 <li>1.2.1 - Fixed validation error on empty <code>SEQ</code> and <code>OR</code> Expressions, which are valid with a <code>NULL</code> pointer.</li>
 <li>1.2.0 - Macros for Expressions to not own memory buffers, empty <code>SEQ</code> and <code>OR</code> Expressions don't allocate a 0-byte buffer anymore, fixed validation error on Non-terminal cycles.</li>

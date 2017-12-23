@@ -13,6 +13,16 @@ int test(pt_rule R[], int expected_output) {
 	return 0;
 }
 
+int test_skip(pt_rule R[], int expected_output) {
+	pt_grammar *g = pt_create_grammar(R, 0);
+	pt_validate_result res = pt_validate_grammar(g, PT_VALIDATE_SKIP);
+	pt_destroy_grammar(g);
+
+	if(res.status == expected_output) return 1;
+	printf("Results don't match: expected %d, found %d\n", expected_output, res.status);
+	return 0;
+}
+
 int main() {
 	// Invalid Grammar
 	puts(
@@ -52,7 +62,11 @@ int main() {
 		test((pt_rule[]){
 			{ "loop empty error", E(0, NOT(ANY)) },
 			{ NULL, NULL },
-		}, PT_VALIDATE_LOOP_EMPTY_STRING)
+		}, PT_VALIDATE_LOOP_EMPTY_STRING) &&
+		test_skip((pt_rule[]){
+			{ "even skipping, verify NULL pointers", AND(NULL) },
+			{ NULL, NULL },
+		}, PT_VALIDATE_NULL_POINTER)
 		? "PASS" : "FAIL");
 	return 0;
 }

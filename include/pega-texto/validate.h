@@ -58,9 +58,12 @@ typedef enum {
 	 */
 	PT_VALIDATE_DEFAULT = 0,
 	/**
-	 * Skip validation.
+	 * Skip well-formedness validation.
 	 *
-	 * May be useful for Release builds when using non-changing Grammars
+	 * This still looks for `NULL` pointers, as they may be introduced by
+	 * `malloc` errors.
+	 *
+	 * This is useful for release builds when using non-changing Grammars
 	 * you know are valid.
 	 */
 	PT_VALIDATE_SKIP = 0b001,

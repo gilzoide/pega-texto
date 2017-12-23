@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.6)
-set(PROJECT_VERSION 1.2.2)
+set(PROJECT_VERSION 1.2.3)
 if(${CMAKE_VERSION} VERSION_GREATER 3.0)
 	cmake_policy(SET CMP0048 NEW)
 	project(pega-texto VERSION ${PROJECT_VERSION})

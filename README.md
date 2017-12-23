@@ -48,6 +48,8 @@ Check out the [Tutorial](tutorial.md).
 
 Change log
 ----------
++ 1.2.3 - Fixed validation error code emmited when `pt_is_nullable` returned
+  true, as it may find an error other than `PT_VALIDATE_LOOP_EMPTY_STRING`.
 + 1.2.2 - Added `NULL` string check on match.
 + 1.2.1 - Fixed validation error on empty `SEQ` and `OR` Expressions, which
   are valid with a `NULL` pointer.
