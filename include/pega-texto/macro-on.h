@@ -74,16 +74,16 @@
 #define NOT_NO(e)       (pt_create_not(e, 0))
 /// Create a Sequence Expression.
 /// You can create an empty Sequence with `SEQ(NULL)`.
-#define SEQ(...)        (pt__from_nt_array(&pt_create_sequence, ((pt_expr*[]){__VA_ARGS__, NULL}), 1, NULL))
-#define SEQ_(a, ...)    (pt__from_nt_array(&pt_create_sequence, ((pt_expr*[]){__VA_ARGS__, NULL}), 1, a))
-#define SEQ_NO(...)     (pt__from_nt_array(&pt_create_sequence, ((pt_expr*[]){__VA_ARGS__, NULL}), 0, NULL))
-#define SEQ_NO_(a, ...) (pt__from_nt_array(&pt_create_sequence, ((pt_expr*[]){__VA_ARGS__, NULL}), 0, a))
+#define SEQ(...)        (pt__from_nt_array(&pt_create_sequence, (pt_expr **)((pt_expr*[]){__VA_ARGS__, NULL}), 1, NULL))
+#define SEQ_(a, ...)    (pt__from_nt_array(&pt_create_sequence, (pt_expr **)((pt_expr*[]){__VA_ARGS__, NULL}), 1, a))
+#define SEQ_NO(...)     (pt__from_nt_array(&pt_create_sequence, (pt_expr **)((pt_expr*[]){__VA_ARGS__, NULL}), 0, NULL))
+#define SEQ_NO_(a, ...) (pt__from_nt_array(&pt_create_sequence, (pt_expr **)((pt_expr*[]){__VA_ARGS__, NULL}), 0, a))
 /// Create a Choice Expression.
 /// You can create an empty Choice with `OR(NULL)`.
-#define OR(...)         (pt__from_nt_array(&pt_create_choice,   ((pt_expr*[]){__VA_ARGS__, NULL}), 1, NULL))
-#define OR_(a, ...)     (pt__from_nt_array(&pt_create_choice,   ((pt_expr*[]){__VA_ARGS__, NULL}), 1, a))
-#define OR_NO(...)      (pt__from_nt_array(&pt_create_choice,   ((pt_expr*[]){__VA_ARGS__, NULL}), 0, NULL))
-#define OR_NO_(a, ...)  (pt__from_nt_array(&pt_create_choice,   ((pt_expr*[]){__VA_ARGS__, NULL}), 0, a))
+#define OR(...)         (pt__from_nt_array(&pt_create_choice,   (pt_expr **)((pt_expr*[]){__VA_ARGS__, NULL}), 1, NULL))
+#define OR_(a, ...)     (pt__from_nt_array(&pt_create_choice,   (pt_expr **)((pt_expr*[]){__VA_ARGS__, NULL}), 1, a))
+#define OR_NO(...)      (pt__from_nt_array(&pt_create_choice,   (pt_expr **)((pt_expr*[]){__VA_ARGS__, NULL}), 0, NULL))
+#define OR_NO_(a, ...)  (pt__from_nt_array(&pt_create_choice,   (pt_expr **)((pt_expr*[]){__VA_ARGS__, NULL}), 0, a))
 /// Create a Custom Matcher Expression.
 #define F(f)            (pt_create_custom_matcher(f, NULL))
 #define F_(a, f)        (pt_create_custom_matcher(f, a))

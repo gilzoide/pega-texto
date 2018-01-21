@@ -229,7 +229,10 @@ void pt_destroy_expr(pt_expr *e);
  * This exists on the sole purpose of making the expression constructor macros
  * for Sequences and Choices possible (pega-texto/macro-on.h).
  */
-pt_expr *pt__from_nt_array(pt_expr *(*f)(pt_expr **, int, uint8_t, pt_expression_action), pt_expr **nt_exprs, uint8_t own_expressions, pt_expression_action);
+pt_expr *pt__from_nt_array(pt_expr *(*f)(pt_expr **, int, uint8_t, pt_expression_action),
+                           pt_expr **nt_exprs,
+						   uint8_t own_expressions,
+						   pt_expression_action);
 
 #endif
 
