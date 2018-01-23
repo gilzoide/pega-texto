@@ -31,8 +31,45 @@
  * (see @ref pt_expression_action).
  */
 
-#ifndef NULL
-#include <stdlib.h>
+// Utility function to create Sequence and Choice Expressions from an array.
+// C and C++ treat arrays differently, so there is one initializer style for each.
+#ifndef __PEGA_TEXTO_MACRO_ON_H__
+#define __PEGA_TEXTO_MACRO_ON_H__
+
+#ifdef __cplusplus
+# include <vector>
+# include <cstring>
+# define __PT_EXPR_FROM_ARRAY_PARAM std::initializer_list<pt_expr *> l
+# define __PT_EXPR_FROM_ARRAY_CAST(...) {__VA_ARGS__}
+# define __PT_EXPR_FROM_ARRAY_GET_N \
+	N = l.size() == 1 && *l.begin() == NULL ? 0 : l.size(); \
+	pt_expr *const *nt_exprs = l.begin()
+#else
+# include <string.h>
+# define __PT_EXPR_FROM_ARRAY_PARAM pt_expr **nt_exprs
+# define __PT_EXPR_FROM_ARRAY_CAST(...) ((pt_expr*[]){__VA_ARGS__, NULL})
+# define __PT_EXPR_FROM_ARRAY_GET_N \
+	for(aux = nt_exprs; *aux; aux++); \
+	N = aux - nt_exprs
+#endif
+static pt_expr *__pt_expr_from_array(pt_expr *(*f)(pt_expr **, int, uint8_t, pt_expression_action),
+                              __PT_EXPR_FROM_ARRAY_PARAM,
+                              uint8_t own_expressions,
+                              pt_expression_action action) {
+	int N, byte_size;
+	pt_expr **aux;
+	__PT_EXPR_FROM_ARRAY_GET_N;
+	byte_size = N * sizeof(pt_expr *);
+	if(N == 0) {
+		return f(NULL, N, own_expressions, action);
+	}
+	else if(aux = (pt_expr **) malloc(byte_size)) {
+		return f((pt_expr **) memcpy(aux, nt_exprs, byte_size), N, own_expressions, action);
+	}
+	else {
+		return NULL;
+	}
+}
 #endif
 
 /// Create a Literal Expression.
@@ -72,24 +109,28 @@
 /// Create a Not Expression.
 #define NOT(e)          (pt_create_not(e, 1))
 #define NOT_NO(e)       (pt_create_not(e, 0))
-/// Create a Sequence Expression.
-/// You can create an empty Sequence with `SEQ(NULL)`.
-#define SEQ(...)        (pt__from_nt_array(&pt_create_sequence, (pt_expr **)((pt_expr*[]){__VA_ARGS__, NULL}), 1, NULL))
-#define SEQ_(a, ...)    (pt__from_nt_array(&pt_create_sequence, (pt_expr **)((pt_expr*[]){__VA_ARGS__, NULL}), 1, a))
-#define SEQ_NO(...)     (pt__from_nt_array(&pt_create_sequence, (pt_expr **)((pt_expr*[]){__VA_ARGS__, NULL}), 0, NULL))
-#define SEQ_NO_(a, ...) (pt__from_nt_array(&pt_create_sequence, (pt_expr **)((pt_expr*[]){__VA_ARGS__, NULL}), 0, a))
-/// Create a Choice Expression.
-/// You can create an empty Choice with `OR(NULL)`.
-#define OR(...)         (pt__from_nt_array(&pt_create_choice,   (pt_expr **)((pt_expr*[]){__VA_ARGS__, NULL}), 1, NULL))
-#define OR_(a, ...)     (pt__from_nt_array(&pt_create_choice,   (pt_expr **)((pt_expr*[]){__VA_ARGS__, NULL}), 1, a))
-#define OR_NO(...)      (pt__from_nt_array(&pt_create_choice,   (pt_expr **)((pt_expr*[]){__VA_ARGS__, NULL}), 0, NULL))
-#define OR_NO_(a, ...)  (pt__from_nt_array(&pt_create_choice,   (pt_expr **)((pt_expr*[]){__VA_ARGS__, NULL}), 0, a))
 /// Create a Custom Matcher Expression.
 #define F(f)            (pt_create_custom_matcher(f, NULL))
 #define F_(a, f)        (pt_create_custom_matcher(f, a))
 /// Create an Error Expression.
 #define E(c, s)         (pt_create_error(c, s, 1))
 #define E_NO(c, s)      (pt_create_error(c, s, 0))
+
+
+// Sequence and Choice Expressions.
+
+/// Create a Sequence Expression.
+/// You can create an empty Sequence with `SEQ(NULL)`.
+#define SEQ(...)        (__pt_expr_from_array(&pt_create_sequence, __PT_EXPR_FROM_ARRAY_CAST(__VA_ARGS__), 1, NULL))
+#define SEQ_(a, ...)    (__pt_expr_from_array(&pt_create_sequence, __PT_EXPR_FROM_ARRAY_CAST(__VA_ARGS__), 1, a))
+#define SEQ_NO(...)     (__pt_expr_from_array(&pt_create_sequence, __PT_EXPR_FROM_ARRAY_CAST(__VA_ARGS__), 0, NULL))
+#define SEQ_NO_(a, ...) (__pt_expr_from_array(&pt_create_sequence, __PT_EXPR_FROM_ARRAY_CAST(__VA_ARGS__), 0, a))
+/// Create a Choice Expression.
+/// You can create an empty Choice with `OR(NULL)`.
+#define OR(...)         (__pt_expr_from_array(&pt_create_choice,   __PT_EXPR_FROM_ARRAY_CAST(__VA_ARGS__), 1, NULL))
+#define OR_(a, ...)     (__pt_expr_from_array(&pt_create_choice,   __PT_EXPR_FROM_ARRAY_CAST(__VA_ARGS__), 1, a))
+#define OR_NO(...)      (__pt_expr_from_array(&pt_create_choice,   __PT_EXPR_FROM_ARRAY_CAST(__VA_ARGS__), 0, NULL))
+#define OR_NO_(a, ...)  (__pt_expr_from_array(&pt_create_choice,   __PT_EXPR_FROM_ARRAY_CAST(__VA_ARGS__), 0, a))
 
 /* These are complex Expressions that are widely used.
  * As macros, they're cost-free abstractions, so cool!

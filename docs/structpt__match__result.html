@@ -60,7 +60,6 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-attribs">Data Fields</a>  </div>
   <div class="headertitle">
 <div class="title">pt_match_result Struct Reference</div>  </div>
@@ -72,22 +71,12 @@ $(function() {
 
 <p><code>#include &lt;<a class="el" href="match_8h_source.html">match.h</a>&gt;</code></p>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
-Public Types</h2></td></tr>
-<tr class="memitem:adf764cbdea00d65edcd07bb9953ad2b7"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom">{ <a class="el" href="structpt__match__result.html#adf764cbdea00d65edcd07bb9953ad2b7a1e14536da61e972a4ac0bc3f0c6ed166">PT_NO_MATCH</a> = -1, 
-<a class="el" href="structpt__match__result.html#adf764cbdea00d65edcd07bb9953ad2b7a47707ce268d09f037ad0a14bf8837d24">PT_NO_STACK_MEM</a> = -2, 
-<a class="el" href="structpt__match__result.html#adf764cbdea00d65edcd07bb9953ad2b7ae7ed631ef63d879a982c4b5f8df25282">PT_MATCHED_ERROR</a> = -3, 
-<a class="el" href="structpt__match__result.html#adf764cbdea00d65edcd07bb9953ad2b7a0bfb30c6d1efd33bd8ee02a2ce246a6e">PT_NULL_INPUT</a> = -4
- }<tr class="memdesc:adf764cbdea00d65edcd07bb9953ad2b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">If positive, represents the number of characters matched; otherwise, it's an error code.  <a href="structpt__match__result.html#adf764cbdea00d65edcd07bb9953ad2b7">More...</a><br /></td></tr>
-</td></tr>
-<tr class="separator:adf764cbdea00d65edcd07bb9953ad2b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr class="memitem:a15455eaa0857dacd07bc5f04284dbd5a"><td class="memItemLeft" align="right" valign="top"><a id="a15455eaa0857dacd07bc5f04284dbd5a"></a>
-enum pt_match_result:: { ... } &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpt__match__result.html#a15455eaa0857dacd07bc5f04284dbd5a">matched</a></td></tr>
-<tr class="memdesc:a15455eaa0857dacd07bc5f04284dbd5a"><td class="mdescLeft">&#160;</td><td class="mdescRight">If positive, represents the number of characters matched; otherwise, it's an error code. <br /></td></tr>
-<tr class="separator:a15455eaa0857dacd07bc5f04284dbd5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2cac697b53844ad0bb0ab9487798c50f"><td class="memItemLeft" align="right" valign="top"><a id="a2cac697b53844ad0bb0ab9487798c50f"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpt__match__result.html#a2cac697b53844ad0bb0ab9487798c50f">matched</a></td></tr>
+<tr class="memdesc:a2cac697b53844ad0bb0ab9487798c50f"><td class="mdescLeft">&#160;</td><td class="mdescRight">If positive, represents the number of characters matched; otherwise, it's an error code. <br /></td></tr>
+<tr class="separator:a2cac697b53844ad0bb0ab9487798c50f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3e2395bb9e7a99111250ab2a8f1519ec"><td class="memItemLeft" align="right" valign="top"><a class="el" href="unionpt__data.html">pt_data</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpt__match__result.html#a3e2395bb9e7a99111250ab2a8f1519ec">data</a></td></tr>
 <tr class="memdesc:a3e2395bb9e7a99111250ab2a8f1519ec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resulting data from the last top-level Action.  <a href="#a3e2395bb9e7a99111250ab2a8f1519ec">More...</a><br /></td></tr>
 <tr class="separator:a3e2395bb9e7a99111250ab2a8f1519ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -97,37 +86,8 @@ enum pt_match_result:: { ... } &#160;</td><td class="memItemRight" valign="botto
 <p>This is returned by the <code>pt_match*</code> functions. </p>
 <dl><dt><b>Examples: </b></dt><dd><a class="el" href="_infix_calculator_8c-example.html#_a18">InfixCalculator.c</a>, <a class="el" href="_lisp_8c-example.html#_a22">Lisp.c</a>, and <a class="el" href="_re_8c-example.html#_a29">Re.c</a>.</dd>
 </dl>
-<p class="definition">Definition at line <a class="el" href="match_8h_source.html#l00040">40</a> of file <a class="el" href="match_8h_source.html">match.h</a>.</p>
-</div><h2 class="groupheader">Member Enumeration Documentation</h2>
-<a id="adf764cbdea00d65edcd07bb9953ad2b7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adf764cbdea00d65edcd07bb9953ad2b7">&#9670;&nbsp;</a></span>anonymous enum</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">anonymous enum</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>If positive, represents the number of characters matched; otherwise, it's an error code. </p>
-<table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="adf764cbdea00d65edcd07bb9953ad2b7a1e14536da61e972a4ac0bc3f0c6ed166"></a>PT_NO_MATCH&#160;</td><td class="fielddoc"><p>Subject string didn't match the given PEG. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="adf764cbdea00d65edcd07bb9953ad2b7a47707ce268d09f037ad0a14bf8837d24"></a>PT_NO_STACK_MEM&#160;</td><td class="fielddoc"><p>Error while allocating memory for the State/Action Stack. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="adf764cbdea00d65edcd07bb9953ad2b7ae7ed631ef63d879a982c4b5f8df25282"></a>PT_MATCHED_ERROR&#160;</td><td class="fielddoc"><p>Matched an Error Expression. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="adf764cbdea00d65edcd07bb9953ad2b7a0bfb30c6d1efd33bd8ee02a2ce246a6e"></a>PT_NULL_INPUT&#160;</td><td class="fielddoc"><p>Provided string is a NULL pointer. </p>
-</td></tr>
-</table>
-
-<p class="definition">Definition at line <a class="el" href="match_8h_source.html#l00045">45</a> of file <a class="el" href="match_8h_source.html">match.h</a>.</p>
-
-</div>
-</div>
-<h2 class="groupheader">Field Documentation</h2>
+<p class="definition">Definition at line <a class="el" href="match_8h_source.html#l00054">54</a> of file <a class="el" href="match_8h_source.html">match.h</a>.</p>
+</div><h2 class="groupheader">Field Documentation</h2>
 <a id="a3e2395bb9e7a99111250ab2a8f1519ec"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a3e2395bb9e7a99111250ab2a8f1519ec">&#9670;&nbsp;</a></span>data</h2>
 
@@ -144,7 +104,7 @@ enum pt_match_result:: { ... } &#160;</td><td class="memItemRight" valign="botto
 <p>If you need a single result for all top-level Actions, just create an outer one that folds them (which will always be the last top-level one). </p>
 <dl><dt><b>Examples: </b></dt><dd><a class="el" href="_infix_calculator_8c-example.html#a21">InfixCalculator.c</a>, <a class="el" href="_lisp_8c-example.html#a25">Lisp.c</a>, and <a class="el" href="_re_8c-example.html#a32">Re.c</a>.</dd>
 </dl>
-<p class="definition">Definition at line <a class="el" href="match_8h_source.html#l00061">61</a> of file <a class="el" href="match_8h_source.html">match.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="match_8h_source.html#l00066">66</a> of file <a class="el" href="match_8h_source.html">match.h</a>.</p>
 
 </div>
 </div>

@@ -48,8 +48,10 @@ Check out the [Tutorial](tutorial.md).
 
 Change log
 ----------
-+ 1.2.5 - Fixed type cast for `SEQ` and `OR` expression macros to compile on
-  C++.
++ 1.2.6 - Fixed `SEQ` and `OR` expression macros on C++, turns out they behave
+  differently about temporary lifetime of arrays.
++ 1.2.5 - Fixed `SEQ` and `OR` expression macros to compile on both C and C++
+  using preprocessor macros and `initializer_list` directly on `macro-on.h`.
 + 1.2.4 - Added `extern "C"` declaration on `pega-texto.h` for using in C++. 
 + 1.2.3 - Fixed validation error code emmited when `pt_is_nullable` returned
   true, as it may find an error other than `PT_VALIDATE_LOOP_EMPTY_STRING`.

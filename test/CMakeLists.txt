@@ -3,8 +3,8 @@ include_directories("${PROJECT_SOURCE_DIR}/include")
 # valgrind, for memory checks
 find_program(VALGRIND valgrind)
 
-macro(run_test test_name pass)
-	add_executable(${test_name} "${test_name}.c")
+function(run_test_ext test_name pass ext)
+	add_executable(${test_name} "${test_name}.${ext}")
 	target_link_libraries(${test_name} pega-texto)
 	add_test(${test_name} ${test_name} ${ARGN})
 
@@ -23,6 +23,10 @@ macro(run_test test_name pass)
 			FAIL_REGULAR_EXPRESSION "FAIL"
 		)
 	endif()
+endfunction()
+
+macro(run_test test_name pass)
+	run_test_ext(${test_name} ${pass} "c")
 endmacro()
 
 include(CTest)
@@ -45,3 +49,5 @@ run_test(GrammarValidation "PASS")
 run_test(SyntacticError "valgrind")
 # full tests
 run_test(MatchingParens "PASS")
+# C++
+run_test_ext(RunsOnC++ "valgrind" cxx)

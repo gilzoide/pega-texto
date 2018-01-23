@@ -33,6 +33,20 @@
 #include <stdlib.h>
 
 /**
+ * Possible error codes returned by the `pt_match*` functions.
+ */
+typedef enum {
+	/// Subject string didn't match the given PEG.
+	PT_NO_MATCH = -1,
+	/// Error while allocating memory for the State/Action Stack.
+	PT_NO_STACK_MEM = -2,
+	/// Matched an Error Expression.
+	PT_MATCHED_ERROR = -3,
+	/// Provided string is a NULL pointer.
+	PT_NULL_INPUT = -4,
+} pt_macth_error_code;
+
+/**
  * Match result: a {matched chars/error code, action result} pair.
  *
  * This is returned by the `pt_match*` functions.
@@ -42,16 +56,7 @@ typedef struct pt_match_result {
 	 * If positive, represents the number of characters matched;
 	 * otherwise, it's an error code.
 	 */
-	enum {
-		/// Subject string didn't match the given PEG.
-		PT_NO_MATCH = -1,
-		/// Error while allocating memory for the State/Action Stack.
-		PT_NO_STACK_MEM = -2,
-		/// Matched an Error Expression.
-		PT_MATCHED_ERROR = -3,
-		/// Provided string is a NULL pointer.
-		PT_NULL_INPUT = -4,
-	} matched;
+	int matched;
 	/**
 	 * Resulting data from the last top-level Action.
 	 *

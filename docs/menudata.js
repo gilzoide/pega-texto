@@ -31,8 +31,7 @@ var menudata={children:[
 {text:"p",url:"functions_vars.html#index_p"},
 {text:"r",url:"functions_vars.html#index_r"},
 {text:"s",url:"functions_vars.html#index_s"},
-{text:"u",url:"functions_vars.html#index_u"}]},
-{text:"Enumerator",url:"functions_eval.html"}]}]},
+{text:"u",url:"functions_vars.html#index_u"}]}]}]},
 {text:"Files",url:"files.html",children:[
 {text:"File List",url:"files.html"},
 {text:"Globals",url:"globals.html",children:[

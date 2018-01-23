@@ -164,9 +164,6 @@ Functions</h2></td></tr>
 <tr class="memitem:af21037b7ddc304b977c91bf8da57ac84"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="expr_8h.html#af21037b7ddc304b977c91bf8da57ac84">pt_destroy_expr</a> (<a class="el" href="structpt__expr.html">pt_expr</a> *e)</td></tr>
 <tr class="memdesc:af21037b7ddc304b977c91bf8da57ac84"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy an Expression, freeing the memory used.  <a href="#af21037b7ddc304b977c91bf8da57ac84">More...</a><br /></td></tr>
 <tr class="separator:af21037b7ddc304b977c91bf8da57ac84"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abe1bb3b86729849c15c37c9d4aa046c5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structpt__expr.html">pt_expr</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="expr_8h.html#abe1bb3b86729849c15c37c9d4aa046c5">pt__from_nt_array</a> (<a class="el" href="structpt__expr.html">pt_expr</a> *(*f)(<a class="el" href="structpt__expr.html">pt_expr</a> **, int, uint8_t, <a class="el" href="action_8h.html#a27822ec5a9ec2e2bf8854e10e8b8fdce">pt_expression_action</a>), <a class="el" href="structpt__expr.html">pt_expr</a> **nt_exprs, uint8_t own_expressions, <a class="el" href="action_8h.html#a27822ec5a9ec2e2bf8854e10e8b8fdce">pt_expression_action</a>)</td></tr>
-<tr class="memdesc:abe1bb3b86729849c15c37c9d4aa046c5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function for creating Sequences and Choices from NULL-terminated arrays.  <a href="#abe1bb3b86729849c15c37c9d4aa046c5">More...</a><br /></td></tr>
-<tr class="separator:abe1bb3b86729849c15c37c9d4aa046c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
@@ -770,49 +767,6 @@ const char *const&#160;</td><td class="memItemRight" valign="bottom"><a class="e
   </table>
   </dd>
 </dl>
-
-</div>
-</div>
-<a id="abe1bb3b86729849c15c37c9d4aa046c5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abe1bb3b86729849c15c37c9d4aa046c5">&#9670;&nbsp;</a></span>pt__from_nt_array()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="structpt__expr.html">pt_expr</a>* pt__from_nt_array </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="structpt__expr.html">pt_expr</a> *(*)(<a class="el" href="structpt__expr.html">pt_expr</a> **, int, uint8_t, <a class="el" href="action_8h.html#a27822ec5a9ec2e2bf8854e10e8b8fdce">pt_expression_action</a>)&#160;</td>
-          <td class="paramname"><em>f</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="structpt__expr.html">pt_expr</a> **&#160;</td>
-          <td class="paramname"><em>nt_exprs</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">uint8_t&#160;</td>
-          <td class="paramname"><em>own_expressions</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="action_8h.html#a27822ec5a9ec2e2bf8854e10e8b8fdce">pt_expression_action</a>&#160;</td>
-          <td class="paramname">&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Function for creating Sequences and Choices from NULL-terminated arrays. </p>
-<p>This exists on the sole purpose of making the expression constructor macros for Sequences and Choices possible (<a class="el" href="macro-on_8h.html" title="Turn on Parsing Expression constructor macros. ">pega-texto/macro-on.h</a>). </p>
 
 </div>
 </div>

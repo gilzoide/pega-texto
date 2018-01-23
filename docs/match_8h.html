@@ -66,6 +66,7 @@ $(function() {
   <div class="summary">
 <a href="#nested-classes">Data Structures</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
+<a href="#enum-members">Enumerations</a> &#124;
 <a href="#func-members">Functions</a> &#124;
 <a href="#var-members">Variables</a>  </div>
   <div class="headertitle">
@@ -97,6 +98,16 @@ Typedefs</h2></td></tr>
 <tr class="memitem:ac276a6c4ffbf6d629b2f8539757daba0"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structpt__match__result.html">pt_match_result</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="match_8h.html#ac276a6c4ffbf6d629b2f8539757daba0">pt_match_result</a></td></tr>
 <tr class="memdesc:ac276a6c4ffbf6d629b2f8539757daba0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Match result: a {matched chars/error code, action result} pair.  <a href="#ac276a6c4ffbf6d629b2f8539757daba0">More...</a><br /></td></tr>
 <tr class="separator:ac276a6c4ffbf6d629b2f8539757daba0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
+Enumerations</h2></td></tr>
+<tr class="memitem:ae6592b49fc3b4d6afaf0dbea6a6c6dbd"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="match_8h.html#ae6592b49fc3b4d6afaf0dbea6a6c6dbd">pt_macth_error_code</a> { <a class="el" href="match_8h.html#ae6592b49fc3b4d6afaf0dbea6a6c6dbda1e14536da61e972a4ac0bc3f0c6ed166">PT_NO_MATCH</a> = -1, 
+<a class="el" href="match_8h.html#ae6592b49fc3b4d6afaf0dbea6a6c6dbda47707ce268d09f037ad0a14bf8837d24">PT_NO_STACK_MEM</a> = -2, 
+<a class="el" href="match_8h.html#ae6592b49fc3b4d6afaf0dbea6a6c6dbdae7ed631ef63d879a982c4b5f8df25282">PT_MATCHED_ERROR</a> = -3, 
+<a class="el" href="match_8h.html#ae6592b49fc3b4d6afaf0dbea6a6c6dbda0bfb30c6d1efd33bd8ee02a2ce246a6e">PT_NULL_INPUT</a> = -4
+ }<tr class="memdesc:ae6592b49fc3b4d6afaf0dbea6a6c6dbd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Possible error codes returned by the <code>pt_match*</code> functions.  <a href="match_8h.html#ae6592b49fc3b4d6afaf0dbea6a6c6dbd">More...</a><br /></td></tr>
+</td></tr>
+<tr class="separator:ae6592b49fc3b4d6afaf0dbea6a6c6dbd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -136,6 +147,35 @@ Variables</h2></td></tr>
 
 <p>Match result: a {matched chars/error code, action result} pair. </p>
 <p>This is returned by the <code>pt_match*</code> functions. </p>
+
+</div>
+</div>
+<h2 class="groupheader">Enumeration Type Documentation</h2>
+<a id="ae6592b49fc3b4d6afaf0dbea6a6c6dbd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae6592b49fc3b4d6afaf0dbea6a6c6dbd">&#9670;&nbsp;</a></span>pt_macth_error_code</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="match_8h.html#ae6592b49fc3b4d6afaf0dbea6a6c6dbd">pt_macth_error_code</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Possible error codes returned by the <code>pt_match*</code> functions. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="ae6592b49fc3b4d6afaf0dbea6a6c6dbda1e14536da61e972a4ac0bc3f0c6ed166"></a>PT_NO_MATCH&#160;</td><td class="fielddoc"><p>Subject string didn't match the given PEG. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ae6592b49fc3b4d6afaf0dbea6a6c6dbda47707ce268d09f037ad0a14bf8837d24"></a>PT_NO_STACK_MEM&#160;</td><td class="fielddoc"><p>Error while allocating memory for the State/Action Stack. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ae6592b49fc3b4d6afaf0dbea6a6c6dbdae7ed631ef63d879a982c4b5f8df25282"></a>PT_MATCHED_ERROR&#160;</td><td class="fielddoc"><p>Matched an Error Expression. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ae6592b49fc3b4d6afaf0dbea6a6c6dbda0bfb30c6d1efd33bd8ee02a2ce246a6e"></a>PT_NULL_INPUT&#160;</td><td class="fielddoc"><p>Provided string is a NULL pointer. </p>
+</td></tr>
+</table>
+
+<p class="definition">Definition at line <a class="el" href="match_8h_source.html#l00038">38</a> of file <a class="el" href="match_8h_source.html">match.h</a>.</p>
 
 </div>
 </div>

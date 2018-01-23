@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-int test(pt_rule R[], int expected_output) {
+int test(pt_rule *R, int expected_output) {
 	pt_grammar *g = pt_create_grammar(R, 0);
 	pt_validate_result res = pt_validate_grammar(g, PT_VALIDATE_DEFAULT);
 	pt_destroy_grammar(g);
@@ -13,7 +13,7 @@ int test(pt_rule R[], int expected_output) {
 	return 0;
 }
 
-int test_skip(pt_rule R[], int expected_output) {
+int test_skip(pt_rule *R, int expected_output) {
 	pt_grammar *g = pt_create_grammar(R, 0);
 	pt_validate_result res = pt_validate_grammar(g, PT_VALIDATE_SKIP);
 	pt_destroy_grammar(g);

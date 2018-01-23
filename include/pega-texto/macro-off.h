@@ -69,3 +69,7 @@
 #undef BUT_NO
 #undef BUT_NO_
 
+#undef __PT_EXPR_FROM_ARRAY_PARAM
+#undef __PT_EXPR_FROM_ARRAY_CAST
+#undef __PT_EXPR_FROM_ARRAY_GET_N
+

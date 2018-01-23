@@ -64,7 +64,8 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#define-members">Macros</a>  </div>
+<a href="#define-members">Macros</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">macro-on.h File Reference</div>  </div>
 </div><!--header-->
@@ -72,12 +73,20 @@ $(function() {
 
 <p>Turn on Parsing Expression constructor macros.  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &lt;stdlib.h&gt;</code><br />
+<div class="textblock"><code>#include &lt;string.h&gt;</code><br />
 </div>
 <p><a href="macro-on_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
+<tr class="memitem:aca5b02a6d7358c3b02ba77cea0652c38"><td class="memItemLeft" align="right" valign="top"><a id="aca5b02a6d7358c3b02ba77cea0652c38"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>__PT_EXPR_FROM_ARRAY_PARAM</b>&#160;&#160;&#160;<a class="el" href="structpt__expr.html">pt_expr</a> **nt_exprs</td></tr>
+<tr class="separator:aca5b02a6d7358c3b02ba77cea0652c38"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8311b4d43c317655191639b7b92ade8c"><td class="memItemLeft" align="right" valign="top"><a id="a8311b4d43c317655191639b7b92ade8c"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>__PT_EXPR_FROM_ARRAY_CAST</b>(...)&#160;&#160;&#160;((<a class="el" href="structpt__expr.html">pt_expr</a>*[]){__VA_ARGS__, NULL})</td></tr>
+<tr class="separator:a8311b4d43c317655191639b7b92ade8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8b63b0473a8c0f2b6ac0832e8f8962e0"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>__PT_EXPR_FROM_ARRAY_GET_N</b></td></tr>
+<tr class="separator:a8b63b0473a8c0f2b6ac0832e8f8962e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3948ef94e164df6b50c4a9d12ba60eb5"><td class="memItemLeft" align="right" valign="top"><a id="a3948ef94e164df6b50c4a9d12ba60eb5"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="macro-on_8h.html#a3948ef94e164df6b50c4a9d12ba60eb5">L</a>(s)&#160;&#160;&#160;(<a class="el" href="expr_8h.html#a7b388498190123948c0fbcaf9512b10c">pt_create_literal</a>(s, 0, NULL))</td></tr>
 <tr class="memdesc:a3948ef94e164df6b50c4a9d12ba60eb5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a Literal Expression. <br /></td></tr>
@@ -171,30 +180,6 @@ Macros</h2></td></tr>
 <tr class="memitem:a8c7aa90ee614c01e2dcd05082a53f2ff"><td class="memItemLeft" align="right" valign="top"><a id="a8c7aa90ee614c01e2dcd05082a53f2ff"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>NOT_NO</b>(e)&#160;&#160;&#160;(<a class="el" href="expr_8h.html#aaea76402d20dafc2d245c40847896aca">pt_create_not</a>(e, 0))</td></tr>
 <tr class="separator:a8c7aa90ee614c01e2dcd05082a53f2ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1fbce1ef13f8b74cfd3c6ee4baa25ba3"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="macro-on_8h.html#a1fbce1ef13f8b74cfd3c6ee4baa25ba3">SEQ</a>(...)&#160;&#160;&#160;(<a class="el" href="expr_8h.html#abe1bb3b86729849c15c37c9d4aa046c5">pt__from_nt_array</a>(&amp;<a class="el" href="expr_8h.html#a125a0abd76d3d666c091e5a5737b1bc2">pt_create_sequence</a>, ((<a class="el" href="structpt__expr.html">pt_expr</a>*[]){__VA_ARGS__, NULL}), 1, NULL))</td></tr>
-<tr class="memdesc:a1fbce1ef13f8b74cfd3c6ee4baa25ba3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a Sequence Expression.  <a href="#a1fbce1ef13f8b74cfd3c6ee4baa25ba3">More...</a><br /></td></tr>
-<tr class="separator:a1fbce1ef13f8b74cfd3c6ee4baa25ba3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a46f443465b096ee92a42ceb37b828a25"><td class="memItemLeft" align="right" valign="top"><a id="a46f443465b096ee92a42ceb37b828a25"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>SEQ_</b>(a, ...)&#160;&#160;&#160;(<a class="el" href="expr_8h.html#abe1bb3b86729849c15c37c9d4aa046c5">pt__from_nt_array</a>(&amp;<a class="el" href="expr_8h.html#a125a0abd76d3d666c091e5a5737b1bc2">pt_create_sequence</a>, ((<a class="el" href="structpt__expr.html">pt_expr</a>*[]){__VA_ARGS__, NULL}), 1, a))</td></tr>
-<tr class="separator:a46f443465b096ee92a42ceb37b828a25"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a08ce6a7bce6e2186635c6ab91f1f3496"><td class="memItemLeft" align="right" valign="top"><a id="a08ce6a7bce6e2186635c6ab91f1f3496"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>SEQ_NO</b>(...)&#160;&#160;&#160;(<a class="el" href="expr_8h.html#abe1bb3b86729849c15c37c9d4aa046c5">pt__from_nt_array</a>(&amp;<a class="el" href="expr_8h.html#a125a0abd76d3d666c091e5a5737b1bc2">pt_create_sequence</a>, ((<a class="el" href="structpt__expr.html">pt_expr</a>*[]){__VA_ARGS__, NULL}), 0, NULL))</td></tr>
-<tr class="separator:a08ce6a7bce6e2186635c6ab91f1f3496"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8cbca2a22dd1e7880ca5ac6eac12c9d9"><td class="memItemLeft" align="right" valign="top"><a id="a8cbca2a22dd1e7880ca5ac6eac12c9d9"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>SEQ_NO_</b>(a, ...)&#160;&#160;&#160;(<a class="el" href="expr_8h.html#abe1bb3b86729849c15c37c9d4aa046c5">pt__from_nt_array</a>(&amp;<a class="el" href="expr_8h.html#a125a0abd76d3d666c091e5a5737b1bc2">pt_create_sequence</a>, ((<a class="el" href="structpt__expr.html">pt_expr</a>*[]){__VA_ARGS__, NULL}), 0, a))</td></tr>
-<tr class="separator:a8cbca2a22dd1e7880ca5ac6eac12c9d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa8c4cbd9ef7da8b278b5f80373eadae5"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="macro-on_8h.html#aa8c4cbd9ef7da8b278b5f80373eadae5">OR</a>(...)&#160;&#160;&#160;(<a class="el" href="expr_8h.html#abe1bb3b86729849c15c37c9d4aa046c5">pt__from_nt_array</a>(&amp;<a class="el" href="expr_8h.html#a5dba39339b78ab80f09fe5fe612ceaed">pt_create_choice</a>,   ((<a class="el" href="structpt__expr.html">pt_expr</a>*[]){__VA_ARGS__, NULL}), 1, NULL))</td></tr>
-<tr class="memdesc:aa8c4cbd9ef7da8b278b5f80373eadae5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a Choice Expression.  <a href="#aa8c4cbd9ef7da8b278b5f80373eadae5">More...</a><br /></td></tr>
-<tr class="separator:aa8c4cbd9ef7da8b278b5f80373eadae5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7bcfe028e29f08c46987d0425a7b1869"><td class="memItemLeft" align="right" valign="top"><a id="a7bcfe028e29f08c46987d0425a7b1869"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>OR_</b>(a, ...)&#160;&#160;&#160;(<a class="el" href="expr_8h.html#abe1bb3b86729849c15c37c9d4aa046c5">pt__from_nt_array</a>(&amp;<a class="el" href="expr_8h.html#a5dba39339b78ab80f09fe5fe612ceaed">pt_create_choice</a>,   ((<a class="el" href="structpt__expr.html">pt_expr</a>*[]){__VA_ARGS__, NULL}), 1, a))</td></tr>
-<tr class="separator:a7bcfe028e29f08c46987d0425a7b1869"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aea9d91d8c03aaab5105a8c5fc63d8a4a"><td class="memItemLeft" align="right" valign="top"><a id="aea9d91d8c03aaab5105a8c5fc63d8a4a"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>OR_NO</b>(...)&#160;&#160;&#160;(<a class="el" href="expr_8h.html#abe1bb3b86729849c15c37c9d4aa046c5">pt__from_nt_array</a>(&amp;<a class="el" href="expr_8h.html#a5dba39339b78ab80f09fe5fe612ceaed">pt_create_choice</a>,   ((<a class="el" href="structpt__expr.html">pt_expr</a>*[]){__VA_ARGS__, NULL}), 0, NULL))</td></tr>
-<tr class="separator:aea9d91d8c03aaab5105a8c5fc63d8a4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab91705376972a2f46dfafc3d172e1db9"><td class="memItemLeft" align="right" valign="top"><a id="ab91705376972a2f46dfafc3d172e1db9"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>OR_NO_</b>(a, ...)&#160;&#160;&#160;(<a class="el" href="expr_8h.html#abe1bb3b86729849c15c37c9d4aa046c5">pt__from_nt_array</a>(&amp;<a class="el" href="expr_8h.html#a5dba39339b78ab80f09fe5fe612ceaed">pt_create_choice</a>,   ((<a class="el" href="structpt__expr.html">pt_expr</a>*[]){__VA_ARGS__, NULL}), 0, a))</td></tr>
-<tr class="separator:ab91705376972a2f46dfafc3d172e1db9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab25baccb41e3b67ef0bfdaa1336c9649"><td class="memItemLeft" align="right" valign="top"><a id="ab25baccb41e3b67ef0bfdaa1336c9649"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="macro-on_8h.html#ab25baccb41e3b67ef0bfdaa1336c9649">F</a>(f)&#160;&#160;&#160;(<a class="el" href="expr_8h.html#a74515fccd5fade7a6b374f01061c3fcf">pt_create_custom_matcher</a>(f, NULL))</td></tr>
 <tr class="memdesc:ab25baccb41e3b67ef0bfdaa1336c9649"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a Custom Matcher Expression. <br /></td></tr>
@@ -209,6 +194,30 @@ Macros</h2></td></tr>
 <tr class="memitem:abf806b589aa901cb5195c2d5869a8302"><td class="memItemLeft" align="right" valign="top"><a id="abf806b589aa901cb5195c2d5869a8302"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>E_NO</b>(c,  s)&#160;&#160;&#160;(<a class="el" href="expr_8h.html#a73f0876f71955956df9ce57a6d6fe0b1">pt_create_error</a>(c, s, 0))</td></tr>
 <tr class="separator:abf806b589aa901cb5195c2d5869a8302"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1fbce1ef13f8b74cfd3c6ee4baa25ba3"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="macro-on_8h.html#a1fbce1ef13f8b74cfd3c6ee4baa25ba3">SEQ</a>(...)&#160;&#160;&#160;(__pt_expr_from_array(&amp;<a class="el" href="expr_8h.html#a125a0abd76d3d666c091e5a5737b1bc2">pt_create_sequence</a>, __PT_EXPR_FROM_ARRAY_CAST(__VA_ARGS__), 1, NULL))</td></tr>
+<tr class="memdesc:a1fbce1ef13f8b74cfd3c6ee4baa25ba3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a Sequence Expression.  <a href="#a1fbce1ef13f8b74cfd3c6ee4baa25ba3">More...</a><br /></td></tr>
+<tr class="separator:a1fbce1ef13f8b74cfd3c6ee4baa25ba3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a46f443465b096ee92a42ceb37b828a25"><td class="memItemLeft" align="right" valign="top"><a id="a46f443465b096ee92a42ceb37b828a25"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>SEQ_</b>(a, ...)&#160;&#160;&#160;(__pt_expr_from_array(&amp;<a class="el" href="expr_8h.html#a125a0abd76d3d666c091e5a5737b1bc2">pt_create_sequence</a>, __PT_EXPR_FROM_ARRAY_CAST(__VA_ARGS__), 1, a))</td></tr>
+<tr class="separator:a46f443465b096ee92a42ceb37b828a25"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a08ce6a7bce6e2186635c6ab91f1f3496"><td class="memItemLeft" align="right" valign="top"><a id="a08ce6a7bce6e2186635c6ab91f1f3496"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>SEQ_NO</b>(...)&#160;&#160;&#160;(__pt_expr_from_array(&amp;<a class="el" href="expr_8h.html#a125a0abd76d3d666c091e5a5737b1bc2">pt_create_sequence</a>, __PT_EXPR_FROM_ARRAY_CAST(__VA_ARGS__), 0, NULL))</td></tr>
+<tr class="separator:a08ce6a7bce6e2186635c6ab91f1f3496"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8cbca2a22dd1e7880ca5ac6eac12c9d9"><td class="memItemLeft" align="right" valign="top"><a id="a8cbca2a22dd1e7880ca5ac6eac12c9d9"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>SEQ_NO_</b>(a, ...)&#160;&#160;&#160;(__pt_expr_from_array(&amp;<a class="el" href="expr_8h.html#a125a0abd76d3d666c091e5a5737b1bc2">pt_create_sequence</a>, __PT_EXPR_FROM_ARRAY_CAST(__VA_ARGS__), 0, a))</td></tr>
+<tr class="separator:a8cbca2a22dd1e7880ca5ac6eac12c9d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa8c4cbd9ef7da8b278b5f80373eadae5"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="macro-on_8h.html#aa8c4cbd9ef7da8b278b5f80373eadae5">OR</a>(...)&#160;&#160;&#160;(__pt_expr_from_array(&amp;<a class="el" href="expr_8h.html#a5dba39339b78ab80f09fe5fe612ceaed">pt_create_choice</a>,   __PT_EXPR_FROM_ARRAY_CAST(__VA_ARGS__), 1, NULL))</td></tr>
+<tr class="memdesc:aa8c4cbd9ef7da8b278b5f80373eadae5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a Choice Expression.  <a href="#aa8c4cbd9ef7da8b278b5f80373eadae5">More...</a><br /></td></tr>
+<tr class="separator:aa8c4cbd9ef7da8b278b5f80373eadae5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7bcfe028e29f08c46987d0425a7b1869"><td class="memItemLeft" align="right" valign="top"><a id="a7bcfe028e29f08c46987d0425a7b1869"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>OR_</b>(a, ...)&#160;&#160;&#160;(__pt_expr_from_array(&amp;<a class="el" href="expr_8h.html#a5dba39339b78ab80f09fe5fe612ceaed">pt_create_choice</a>,   __PT_EXPR_FROM_ARRAY_CAST(__VA_ARGS__), 1, a))</td></tr>
+<tr class="separator:a7bcfe028e29f08c46987d0425a7b1869"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aea9d91d8c03aaab5105a8c5fc63d8a4a"><td class="memItemLeft" align="right" valign="top"><a id="aea9d91d8c03aaab5105a8c5fc63d8a4a"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>OR_NO</b>(...)&#160;&#160;&#160;(__pt_expr_from_array(&amp;<a class="el" href="expr_8h.html#a5dba39339b78ab80f09fe5fe612ceaed">pt_create_choice</a>,   __PT_EXPR_FROM_ARRAY_CAST(__VA_ARGS__), 0, NULL))</td></tr>
+<tr class="separator:aea9d91d8c03aaab5105a8c5fc63d8a4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab91705376972a2f46dfafc3d172e1db9"><td class="memItemLeft" align="right" valign="top"><a id="ab91705376972a2f46dfafc3d172e1db9"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>OR_NO_</b>(a, ...)&#160;&#160;&#160;(__pt_expr_from_array(&amp;<a class="el" href="expr_8h.html#a5dba39339b78ab80f09fe5fe612ceaed">pt_create_choice</a>,   __PT_EXPR_FROM_ARRAY_CAST(__VA_ARGS__), 0, a))</td></tr>
+<tr class="separator:ab91705376972a2f46dfafc3d172e1db9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acbca2efeec65ad012d177b51b5c02eec"><td class="memItemLeft" align="right" valign="top"><a id="acbca2efeec65ad012d177b51b5c02eec"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="macro-on_8h.html#acbca2efeec65ad012d177b51b5c02eec">BUT</a>(e)&#160;&#160;&#160;(<a class="el" href="macro-on_8h.html#a1fbce1ef13f8b74cfd3c6ee4baa25ba3">SEQ</a>(<a class="el" href="macro-on_8h.html#a0e656ebff6d3b76361f4ea16ccadad59">NOT</a>(e), <a class="el" href="macro-on_8h.html#a756cb5435a9a4479ee2066ab9da0dbae">ANY</a>))</td></tr>
 <tr class="memdesc:acbca2efeec65ad012d177b51b5c02eec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code>!e .</code> (Any but <code>e</code>) Expression. <br /></td></tr>
@@ -222,6 +231,12 @@ Macros</h2></td></tr>
 <tr class="memitem:ac55d50ae36bc063fe9c5baf02843517a"><td class="memItemLeft" align="right" valign="top"><a id="ac55d50ae36bc063fe9c5baf02843517a"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>BUT_NO_</b>(a,  e)&#160;&#160;&#160;(SEQ_(a, NOT_NO(e), <a class="el" href="macro-on_8h.html#a756cb5435a9a4479ee2066ab9da0dbae">ANY</a>))</td></tr>
 <tr class="separator:ac55d50ae36bc063fe9c5baf02843517a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a93ae8725f67528337844c375356dd692"><td class="memItemLeft" align="right" valign="top"><a id="a93ae8725f67528337844c375356dd692"></a>
+static <a class="el" href="structpt__expr.html">pt_expr</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>__pt_expr_from_array</b> (<a class="el" href="structpt__expr.html">pt_expr</a> *(*f)(<a class="el" href="structpt__expr.html">pt_expr</a> **, int, uint8_t, <a class="el" href="action_8h.html#a27822ec5a9ec2e2bf8854e10e8b8fdce">pt_expression_action</a>), __PT_EXPR_FROM_ARRAY_PARAM, uint8_t own_expressions, <a class="el" href="action_8h.html#a27822ec5a9ec2e2bf8854e10e8b8fdce">pt_expression_action</a> action)</td></tr>
+<tr class="separator:a93ae8725f67528337844c375356dd692"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Turn on Parsing Expression constructor macros. </p>
@@ -231,6 +246,22 @@ Macros</h2></td></tr>
 
 <p class="definition">Definition in file <a class="el" href="macro-on_8h_source.html">macro-on.h</a>.</p>
 </div><h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="a8b63b0473a8c0f2b6ac0832e8f8962e0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8b63b0473a8c0f2b6ac0832e8f8962e0">&#9670;&nbsp;</a></span>__PT_EXPR_FROM_ARRAY_GET_N</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define __PT_EXPR_FROM_ARRAY_GET_N</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line"><span class="keywordflow">for</span>(aux = nt_exprs; *aux; aux++); \</div><div class="line">    N = aux - nt_exprs</div></div><!-- fragment -->
+<p class="definition">Definition at line <a class="el" href="macro-on_8h_source.html#l00051">51</a> of file <a class="el" href="macro-on_8h_source.html">macro-on.h</a>.</p>
+
+</div>
+</div>
 <a id="a1fbce1ef13f8b74cfd3c6ee4baa25ba3"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1fbce1ef13f8b74cfd3c6ee4baa25ba3">&#9670;&nbsp;</a></span>SEQ</h2>
 
@@ -242,7 +273,7 @@ Macros</h2></td></tr>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname"><em>...</em></td><td>)</td>
-          <td>&#160;&#160;&#160;(<a class="el" href="expr_8h.html#abe1bb3b86729849c15c37c9d4aa046c5">pt__from_nt_array</a>(&amp;<a class="el" href="expr_8h.html#a125a0abd76d3d666c091e5a5737b1bc2">pt_create_sequence</a>, ((<a class="el" href="structpt__expr.html">pt_expr</a>*[]){__VA_ARGS__, NULL}), 1, NULL))</td>
+          <td>&#160;&#160;&#160;(__pt_expr_from_array(&amp;<a class="el" href="expr_8h.html#a125a0abd76d3d666c091e5a5737b1bc2">pt_create_sequence</a>, __PT_EXPR_FROM_ARRAY_CAST(__VA_ARGS__), 1, NULL))</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -251,7 +282,7 @@ Macros</h2></td></tr>
 <p>You can create an empty Sequence with <code><a class="el" href="macro-on_8h.html#a1fbce1ef13f8b74cfd3c6ee4baa25ba3" title="Create a Sequence Expression. ">SEQ(NULL)</a></code>. </p>
 <dl><dt><b>Examples: </b></dt><dd><a class="el" href="_find_includes_8c-example.html#a7">FindIncludes.c</a>, <a class="el" href="_infix_calculator_8c-example.html#a5">InfixCalculator.c</a>, <a class="el" href="_lisp_8c-example.html#a8">Lisp.c</a>, and <a class="el" href="_re_8c-example.html#a20">Re.c</a>.</dd>
 </dl>
-<p class="definition">Definition at line <a class="el" href="macro-on_8h_source.html#l00077">77</a> of file <a class="el" href="macro-on_8h_source.html">macro-on.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="macro-on_8h_source.html#l00124">124</a> of file <a class="el" href="macro-on_8h_source.html">macro-on.h</a>.</p>
 
 </div>
 </div>
@@ -266,7 +297,7 @@ Macros</h2></td></tr>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname"><em>...</em></td><td>)</td>
-          <td>&#160;&#160;&#160;(<a class="el" href="expr_8h.html#abe1bb3b86729849c15c37c9d4aa046c5">pt__from_nt_array</a>(&amp;<a class="el" href="expr_8h.html#a5dba39339b78ab80f09fe5fe612ceaed">pt_create_choice</a>,   ((<a class="el" href="structpt__expr.html">pt_expr</a>*[]){__VA_ARGS__, NULL}), 1, NULL))</td>
+          <td>&#160;&#160;&#160;(__pt_expr_from_array(&amp;<a class="el" href="expr_8h.html#a5dba39339b78ab80f09fe5fe612ceaed">pt_create_choice</a>,   __PT_EXPR_FROM_ARRAY_CAST(__VA_ARGS__), 1, NULL))</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -275,7 +306,7 @@ Macros</h2></td></tr>
 <p>You can create an empty Choice with <code><a class="el" href="macro-on_8h.html#aa8c4cbd9ef7da8b278b5f80373eadae5" title="Create a Choice Expression. ">OR(NULL)</a></code>. </p>
 <dl><dt><b>Examples: </b></dt><dd><a class="el" href="_find_includes_8c-example.html#a5">FindIncludes.c</a>, <a class="el" href="_infix_calculator_8c-example.html#a10">InfixCalculator.c</a>, <a class="el" href="_lisp_8c-example.html#a13">Lisp.c</a>, and <a class="el" href="_re_8c-example.html#a23">Re.c</a>.</dd>
 </dl>
-<p class="definition">Definition at line <a class="el" href="macro-on_8h_source.html#l00083">83</a> of file <a class="el" href="macro-on_8h_source.html">macro-on.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="macro-on_8h_source.html#l00130">130</a> of file <a class="el" href="macro-on_8h_source.html">macro-on.h</a>.</p>
 
 </div>
 </div>

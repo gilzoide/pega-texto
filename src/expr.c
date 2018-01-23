@@ -202,21 +202,3 @@ void pt_destroy_expr(pt_expr *e) {
 	}
 }
 
-pt_expr *pt__from_nt_array(pt_expr *(*f)(pt_expr **, int, uint8_t, pt_expression_action), pt_expr **nt_exprs, uint8_t own_expressions, pt_expression_action action) {
-	int N, byte_size;
-	pt_expr **aux;
-	for(aux = nt_exprs; *aux; aux++);
-	N = aux - nt_exprs;
-	byte_size = N * sizeof(pt_expr *);
-	// Don't even create the `es` buffer if there are no Expressions at all.
-	if(N == 0) {
-		return f(NULL, N, own_expressions, action);
-	}
-	else if(aux = malloc(byte_size)) {
-		return f(memcpy(aux, nt_exprs, byte_size), N, own_expressions, action);
-	}
-	else {
-		return NULL;
-	}
-}
-

@@ -98,6 +98,10 @@ static int pt_is_nullable(pt_grammar *g, pt_expr *e, uint16_t *rule, pt_validati
 
 /// Validates a single expression in the Grammar, to be called recursively.
 static int pt_validate_expr_in_grammar(pt_grammar *g, pt_expr *e, uint16_t *rule, pt_validation_per_rule *visited_rules, int should_skip) {
+	if(e == NULL) {
+		return PT_VALIDATE_NULL_POINTER;
+	}
+
 	int i, res;
 	uint16_t cur_rule = *rule;
 	visited_rules[cur_rule].was_visited = 1;
