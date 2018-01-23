@@ -50,4 +50,5 @@ run_test(SyntacticError "valgrind")
 # full tests
 run_test(MatchingParens "PASS")
 # C++
+set(CMAKE_CXX_STANDARD 11)
 run_test_ext(RunsOnC++ "valgrind" cxx)

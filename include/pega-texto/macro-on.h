@@ -37,7 +37,7 @@
 #define __PEGA_TEXTO_MACRO_ON_H__
 
 #ifdef __cplusplus
-# include <vector>
+# include <initializer_list>
 # include <cstring>
 # define __PT_EXPR_FROM_ARRAY_PARAM std::initializer_list<pt_expr *> l
 # define __PT_EXPR_FROM_ARRAY_CAST(...) {__VA_ARGS__}
