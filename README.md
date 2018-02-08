@@ -48,6 +48,9 @@ Check out the [Tutorial](tutorial.md).
 
 Change log
 ----------
++ 1.2.7 - Removed all the Action sequence computation, as Actions are already
+  stacked in the right sequence. Running actions is now iterative, O(n) and use
+  far less memory.
 + 1.2.6 - Fixed `SEQ` and `OR` expression macros on C++, turns out they behave
   differently about temporary lifetime of arrays.
 + 1.2.5 - Fixed `SEQ` and `OR` expression macros to compile on both C and C++

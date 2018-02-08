@@ -36,24 +36,28 @@ static inline int pt_find_non_terminal_index(const char *name, const char **name
 /// Propagate success back until reach a Quantifier, Sequence, And or Not, changing it's position
 static pt_match_state *pt_match_succeed(pt_match_state_stack *s, pt_match_action_stack *a,
 		int *matched, const char *str, size_t new_pos, pt_match_options *opts) {
-	int i;
 	pt_match_state *state = s->states + s->size - 1;
+	int i, queried_actions = state->qa;
 	if(opts->each_success) {
 		opts->each_success(s, a, str, state->pos, new_pos, opts->userdata);
 	}
+	// query action, if there is any
 	if(state->e->action) {
-		if(pt_push_action(a, state->e->action, state->pos, new_pos) == NULL) {
+		if(pt_push_action(a, state->e->action, state->pos, new_pos, queried_actions) == NULL) {
 			*matched = PT_NO_STACK_MEM;
 			return NULL;
 		}
+		queried_actions = 1;
 	}
 	for(i = s->size - 2; i >= 0; i--) {
 		state = s->states + i;
+		queried_actions += state->qa;
 		switch(state->e->op) {
 			case PT_QUANTIFIER:
 			case PT_SEQUENCE:
 				state->r2 = new_pos - state->pos; // mark current match accumulator
 				state->ac = a->size; // keep queried actions
+				state->qa = queried_actions;
 				goto backtrack;
 
 			case PT_AND:
@@ -70,12 +74,14 @@ static pt_match_state *pt_match_succeed(pt_match_state_stack *s, pt_match_action
 				pt_destroy_expr(s->states[i + 1].e);  // destroy the syncronization expression wrapper
 				break;
 
-			default: // query action, if there is any
+			default: // should be PT_NON_TERMINAL or PT_CHOICE
+				// query action, if there is any
 				if(state->e->action) {
-					if(pt_push_action(a, state->e->action, state->pos, new_pos) == NULL) {
+					if(pt_push_action(a, state->e->action, state->pos, new_pos, queried_actions) == NULL) {
 						*matched = PT_NO_STACK_MEM;
 						return NULL;
 					}
+					queried_actions = 1;
 				}
 				break;
 		}

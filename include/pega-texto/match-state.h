@@ -42,6 +42,7 @@ typedef struct {
 	int r1;  ///< General purpose register 1.
 	unsigned int r2;  ///< General purpose register 2.
 	unsigned int ac;  ///< Action counter.
+	unsigned int qa;  ///< Number of queried Actions.
 } pt_match_state;
 
 /**

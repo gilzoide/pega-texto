@@ -70,7 +70,7 @@ static pt_expr *__pt_expr_from_array(pt_expr *(*f)(pt_expr **, int, uint8_t, pt_
 		return NULL;
 	}
 }
-#endif
+#endif  // __PEGA_TEXTO_MACRO_ON_H__
 
 /// Create a Literal Expression.
 #define L(s)            (pt_create_literal(s, 0, NULL))

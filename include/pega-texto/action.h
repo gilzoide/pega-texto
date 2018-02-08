@@ -88,6 +88,7 @@ typedef struct {
 	pt_expression_action f;  ///< Action function.
 	size_t start;  ///< Start point of the match.
 	size_t end;  ///< End point of the match.
+	int argc;  ///< Number of arguments expected by Action.
 } pt_match_action;
 
 /**

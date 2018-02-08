@@ -57,6 +57,7 @@ pt_match_state *pt_push_state(pt_match_state_stack *s, pt_expr *e, size_t pos, s
 	state->pos = pos;
 	state->r1 = state->r2 = 0;
 	state->ac = ac;
+	state->qa = 0;
 
 	return state;
 }
@@ -84,7 +85,7 @@ void pt_destroy_action_stack(pt_match_action_stack *a) {
 	free(a->actions);
 }
 
-pt_match_action *pt_push_action(pt_match_action_stack *a, pt_expression_action f, size_t start, size_t end) {
+pt_match_action *pt_push_action(pt_match_action_stack *a, pt_expression_action f, size_t start, size_t end, int argc) {
 	pt_match_action *action;
 	// Double capacity, if reached
 	if(a->size == a->capacity) {
@@ -101,6 +102,7 @@ pt_match_action *pt_push_action(pt_match_action_stack *a, pt_expression_action f
 	action->f = f;
 	action->start = start;
 	action->end = end;
+	action->argc = argc;
 
 	return action;
 }

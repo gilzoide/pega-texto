@@ -60,7 +60,7 @@ pt_match_state *pt_push_state(pt_match_state_stack *s, pt_expr *e, size_t pos, s
 /**
  * Initializes the State Stack, `malloc`ing the stack with `initial_capacity`.
  *
- * @param s                The state stack to be initialized.
+ * @param a                The action stack to be initialized.
  * @param initial_capacity The initial stack capacity. If 0, stack is
  *                         initialized with a default value.
  * @return 1 if the allocation went well, 0 otherwise
@@ -68,21 +68,26 @@ pt_match_state *pt_push_state(pt_match_state_stack *s, pt_expr *e, size_t pos, s
 int pt_initialize_action_stack(pt_match_action_stack *s, size_t initial_capacity);
 
 /**
- * Destroy the State Stack, freeing the memory used.
+ * Destroy the Action Stack, freeing the memory used.
  *
- * @param s The state stack to be destroyed.
+ * @param a The action stack to be destroyed.
  */
 void pt_destroy_action_stack(pt_match_action_stack *s);
 
 /**
- * Push a State into the State Stack, doubling it's capacity, if needed.
+ * Push an Action into the Action Stack, doubling it's capacity, if needed.
  *
- * @param s   The state stack.
- * @param e   The Parsing Expression to be used for the next iteration.
- * @param pos The starting position of the stream for next iteration.
+ * @param a     The action stack.
+ * @param f     The function to be called as action.
+ * @param start The starting position of the stream for action.
+ * @param end   The ending position of the stream for action.
+ * @param argc  Number of arguments (inner action results) used by this action.
  * @return The newly pushed State.
  */
-pt_match_action *pt_push_action(pt_match_action_stack *a, pt_expression_action f, size_t start, size_t end);
+pt_match_action *pt_push_action(pt_match_action_stack *a,
+                                pt_expression_action f,
+                                size_t start, size_t end,
+                                int argc);
 
 #endif
 

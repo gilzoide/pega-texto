@@ -33,6 +33,7 @@
  * structuring the Grammar.
  */
 typedef union {
+	void *p;
 	char c;
 	unsigned char uc;
 	short s;
@@ -45,7 +46,6 @@ typedef union {
 	unsigned long long ull;
 	float f;
 	double d;
-	void *p;
 } pt_data;
 
 /**
