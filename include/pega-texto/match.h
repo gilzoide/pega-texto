@@ -70,6 +70,8 @@ typedef struct pt_match_result {
  * Options passed to the `pt_match*` functions.
  *
  * This contains callbacks to be called, as well as some memory usage control.
+ *
+ * @warning Zero initialize every unused option before calling `pt_match*`.
  */
 typedef struct {
 	pt_iteration_action each_iteration;  ///< The action to be performed on each iteration

@@ -34,7 +34,7 @@ int main() {
 	pt_validate_grammar(g, PT_VALIDATE_ABORT);
 
 	Position pos;
-	pt_match_options opts;
+	pt_match_options opts = {0};
 	opts.userdata = &pos;
 	pt_match_result res = pt_match_grammar(g, map1, &opts);
 	if(res.matched >= 0) {

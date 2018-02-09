@@ -11,5 +11,8 @@ install:
 - make
 
 script:
-- make test
+- ctest
+
+after_failure:
+- cat Testing/Temporary/LastTest.log
 

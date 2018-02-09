@@ -80,6 +80,7 @@ $ make
 <p>The API is documented using <a href="http://www.stack.nl/~dimitri/doxygen/">Doxygen</a> and is available at <a href="https://gilzoide.github.io/pega-texto/">github pages</a>. Check out the <a class="el" href="md_tutorial.html">Tutorial</a>.</p>
 <h2>Change log </h2>
 <ul>
+<li>1.2.7 - Removed all the Action sequence computation, as Actions are already stacked in the right sequence. Running actions is now iterative, O(n) and use far less memory.</li>
 <li>1.2.6 - Fixed <code>SEQ</code> and <code>OR</code> expression macros on C++, turns out they behave differently about temporary lifetime of arrays.</li>
 <li>1.2.5 - Fixed <code>SEQ</code> and <code>OR</code> expression macros to compile on both C and C++ using preprocessor macros and <code>initializer_list</code> directly on <code><a class="el" href="macro-on_8h.html" title="Turn on Parsing Expression constructor macros. ">macro-on.h</a></code>.</li>
 <li>1.2.4 - Added <code>extern "C"</code> declaration on <code><a class="el" href="pega-texto_8h.html" title="Main header file: include this and you&#39;re good to go! ">pega-texto.h</a></code> for using in C++.</li>
