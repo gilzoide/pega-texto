@@ -19,17 +19,20 @@
  */
 
 /** @file expr.h
- * Parsing Expressions.
- *
- * Parsing Expressions can be combined to create PEGs, which can match text.
+ * Parsing Expressions that can be combined to create PEGs, which can match text.
  *
  * Types of Expressions:
  * - __Literal__ (`"string"`): match a string literally.
+ * - __Case Insensitive__ (`I"string"`): match a string literally, insensitive
+ *   to case.
+ * - __Character class__ (`int(*)(char)`): match character if function applied
+ *   to it returns non-zero. Perfect for the `"is?????"` function family from
+ *   "ctype.h".
  * - __Set__ (`[chars]`): match any character in a set.
  * - __Range__ (`[c1-c2]`): match a character between a range.
  * - __Any__ (`.`): only fail at end of stream ('\0').
- * - __Non-terminal__ (`Non-terminal-name or index`): match the expression in a given
- *   index in the grammar.
+ * - __Non-terminal__ (`Non-terminal-name or index`): match the expression in a
+ *   given index in the Grammar.
  * - __Quantifier__ (`e^N`): If N is non-negative, match N or more occurrences
  *   of `e`. If N is negative, match at most `|N|` occurrences of `e`. In
  *   particular, `e^0 == e*`, `e^1 == e+` and `e^-1 == e?` on the original PEG
@@ -38,12 +41,17 @@
  * - __Not__ (`!e`): match only if input doesn't match `e`.
  * - __Sequence__ (`e1 e2 ...`): match if all Expressions match in sequence.
  *   An empty Sequence will always match.
- * - __Choice__ (`e1 / e2 / ...`): match either one of the Expressions, trying from
- *   the first one to the last. An empty Choice will always fail.
- * - __Custom Matcher__: match if function `matcher` applied to next character
- *   returns non-zero.
+ * - __Choice__ (`e1 / e2 / ...`): match either one of the Expressions, trying
+ *   from the first one to the last. An empty Choice will always fail.
+ * - __Custom Matcher__ (`int(*)(const char *, void *)`): matches the number of
+ *   characters as the function returns, if positive. If it returns
+ *   zero or negative values, there's no match. Note that if zero was accepted
+ *   as match, there was no way to tell if a grammar containing this Expression
+ *   was valid. Also note that the function will receive the string at current
+ *   match position and should not match more than the string's capacity, which
+ *   would cause a segmentation fault.
  * - __Error__: represents a syntactic error, with optional syncronization.
- *   Every error has a numeric code, which should probably all differ.
+ *   Every error has a numeric code, which should most likely all differ.
  */
 
 #ifndef __PEGA_TEXTO_EXPR_H__
@@ -59,6 +67,9 @@
 typedef enum {
 	// Primary
 	PT_LITERAL,          // "string"
+	PT_CASE_INSENSITIVE, // I"string"
+	PT_CHARACTER_CLASS,  // int(char) // If return 0, match fails
+	                                  // If return non-zero, match succeeds, advance 1
 	PT_SET,              // [chars]
 	PT_RANGE,            // [c1-c2]
 	PT_ANY,              // .
@@ -75,16 +86,18 @@ typedef enum {
 	PT_SEQUENCE,         // e1 e2
 	PT_CHOICE,           // e1 / e2
 	// Custom match by function
-	PT_CUSTOM_MATCHER,   // function(c) // If return 0, match fails
-	                                    // If return nonzero, match succeeds, advance 1
+	PT_CUSTOM_MATCHER,   // int(const char *, void *) // Return how many characters were matched
+	                                                  // Return non-positive values for no match to occur
 	PT_ERROR,            // ERROR // Represents a syntactic error
 } pt_operation;
 
 /// String version of the possible operations.
 extern const char * const pt_operation_names[];
 
+/// A function that receives a string and userdata and match it (positive) or not, advancing the matched number.
+typedef int(*pt_custom_matcher_function)(const char *, void *);
 /// A function that receives a character (int) and match it (non-zero) or not (0).
-typedef int(*pt_custom_matcher)(int);
+typedef int(*pt_character_class_function)(int);
 
 /// Parsing Expressions.
 typedef struct pt_expr {
@@ -97,7 +110,9 @@ typedef struct pt_expr {
 		/// N-ary operators: a N-array of operands.
 		struct pt_expr **es;
 		/// Custom match function.
-		pt_custom_matcher matcher;
+		pt_custom_matcher_function matcher;
+		/// Character class function.
+		pt_character_class_function test_character_class;
 	} data;
 	pt_expression_action action;  ///< Action to be called when the whole match succeeds.
 	int16_t N;  ///< Quantifier, array size for N-ary operations, Non-Terminal index or Literal length, Error code.
@@ -113,6 +128,21 @@ typedef struct pt_expr {
  * @param action         Action associated to the Expression.
  */
 pt_expr *pt_create_literal(const char *str, uint8_t own_characters, pt_expression_action action);
+/**
+ * Create a Case Insensitive Expression.
+ *
+ * @param str            Literal string to be matched ignoring case.
+ * @param own_characters Should Expression own the `characters` buffer?
+ * @param action         Action associated to the Expression.
+ */
+pt_expr *pt_create_case_insensitive(const char *str, uint8_t own_characters, pt_expression_action action);
+/**
+ * Create a Character Class Expression.
+ *
+ * @param f      Custom function that returns true for characters in the class.
+ * @param action Action associated to the Expression.
+ */
+pt_expr *pt_create_character_class(pt_character_class_function f, pt_expression_action action);
 /**
  * Create a Set Expression.
  *
@@ -197,7 +227,7 @@ pt_expr *pt_create_choice(pt_expr **es, int N, uint8_t own_expressions, pt_expre
  * @param f      Custom Matcher function.
  * @param action Action associated to the Expression.
  */
-pt_expr *pt_create_custom_matcher(pt_custom_matcher f, pt_expression_action action);
+pt_expr *pt_create_custom_matcher(pt_custom_matcher_function f, pt_expression_action action);
 /**
  * Create an Error Expression.
  *

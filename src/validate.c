@@ -107,6 +107,12 @@ static int pt_validate_expr_in_grammar(pt_grammar *g, pt_expr *e, uint16_t *rule
 	visited_rules[cur_rule].was_visited = 1;
 
 	switch(e->op) {
+		case PT_LITERAL: case PT_CASE_INSENSITIVE: case PT_CHARACTER_CLASS: case PT_CUSTOM_MATCHER:
+			if(e->data.characters == NULL) {
+				return PT_VALIDATE_NULL_POINTER;
+			}
+			break;
+
 		case PT_RANGE:
 			if(e->data.characters == NULL) {
 				return PT_VALIDATE_NULL_POINTER;

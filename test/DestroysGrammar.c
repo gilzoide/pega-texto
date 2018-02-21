@@ -8,8 +8,8 @@ int main() {
 	// No-own
 	pt_rule R[] = {
 		{ "Axiom", SEQ(L("oi"), V("space"), Q(V("Letters"), 1)) },
-		{ "Space", F(isspace) }, // space
-		{ "Letters", F(isalpha) }, // letters
+		{ "Space", C(isspace) }, // space
+		{ "Letters", C(isalpha) }, // letters
 		{ NULL, NULL },
 	};
 	pt_grammar *g;

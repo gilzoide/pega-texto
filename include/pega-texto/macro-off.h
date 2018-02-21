@@ -28,6 +28,10 @@
 #undef L_
 #undef L_O
 #undef L_O_
+#undef I
+#undef I_
+#undef I_O
+#undef I_O_
 #undef S
 #undef S_
 #undef S_O

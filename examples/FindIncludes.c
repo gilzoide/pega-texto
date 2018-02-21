@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
 		{ "Include", SEQ(L("#"), V("Space"), L("include"), V("Space"), OR(V("Angled"), V("Quoted"))) },
 		{ "Angled", SEQ(L("<"), Q(BUT(L(">")), 1), L(">")) },
 		{ "Quoted", SEQ(L("\""), Q(BUT(L("\"")), 1), L("\"")) },
-		{ "Space", Q(F(isspace), 0) },
+		{ "Space", Q(C(isspace), 0) },
 		{ NULL, NULL },
 	};
 	pt_grammar *g = pt_create_grammar(R, 0);

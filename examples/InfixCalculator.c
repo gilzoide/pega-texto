@@ -49,8 +49,8 @@ int main(int argc, char **argv) {
 		{ "Term", SEQ_(calc, V("Factor"), Q(SEQ(V("FactorOp"), V("Factor")), 0)) },
 		{ "Factor", OR(V("Number"), SEQ(V("OpenParen"), V("Exp"), V("CloseParen"))) },
 		// Lexical elements
-		{ "Space", Q(F(isspace), 0) },
-		{ "Number", SEQ_(tonumber, Q(S("+-"), -1), Q(F(isdigit), 1), V("Space")) },
+		{ "Space", Q(C(isspace), 0) },
+		{ "Number", SEQ_(tonumber, Q(S("+-"), -1), Q(C(isdigit), 1), V("Space")) },
 		{ "TermOp", SEQ_(get_op, S("+-"), V("Space")) },
 		{ "FactorOp", SEQ_(get_op, S("*/"), V("Space")) },
 		{ "OpenParen", SEQ(L("("), V("Space")) },

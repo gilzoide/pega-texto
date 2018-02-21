@@ -26,6 +26,8 @@
 
 const char * const pt_operation_names[] = {
 	"PT_LITERAL",
+	"PT_CASE_INSENSITIVE",
+	"PT_CHARACTER_CLASS",
 	"PT_SET",
 	"PT_RANGE",
 	"PT_ANY",
@@ -46,13 +48,30 @@ const char * const pt_operation_names[] = {
 	}                                        \
 	return new_expr;
 
-
 pt_expr *pt_create_literal(const char *str, uint8_t own_characters, pt_expression_action action) {
 	NEW_EXPR(
 		new_expr->op = PT_LITERAL;
 		new_expr->data.characters = str;
 		new_expr->N = strlen(str);
 		new_expr->own_memory = own_characters;
+		new_expr->action = action;
+	)
+}
+
+pt_expr *pt_create_case_insensitive(const char *str, uint8_t own_characters, pt_expression_action action) {
+	NEW_EXPR(
+		new_expr->op = PT_CASE_INSENSITIVE;
+		new_expr->data.characters = str;
+		new_expr->N = strlen(str);
+		new_expr->own_memory = own_characters;
+		new_expr->action = action;
+	)
+}
+
+pt_expr *pt_create_character_class(pt_character_class_function f, pt_expression_action action) {
+	NEW_EXPR(
+		new_expr->op = PT_CHARACTER_CLASS;
+		new_expr->data.test_character_class = f;
 		new_expr->action = action;
 	)
 }
@@ -149,7 +168,7 @@ pt_expr *pt_create_choice(pt_expr **es, int N, uint8_t own_expressions, pt_expre
 	)
 }
 
-pt_expr *pt_create_custom_matcher(pt_custom_matcher f, pt_expression_action action) {
+pt_expr *pt_create_custom_matcher(pt_custom_matcher_function f, pt_expression_action action) {
 	NEW_EXPR(
 		new_expr->op = PT_CUSTOM_MATCHER;
 		new_expr->data.matcher = f;
@@ -175,7 +194,7 @@ void pt_destroy_expr(pt_expr *e) {
 				if(!e->data.characters) {
 					break;
 				}
-			case PT_LITERAL: case PT_SET: case PT_RANGE:
+			case PT_LITERAL: case PT_CASE_INSENSITIVE: case PT_SET: case PT_RANGE:
 				if(e->own_memory) {
 					free((void *) e->data.characters);
 				}

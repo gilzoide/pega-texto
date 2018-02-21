@@ -49,7 +49,7 @@ typedef union {
 } pt_data;
 
 /**
- * Facility to return a "whatever" #pt_data
+ * Facility to return a null #pt_data
  */
 #define PT_NULL_DATA ((pt_data){0})
 

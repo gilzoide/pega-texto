@@ -31,8 +31,6 @@
  * (see @ref pt_expression_action).
  */
 
-// Utility function to create Sequence and Choice Expressions from an array.
-// C and C++ treat arrays differently, so there is one initializer style for each.
 #ifndef __PEGA_TEXTO_MACRO_ON_H__
 #define __PEGA_TEXTO_MACRO_ON_H__
 
@@ -52,6 +50,11 @@
 	for(aux = nt_exprs; *aux; aux++); \
 	N = aux - nt_exprs
 #endif
+/**
+ * Utility function to create Sequence and Choice Expressions from an array.
+ *
+ * C and C++ treat arrays differently, so there is one initializer style for each.
+ */
 static pt_expr *__pt_expr_from_array(pt_expr *(*f)(pt_expr **, int, uint8_t, pt_expression_action),
                               __PT_EXPR_FROM_ARRAY_PARAM,
                               uint8_t own_expressions,
@@ -77,6 +80,14 @@ static pt_expr *__pt_expr_from_array(pt_expr *(*f)(pt_expr **, int, uint8_t, pt_
 #define L_(a, s)        (pt_create_literal(s, 0, a))
 #define L_O(s)          (pt_create_literal(s, 1, NULL))
 #define L_O_(a, s)      (pt_create_literal(s, 1, a))
+/// Create a Case Insensitive Expression.
+#define I(s)            (pt_create_case_insensitive(s, 0, NULL))
+#define I_(a, s)        (pt_create_case_insensitive(s, 0, a))
+#define I_O(s)          (pt_create_case_insensitive(s, 1, NULL))
+#define I_O_(a, s)      (pt_create_case_insensitive(s, 1, a))
+/// Create a Character Class Expression.
+#define C(f)            (pt_create_character_class(f, NULL))
+#define C_(a, f)        (pt_create_character_class(f, a))
 /// Create a Set Expression.
 #define S(s)            (pt_create_set(s, 0, NULL))
 #define S_(a, s)        (pt_create_set(s, 0, a))

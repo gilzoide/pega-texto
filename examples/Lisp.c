@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
 		{ "List", SEQ_(list, L("("), V("Spaces"), Q(V("Sexp"), 0), L(")")) },
 		{ "Atom", Q_(atom, BUT(OR(S("()"), V("Space"))), 1) },
 		{ "Spaces", Q(V("Space"), 0) },
-		{ "Space", OR(V("Comment"), F(isspace)) },
+		{ "Space", OR(V("Comment"), C(isspace)) },
 		{ "Comment", SEQ(L(";"), Q(BUT(L("\n")), 0)) },
 		{ NULL, NULL },
 	};

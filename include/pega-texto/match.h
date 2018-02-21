@@ -53,7 +53,7 @@ typedef enum {
  */
 typedef struct pt_match_result {
 	/**
-	 * If positive, represents the number of characters matched;
+	 * If non-negative, represents the number of characters matched;
 	 * otherwise, it's an error code.
 	 */
 	int matched;
@@ -71,15 +71,17 @@ typedef struct pt_match_result {
  *
  * This contains callbacks to be called, as well as some memory usage control.
  *
+ * @note The first field is the userdata, so you can easily initialize it with
+ *       an aggregate initializer.
  * @warning Zero initialize every unused option before calling `pt_match*`.
  */
 typedef struct {
+	void *userdata;  ///< Custom user data for the actions
 	pt_iteration_action each_iteration;  ///< The action to be performed on each iteration
 	pt_end_action on_end;  ///< The action to be performed when the match algorithm ends
 	pt_success_action each_success;  ///< The action to be performed when any match succeeds
 	pt_fail_action each_fail;  ///< The action to be performed when the whole match fails
 	pt_error_action on_error;  ///< The action to be performed when a syntactic error is found
-	void *userdata;  ///< Custom user data for the actions
 	int initial_stack_capacity;  ///< The initial capacity for the stack. If 0, stack capacity will begin at a reasonable default
 } pt_match_options;
 

@@ -18,7 +18,7 @@ pt_data count_and_sum_number(const char *str, size_t start, size_t end, int argc
 
 int main() {
 	// Numbers <- ({%d+} / .)*
-	pt_expr *e = Q(OR(Q_(&count_and_sum_number, F(isdigit), 1), ANY), 0);
+	pt_expr *e = Q(OR(Q_(&count_and_sum_number, C(isdigit), 1), ANY), 0);
 	count_and_sum cs = {};
 	pt_match_options opts = {
 		.userdata = &cs,

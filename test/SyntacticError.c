@@ -17,9 +17,9 @@ int main() {
 	pt_rule R[] = {
 		{ "S", SEQ(V("Id"), V("List")) },
 		{ "List", OR(NOT(ANY), SEQ(V("Comma"), V("Id"), V("List"))) },
-		{ "Id", OR(SEQ(V("Sp"), Q(F(islower), 1)), E(0, L(","))) },
-		{ "Comma", OR(SEQ(V("Sp"), L(",")), E(1, Q(F(islower), 1))) },
-		{ "Sp", Q(F(isspace), 0) },
+		{ "Id", OR(SEQ(V("Sp"), Q(C(islower), 1)), E(0, L(","))) },
+		{ "Comma", OR(SEQ(V("Sp"), L(",")), E(1, Q(C(islower), 1))) },
+		{ "Sp", Q(C(isspace), 0) },
 		{ NULL, NULL },
 	};
 	pt_grammar *g = pt_create_grammar(R, 0);

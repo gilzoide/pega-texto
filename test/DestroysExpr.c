@@ -7,8 +7,8 @@
 int main() {
 	pt_expr *e[] = {
 		SEQ(L("hi there,"), VI(1), Q(VI(2), 1)),
-		F(isspace), // space
-		F(isalpha), // letters
+		C(isspace), // space
+		C(isalpha), // letters
 		L_O(strdup("Expression may own strings, which will be `free`d")),
 		L_O(strdup("just use the `*_O` macros =]")),
 		V("Memory management is important in C, be careful with"),

@@ -42,12 +42,15 @@ From build directory, after building:
 Documentation
 -------------
 The API is documented using [Doxygen](http://www.stack.nl/~dimitri/doxygen/)
-and is available at [github pages](https://gilzoide.github.io/pega-texto/).
+and is available at [github pages](https://gilzoide.github.io/pega-texto-docs/).
 Also check out the [tutorial](tutorial.md).
 
 
 Change log
 ----------
++ 2.0.0 - ABI change on `pt_match_options`, included Case Insensitive and
+  Character Class Expressions (the old Custom Matcher), changed Custom Matcher
+  Expressions to allow operating on strings, also receiving userdata.
 + 1.2.7 - Removed all the Action sequence computation, as Actions are already
   stacked in the right sequence. Running actions is now iterative, O(n) and use
   far less memory.

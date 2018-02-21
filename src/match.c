@@ -190,6 +190,18 @@ pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_m
 				}
 				break;
 
+			case PT_CASE_INSENSITIVE:
+				if(strncasecmp(ptr, e->data.characters, e->N) == 0) {
+					matched = e->N;
+				}
+				break;
+
+			case PT_CHARACTER_CLASS:
+				if(e->data.test_character_class(*ptr)) {
+					matched = 1;
+				}
+				break;
+
 			case PT_SET:
 				if(*ptr && strchr(e->data.characters, *ptr)) {
 					matched = 1;
@@ -281,8 +293,8 @@ iterate_quantifier:
 
 			// Others
 			case PT_CUSTOM_MATCHER:
-				if(e->data.matcher(*ptr)) {
-					matched = 1;
+				if((matched = e->data.matcher(ptr, opts->userdata)) <= 0) {
+					matched = PT_NO_MATCH;
 				}
 				break;
 

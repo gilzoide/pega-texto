@@ -39,7 +39,7 @@ pt_data defined(const char *str, size_t start, size_t end, int argc, pt_data *ar
 		case 'x': case 'X': f = isxdigit; break;
 		default: assert(0 && "No way the class is not in [wWaAcCdDgGlLpPsSuUxX]"); break;
 	}
-	pt_expr *e = F(f);
+	pt_expr *e = C(f);
 	if(isupper(c)) {
 		e = BUT(e);
 	}
@@ -98,21 +98,25 @@ pt_data one_char(const char *str, size_t start, size_t end, int argc, pt_data *a
 	}
 	return (pt_data){ .p = e };
 }
-pt_data literal(const char *str, size_t start, size_t end, int argc, pt_data *argv, void *data) {
+pt_data concat_characters(const char *str, size_t start, size_t end, int argc, pt_data *argv, void *data) {
 	char *l;
-	pt_expr *e = NULL;
 	if(l = malloc((argc + 1) * sizeof(char))) {
 		int i;
 		for(i = 0; i < argc; i++) {
 			l[i] = argv[i].c;
 		}
 		l[i] = '\0';
-		e = L_O(l);
 	}
-	return (pt_data){ .p = e };
+	return (pt_data){ .p = l };
 }
-pt_data char_class(const char *str, size_t start, size_t end, int argc, pt_data *argv, void *data) {
-	assert(argc > 0 && "Class");
+pt_data literal(const char *str, size_t start, size_t end, int argc, pt_data *argv, void *data) {
+	return (pt_data){ .p = L_O(argv[0].p) };
+}
+pt_data case_insensitive(const char *str, size_t start, size_t end, int argc, pt_data *argv, void *data) {
+	return (pt_data){ .p = I_O(argv[0].p) };
+}
+pt_data char_set(const char *str, size_t start, size_t end, int argc, pt_data *argv, void *data) {
+	assert(argc > 0 && "CharacterSet");
 	pt_expr *e;
 	if(argc > 1) {
 		pt_expr **es;
@@ -236,13 +240,16 @@ pt_grammar *create_grammar_from_string(const char *str, ...) {
 	 *          / "{" S Exp "}" S
 	 *          / Defined
 	 *          / Literal
-	 *          / Class
+	 *          / CaseInsensitive
+	 *          / CharacterSet
 	 *          / "." S
 	 *          / Identifier !Arrow
 	 *
-	 * Literal <- '"' (!'"' Character)* '"' S
-	 *          / "'" (!"'" Character)* "'" S
-	 * Class <- "[" "^"? Item (!"]" Item)* "]" S
+	 * Literal <- String
+	 * CaseInsensitive <- "I" String
+	 * String <- '"' (!'"' Character)* '"' S
+	 *         / "'" (!"'" Character)* "'" S
+	 * CharacterSet <- "[" "^"? Item (!"]" Item)* "]" S
 	 * Item <- Defined / Range / .
 	 * Range <- . "-" [^]]
 	 * Character <- "\\" [abfnrtv'"\[\]\\]
@@ -270,13 +277,16 @@ pt_grammar *create_grammar_from_string(const char *str, ...) {
 		                SEQ_(with_action, L("{"), V("S"), V("Exp"), L("}"), V("S")),
 		                V("Defined"),
 		                V("Literal"),
-		                V("Class"),
+		                V("CaseInsensitive"),
+		                V("CharacterSet"),
 		                SEQ_(create_any, L("."), V("S")),
 		                SEQ(V_(non_terminal, "Identifier"), NOT(V("Arrow")))) },
-		{ "Literal", OR_(literal,
-		                 SEQ(L("\""), Q(SEQ(NOT(L("\"")), V("Character")), 0), L("\""), V("S")),
-		                 SEQ(L("\'"), Q(SEQ(NOT(L("\'")), V("Character")), 0), L("\'"), V("S"))) },
-		{ "Class", SEQ_(char_class, L("["), Q(L("^"), -1), V("Item"), Q(SEQ(NOT(L("]")), V("Item")), 0), L("]"), V("S")) },
+		{ "String", OR_(concat_characters,
+		                SEQ(L("\""), Q(SEQ(NOT(L("\"")), V("Character")), 0), L("\""), V("S")),
+		                SEQ(L("\'"), Q(SEQ(NOT(L("\'")), V("Character")), 0), L("\'"), V("S"))) },
+		{ "Literal", V_(literal, "String") },
+		{ "CaseInsensitive", SEQ(L("I"), V_(case_insensitive, "String")) },
+		{ "CharacterSet", SEQ_(char_set, L("["), Q(L("^"), -1), V("Item"), Q(SEQ(NOT(L("]")), V("Item")), 0), L("]"), V("S")) },
 		{ "Item", OR(V("Defined"), V("Range"), V_(one_char, "Character")) },
 		{ "Range", SEQ_(range, ANY, L("-"), BUT(L("]"))) },
 		{ "Character", OR_(character,
@@ -286,10 +296,10 @@ pt_grammar *create_grammar_from_string(const char *str, ...) {
 		                   ANY) },
 		{ "Defined", SEQ(L("\\"), S_(defined, "wWaAcCdDgGlLpPsSuUxX"), V("S")) },
 
-		{ "S", Q(OR(F(isspace), SEQ(L("#"), Q(BUT(L("\n")), 0))), 0) },
-		{ "Identifier", SEQ(SEQ_(identifier, OR(F(isalpha), L("_")), Q(OR(F(isalnum), S("_-")), 0)), V("S")) },
+		{ "S", Q(OR(C(isspace), SEQ(L("#"), Q(BUT(L("\n")), 0))), 0) },
+		{ "Identifier", SEQ(SEQ_(identifier, OR(C(isalpha), L("_")), Q(OR(C(isalnum), S("_-")), 0)), V("S")) },
 		{ "Arrow", SEQ(L("<-"), V("S")) },
-		{ "Number", SEQ_(tonumber, Q(S("+-"), -1), Q(F(isdigit), 1), V("S")) },
+		{ "Number", SEQ_(tonumber, Q(S("+-"), -1), Q(C(isdigit), 1), V("S")) },
 		{ NULL, NULL },
 	};
 	pt_grammar *re = pt_create_grammar(rules, 0);
@@ -341,13 +351,16 @@ int main(int argc, char **argv) {
 "         / \"{\" S Exp \"}\" S \n"
 "         / Defined \n"
 "         / Literal \n"
-"         / Class \n"
+"         / CaseInsensitive \n"
+"         / CharacterSet \n"
 "         / \".\" S \n"
 "         / Identifier !Arrow \n"
 
-"Literal <- \'\"\' (!\'\"\' Character)* \'\"\' S \n"
-"         / \"\'\" (!\"\'\" Character)* \"\'\" S \n"
-"Class <- \"[\" \"^\"? Item (!\"]\" Item)* \"]\" S \n"
+"Literal <- String \n"
+"CaseInsensitive <- \"I\" String \n"
+"String <- \'\"\' (!\'\"\' Character)* \'\"\' S \n"
+"        / \"\'\" (!\"\'\" Character)* \"\'\" S \n"
+"CharacterSet <- \"[\" \"^\"? Item (!\"]\" Item)* \"]\" S \n"
 "Item <- Defined / Range / Character \n"
 "Range <- . \"-\" [^]] \n"
 "Character <- \"\\\\\" [abfnrtv\'\"\\[\\]\\\\] \n"

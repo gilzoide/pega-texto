@@ -27,15 +27,14 @@ pt_data count_lines(const char *str, size_t start, size_t end, int argc, pt_data
 int main() {
 	pt_rule rules[] = {
 		{ "Where", SEQ(Q(OR(L_(count_lines, "\n"), BUT(V("Wally"))), 0), V("Wally")) },
-		{ "Wally", SEQ(S("Ww"), S("Aa"), S("Ll"), S("Ll"), S("Yy")) },
+		{ "Wally", I("wally") },
 		{ NULL, NULL },
 	};
 	pt_grammar *g = pt_create_grammar(rules, 0);
 	pt_validate_grammar(g, PT_VALIDATE_ABORT);
 
 	Position pos;
-	pt_match_options opts = {0};
-	opts.userdata = &pos;
+	pt_match_options opts = {&pos};
 	pt_match_result res = pt_match_grammar(g, map1, &opts);
 	if(res.matched >= 0) {
 		cout << "Found ";

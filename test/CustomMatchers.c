@@ -2,24 +2,30 @@
 
 #include <ctype.h>
 
-int always_match(int _) {
-	return 1;
+int alphabetically_ordered(const char *str, void *data) {
+	int i = 0;
+	while(str[i] && str[i] <= str[i + 1]) i++;
+	return i ? i + 1 : i;
 }
-int iseof(int c) {
-	return c == 0;
+
+int whole_alphabet(const char *str, void *data) {
+	int i = 0;
+	while(str[i] && str[i + 1] == str[i] + 1) i++;
+	return i == 25 ? i : 0;
 }
 
 int main() {
-	pt_expr *alpha = F(isalpha);
-	pt_expr *eof = F(iseof);
+	pt_expr *ordered = SEQ(F(alphabetically_ordered), NOT(ANY));
+	pt_expr *alphabet = F(whole_alphabet);
 
-	puts(Yes(alpha, "j") && Yes(alpha, "x") &&
-		No(alpha, "7") && No(alpha, "") &&
-		Yes(eof, "") &&
-		No(eof, " ")
+	puts(
+		Yes(ordered, "abcd") && No(ordered, "abdc") &&
+		Yes(ordered, "ABab") && No(ordered, "abAB") &&
+		Yes(alphabet, "abcdefghijklmnopqrstuvwxyz") && No(alphabet, "abcdefghijklmnopqrstuvwxy") &&
+		Yes(alphabet, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") && No(alphabet, "ABCDEFGHIJKLMNOPQRSTUVWXYz")
 		? "PASS" : "FAIL");
 
-	pt_destroy_expr(alpha);
-	pt_destroy_expr(eof);
+	pt_destroy_expr(ordered);
+	pt_destroy_expr(alphabet);
 	return 0;
 }

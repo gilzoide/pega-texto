@@ -31,6 +31,7 @@
 
 /// Forward declaration
 typedef struct pt_match_state_stack pt_match_state_stack;
+/// Forward declaration
 typedef struct pt_match_result pt_match_result;
 
 /**

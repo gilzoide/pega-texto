@@ -5,6 +5,7 @@ int main() {
 	pt_expr *set = S("abcde");
 	pt_expr *range = R("az");
 	pt_expr *any = ANY;
+	pt_expr *case_insensitive = I("latex");
 	char control_stuff[] = {1, 0};
 
 	puts(
@@ -15,12 +16,14 @@ int main() {
 		Yes(range, "a") && Yes(range, "h") && Yes(range, "super cool") && Yes(range, "zoboomafoo") &&
 		No(range, "A") && No(range, "") && No(range, ".") &&
 		Yes(any, "\t") && Yes(any, control_stuff) &&
-		No(any, "")
+		No(any, "") &&
+		Yes(case_insensitive, "LaTeX") && Yes(case_insensitive, "LATEX") && No(case_insensitive, "just word")
 		? "PASS" : "FAIL");
 
 	pt_destroy_expr(literal);
 	pt_destroy_expr(set);
 	pt_destroy_expr(range);
 	pt_destroy_expr(any);
+	pt_destroy_expr(case_insensitive);
 	return 0;
 }
