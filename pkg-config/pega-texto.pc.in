@@ -6,4 +6,4 @@ Name: pega-texto
 Description: A runtime engine for Parsing Expression Grammars (PEG) in C
 Version: @PROJECT_VERSION@
 Cflags: -I${includedir}
-Libs: -L${libdir} -lpega-texto
+Libs: -L${libdir} -lpega-texto@WITH_SOVERSION@

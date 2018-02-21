@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 2.6)
-set(PROJECT_VERSION 1.2.7)
+
+set(PROJECT_VERSION_MAJOR 1)
+set(PROJECT_VERSION_MINOR 2)
+set(PROJECT_VERSION_PATCH 7)
+set(PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
+set(PROJECT_SOVERSION ${PROJECT_VERSION_MAJOR})
+
 if(${CMAKE_VERSION} VERSION_GREATER 3.0)
 	cmake_policy(SET CMP0048 NEW)
 	project(pega-texto VERSION ${PROJECT_VERSION})
@@ -13,6 +19,9 @@ add_definitions(-DPROJECT_VERSION="${PROJECT_VERSION}")
 
 # Build stuff
 option(BUILD_SHARED_LIBS "Build as a shared library" ON)
+if(UNIX)
+	option(LINK_SONAME_FILE "Create an additional symlink and pkg-config script for library based on it's SONAME" ON)
+endif()
 add_subdirectory(src)
 add_subdirectory(pkg-config)
 

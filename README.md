@@ -43,7 +43,7 @@ Documentation
 -------------
 The API is documented using [Doxygen](http://www.stack.nl/~dimitri/doxygen/)
 and is available at [github pages](https://gilzoide.github.io/pega-texto/).
-Check out the [Tutorial](tutorial.md).
+Also check out the [tutorial](tutorial.md).
 
 
 Change log
