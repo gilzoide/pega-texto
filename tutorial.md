@@ -4,6 +4,8 @@ This tutorial will give you an overview of how to use *pega-texto*. Don't
 forget to also look at the reference manual and examples (I promise they're
 very informative!).
 
+**Note**: this tutorial is written for *pega-texto* version 2.
+
 Including and compiling
 -----------------------
 First things first: include the main header.
@@ -20,6 +22,9 @@ To compile a program that uses *pega-texto*, just use the `-lpega-texto` linker
 flag, also available from the `pkg-config` command. You may also compile
 *pega-texto* as a static library by passing `-DBUILD_SHARED_LIBS=OFF` to
 *CMake*.
+On Unix systems, a symbolic link to the library is created with the major
+version, so you may also link with `-lpega-texto1` or `-lpega-texto2`, or with
+`pkg-config pega-texto1 --libs` and `pkg-config pega-texto2 --libs`.
 
 
 Creating and destroying Expressions
@@ -51,7 +56,7 @@ and turned off by including `pega-texto/macro-off.h`.
 #include <ctype.h>
 
 int main(int argc, char **argv) {
-    pt_expr *e = SEQ(Q(S("+-"), -1), Q(F(isdigit), 1)); // Match integer: [+-]? \d+
+    pt_expr *e = SEQ(Q(S("+-"), -1), Q(C(isdigit), 1)); // Match integer: [+-]? \d+
     pt_destroy_expr(e);
     return 0;
 }
@@ -77,7 +82,7 @@ With an Expression in hands, you may start to match strings with
 #include <stdio.h>
 
 int main(int argc, char **argv) {
-    pt_expr *e = SEQ(Q(S("+-"), -1), Q(F(isdigit), 1)); // Match integer: [+-]? \d+
+    pt_expr *e = SEQ(Q(S("+-"), -1), Q(C(isdigit), 1)); // Match integer: [+-]? \d+
     pt_match_result res;
     res = pt_match_expr(e, "42 hello world!", NULL);
     if(res.matched > 0) {
@@ -114,8 +119,8 @@ int main(int argc, char **argv) {
      */
     pt_rule rules[] = {
         { "List", SEQ(V("Id"), Q(SEQ(L(","), V("Id")), 0)) },
-        { "Id", SEQ(V("Space"), Q(F(isalpha), 1), V("Space")) },
-        { "Space", Q(F(isspace), 0) },
+        { "Id", SEQ(V("Space"), Q(C(isalpha), 1), V("Space")) },
+        { "Space", Q(C(isspace), 0) },
         { NULL, NULL }, // pega-texto uses NULL-terminated arrays for Rules
     };
     pt_grammar *g = pt_create_grammar(rules, 0);
@@ -160,8 +165,8 @@ int main(int argc, char **argv) {
      */
     pt_rule rules[] = {
         { "List", SEQ(V("Id"), Q(SEQ(L(","), V("Id")), 0)) },
-        { "Id", SEQ(V("Space"), Q(F(isalpha), 1), V("Space")) },
-        { "Space", Q(F(isspace), 0) },
+        { "Id", SEQ(V("Space"), Q(C(isalpha), 1), V("Space")) },
+        { "Space", Q(C(isspace), 0) },
         { NULL, NULL }, // pega-texto uses NULL-terminated arrays for Rules
     };
     pt_grammar *g = pt_create_grammar(rules, 0);
@@ -242,8 +247,8 @@ int main(int argc, char **argv) {
      */
     pt_rule rules[] = {
         { "List", SEQ_(generate_list, V("Id"), Q(SEQ(L(","), V("Id")), 0)) },
-        { "Id", SEQ(V("Space"), Q_(copy_identifier, F(isalpha), 1), V("Space")) },
-        { "Space", Q(F(isspace), 0) },
+        { "Id", SEQ(V("Space"), Q_(copy_identifier, C(isalpha), 1), V("Space")) },
+        { "Space", Q(C(isspace), 0) },
         { NULL, NULL }, // pega-texto uses NULL-terminated arrays for Rules
     };
     pt_grammar *g = pt_create_grammar(rules, 0);
@@ -305,8 +310,8 @@ int main(int argc, char **argv) {
      */
     pt_rule rules[] = {
         { "List", SEQ(V("Id"), Q(SEQ(L(","), V("Id")), 0)) },
-        { "Id", SEQ(V("Space"), OR(Q(F(isalpha), 1), E(1, L(","))), V("Space")) },
-        { "Space", Q(F(isspace), 0) },
+        { "Id", SEQ(V("Space"), OR(Q(C(isalpha), 1), E(1, L(","))), V("Space")) },
+        { "Space", Q(C(isspace), 0) },
         { NULL, NULL }, // pega-texto uses NULL-terminated arrays for Rules
     };
     pt_grammar *g = pt_create_grammar(rules, 0);

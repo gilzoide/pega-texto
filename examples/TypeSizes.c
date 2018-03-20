@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #define PRINT_SIZE(s) \
-	printf(#s ": %d\n", sizeof(s))
+	printf(#s ": %ld\n", sizeof(s))
 
 int main() {
 	puts("Struct sizes:");
