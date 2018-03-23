@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gil Barbosa Reis <gilzoide@gmail.com>
+ * Copyright 2017, 2018 Gil Barbosa Reis <gilzoide@gmail.com>
  * This file is part of pega-texto.
  * 
  * Pega-texto is free software: you can redistribute it and/or modify
@@ -89,7 +89,7 @@ typedef struct {
 	pt_expression_action f;  ///< Action function.
 	size_t start;  ///< Start point of the match.
 	size_t end;  ///< End point of the match.
-	int argc;  ///< Number of arguments expected by Action.
+	int argc;  ///< Number of arguments that will be passed when Action is executed.
 } pt_match_action;
 
 /**
@@ -155,6 +155,7 @@ typedef void(*pt_fail_action)(const pt_match_state_stack *,
  * - A const pointer for the current State Stack, so you can examine it (if desired)
  * - A const pointer for the current Action Stack, so you can examine it (if desired)
  * - The original subject string
+ * - The result of the matching algorithm, after actions are run (if success)
  * - User custom data from match options
  */
 typedef void(*pt_end_action)(const pt_match_state_stack *,

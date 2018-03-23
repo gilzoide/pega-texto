@@ -6,7 +6,7 @@ set_target_properties(pega-texto PROPERTIES
 	VERSION "${PROJECT_VERSION}"
 	SOVERSION "${PROJECT_SOVERSION}")
 
-if(UNIX AND LINK_SONAME_FILE)
+if(UNIX AND BUILD_SHARED_LIBS AND LINK_SONAME_FILE)
 	if(APPLE)
 		set(lib-ext dylib)
 	else()
