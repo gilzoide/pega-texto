@@ -25,6 +25,20 @@ Using [CMake](https://cmake.org/):
 	$ make
 
 
+Package
+-------
+[CPack](https://cmake.org/Wiki/CMake:Packaging_With_CPack) is configured for
+packaging __pega-texto__. From build directory, after building:
+
+	$ cpack
+
+By default, it uses the TGZ, STGZ and TZ generators. You may override this with
+other [available generators](https://cmake.org/Wiki/CMake:CPackPackageGenerators)
+if you want:
+
+	$ cpack -DCPACK_GENERATOR=<generator>
+
+
 Install
 -------
 From build directory:
