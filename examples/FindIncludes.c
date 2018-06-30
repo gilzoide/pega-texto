@@ -16,7 +16,7 @@
 
 pt_data print_includes(const char *str, size_t begin, size_t end, int argc, pt_data *argv, void *data) {
 	int *count = data;
-	printf("%.*s\n", end - begin, str + begin);
+	printf("%.*s\n", (int)(end - begin), str + begin);
 	(*count)++;
 	return PT_NULL_DATA;
 }

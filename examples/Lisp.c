@@ -35,7 +35,7 @@ void print_cons_list(Cons *cell) {
 	if(cell == NULL) printf("nil");
 	else {
 		if(cell->is_atom) {
-			printf("%s", cell->car != NULL ? cell->car : "nil");
+			printf("%s", cell->car != NULL ? (char *)cell->car : "nil");
 		}
 		else {
 			printf("(");

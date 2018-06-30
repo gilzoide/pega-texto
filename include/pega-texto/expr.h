@@ -115,7 +115,7 @@ typedef struct pt_expr {
 		pt_character_class_function test_character_class;
 	} data;
 	pt_expression_action action;  ///< Action to be called when the whole match succeeds.
-	int16_t N;  ///< Quantifier, array size for N-ary operations, Non-Terminal index or Literal length, Error code.
+	int16_t N;  ///< Quantifier, array size for N-ary operations, Non-Terminal index, Literal length, Error code.
 	uint8_t op;  ///< Operation to be performed.
 	uint8_t own_memory : 1;  ///< Do Expression own the `characters`, `e` or `es` data buffer?
 } pt_expr;

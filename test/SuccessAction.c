@@ -19,7 +19,7 @@ void each_iteration(const pt_match_state_stack *s, const pt_match_action_stack *
 void each_success(const pt_match_state_stack *s, const pt_match_action_stack *a, const char *str, size_t start, size_t end, void *data) {
 	int i;
 	for(i = 0; i < s->size - 1; i++) fputc(' ', stdout);
-	printf("#success = matched \"%.*s\"\n", end - start, str + start);
+	printf("#success = matched \"%.*s\"\n", (int)(end - start), str + start);
 }
 
 void each_fail(const pt_match_state_stack *s, const pt_match_action_stack *a, const char *str, void *data) {

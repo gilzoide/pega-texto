@@ -3,7 +3,7 @@ pega-texto
 [![Build Status](https://travis-ci.org/gilzoide/pega-texto.svg?branch=master)](https://travis-ci.org/gilzoide/pega-texto)
 
 A runtime engine for [Parsing Expression Grammars (PEG)](http://bford.info/packrat/)
-in C, heavily inspired by [LPeg](http://www.inf.puc-rio.br/~roberto/lpeg/).
+in pure C, heavily inspired by [LPeg](http://www.inf.puc-rio.br/~roberto/lpeg/).
 
 In __pega-texto__, PEGs are just Expression arrays, and can be easily combined
 or rearranged dynamically. You can also provide a single expression (which, for
@@ -27,13 +27,14 @@ Using [CMake](https://cmake.org/):
 
 Package
 -------
-[CPack](https://cmake.org/Wiki/CMake:Packaging_With_CPack) is configured for
-packaging __pega-texto__. From build directory, after building:
+[CPack](https://gitlab.kitware.com/cmake/community/wikis/doc/cpack/Packaging-With-CPack)
+is configured for packaging __pega-texto__. From build directory, after
+building:
 
 	$ cpack
 
 By default, it uses the TGZ, STGZ and TZ generators. You may override this with
-other [available generators](https://cmake.org/Wiki/CMake:CPackPackageGenerators)
+other [available generators](https://gitlab.kitware.com/cmake/community/wikis/doc/cpack/PackageGenerators)
 if you want:
 
 	$ cpack -DCPACK_GENERATOR=<generator>
