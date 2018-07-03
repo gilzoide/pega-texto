@@ -25,6 +25,10 @@
 #ifndef __PEGA_TEXTO_GRAMMAR_H__
 #define __PEGA_TEXTO_GRAMMAR_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "pega-texto/expr.h"
 
 /**
@@ -71,6 +75,10 @@ pt_grammar *pt_create_grammar(pt_rule *rules, uint8_t own_names);
  * @param g Grammar to be destroyed.
  */
 void pt_destroy_grammar(pt_grammar *g);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

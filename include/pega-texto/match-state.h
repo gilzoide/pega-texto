@@ -25,6 +25,10 @@
 #ifndef __PEGA_TEXTO_MATCH_STATE_H__
 #define __PEGA_TEXTO_MATCH_STATE_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "pega-texto/expr.h"
 #include "pega-texto/action.h"
 
@@ -61,6 +65,10 @@ typedef struct pt_match_state_stack {
  * @return Current State, if there is any, `NULL` otherwise.
  */
 pt_match_state *pt_get_current_state(const pt_match_state_stack *s);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

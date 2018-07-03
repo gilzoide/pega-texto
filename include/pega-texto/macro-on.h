@@ -56,9 +56,9 @@
  * C and C++ treat arrays differently, so there is one initializer style for each.
  */
 static pt_expr *__pt_expr_from_array(pt_expr *(*f)(pt_expr **, int, uint8_t, pt_expression_action),
-                              __PT_EXPR_FROM_ARRAY_PARAM,
-                              uint8_t own_expressions,
-                              pt_expression_action action) {
+                                     __PT_EXPR_FROM_ARRAY_PARAM,
+                                     uint8_t own_expressions,
+                                     pt_expression_action action) {
 	int N, byte_size;
 	pt_expr **aux;
 	__PT_EXPR_FROM_ARRAY_GET_N;

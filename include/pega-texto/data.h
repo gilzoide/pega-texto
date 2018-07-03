@@ -25,6 +25,10 @@
 #ifndef __PEGA_TEXTO_DATA_H__
 #define __PEGA_TEXTO_DATA_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Collection of possible types for Expression Actions to return.
  *
@@ -52,6 +56,10 @@ typedef union {
  * Facility to return a null #pt_data
  */
 #define PT_NULL_DATA ((pt_data){NULL})
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

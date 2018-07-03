@@ -57,6 +57,10 @@
 #ifndef __PEGA_TEXTO_EXPR_H__
 #define __PEGA_TEXTO_EXPR_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "pega-texto/action.h"
 
 #include <stdint.h>
@@ -252,6 +256,10 @@ pt_expr *pt_create_error(int code, pt_expr *sync, uint8_t own_expression);
  * @param e Expression to be destroyed.
  */
 void pt_destroy_expr(pt_expr *e);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

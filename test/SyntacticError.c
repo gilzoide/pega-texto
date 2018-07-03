@@ -10,7 +10,7 @@ const char *error_messages[] = {
 };
 
 void print_error(const char *str, size_t where, int code, void *data) {
-	fprintf(stderr, "Syntatic error found at position %ld: %s\n", where, error_messages[code]);
+	fprintf(stderr, "Syntatic error found at position %zd: %s\n", where, error_messages[code]);
 }
 
 int main() {

@@ -25,6 +25,10 @@
 #ifndef __PEGA_TEXTO_ACTION_H__
 #define __PEGA_TEXTO_ACTION_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "pega-texto/data.h"
 
 #include <stdlib.h>
@@ -197,6 +201,10 @@ Found 7 includes
  * Complex #pt_expression_action example that creates PEGs using a Regex-like
  * syntax, and then matches the syntax described by itself.
  */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

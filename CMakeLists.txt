@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 
 set(PROJECT_VERSION_MAJOR 2)
 set(PROJECT_VERSION_MINOR 0)
-set(PROJECT_VERSION_PATCH 0)
+set(PROJECT_VERSION_PATCH 1)
 set(PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 set(PROJECT_SOVERSION ${PROJECT_VERSION_MAJOR})
 
@@ -39,10 +39,15 @@ if(COMPILE_EXAMPLES)
 	add_subdirectory(examples)
 endif()
 
-# Install headers
+# Process headers
+file(STRINGS "include/pega-texto.h" _version_line REGEX "PT_VERSION")
+string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" PEGA_TEXTO_VERSION ${_version_line})
+if(NOT PEGA_TEXTO_VERSION VERSION_EQUAL ${PROJECT_VERSION})
+	message(SEND_ERROR "Version from CMakeLists.txt doesn't match the one in pega-texto.h")
+endif()
+
 file(GLOB headers "include/pega-texto/*.h")
-configure_file("include/pega-texto.h" "pega-texto.h" @ONLY)
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/pega-texto.h" DESTINATION "include")
+install(FILES "include/pega-texto.h" DESTINATION "include")
 install(FILES ${headers} DESTINATION "include/${CMAKE_PROJECT_NAME}")
 
 

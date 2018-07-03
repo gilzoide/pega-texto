@@ -25,6 +25,10 @@
 #ifndef __PEGA_TEXTO_VALIDATE_H__
 #define __PEGA_TEXTO_VALIDATE_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "pega-texto/grammar.h"
 
 /**
@@ -106,6 +110,9 @@ typedef struct {
  */
 pt_validate_result pt_validate_grammar(pt_grammar *g, pt_validate_behaviour bhv);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

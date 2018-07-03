@@ -25,6 +25,10 @@
 #ifndef __PEGA_TEXTO_MATCH_H__
 #define __PEGA_TEXTO_MATCH_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "pega-texto/action.h"
 #include "pega-texto/data.h"
 #include "pega-texto/expr.h"
@@ -130,5 +134,9 @@ pt_match_result pt_match_expr(pt_expr *e, const char *str, pt_match_options *opt
  * @return Number of matched characters/error code, result of Action folding.
  */
 pt_match_result pt_match_grammar(pt_grammar *g, const char *str, pt_match_options *opts);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
