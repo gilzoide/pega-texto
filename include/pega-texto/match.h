@@ -51,7 +51,8 @@ typedef enum {
 } pt_macth_error_code;
 
 /**
- * Match result: a {matched chars/error code, action result} pair.
+ * Match result: a {number of matched chars/match error code, action
+ * result/syntactic error code} pair.
  *
  * This is returned by the `pt_match*` functions.
  */
@@ -62,10 +63,16 @@ typedef struct pt_match_result {
 	 */
 	int matched;
 	/**
-	 * Resulting data from the last top-level Action.
+	 * Resulting data from the last top-level Action or first syntactic error
+	 * found.
 	 *
-	 * If you need a single result for all top-level Actions, just create an
-	 * outer one that folds them (which will always be the last top-level one).
+	 * If `matched` is `PT_MATCHED_ERROR`, `data.i` will be populated with the
+	 * first syntactic error code found. This is useful if you don't want to
+	 * specify a #pt_error_action just for capturing the error code.
+	 *
+	 * @note If you need a single result for all top-level Actions, just create
+	 * an outer one that folds them (which will always be the last top-level
+	 * one).
 	 */
 	pt_data data;
 } pt_match_result;

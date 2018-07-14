@@ -63,6 +63,8 @@ Also check out the [tutorial](tutorial.md).
 
 Change log
 ----------
++ 2.1.0 - Populate `pt_match_result.data.i` with the first syntactic error code
+  when syntactic errors occur.
 + 2.0.1 - Put `extern "C"` declarations in inner headers.
 + 2.0.0 - ABI change on `pt_match_options`, included Case Insensitive and
   Character Class Expressions (the old Custom Matcher), changed Custom Matcher

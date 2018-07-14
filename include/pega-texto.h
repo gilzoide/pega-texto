@@ -28,6 +28,9 @@
 #ifndef __PEGA_TEXTO_H__
 #define __PEGA_TEXTO_H__
 
+/// Pega-texto version string
+#define PT_VERSION "2.1.0"
+
 #include "pega-texto/action.h"
 #include "pega-texto/data.h"
 #include "pega-texto/expr.h"
@@ -35,9 +38,6 @@
 #include "pega-texto/match.h"
 #include "pega-texto/match-state.h"
 #include "pega-texto/validate.h"
-
-/// Pega-texto version string
-#define PT_VERSION "2.0.1"
 
 #endif
 

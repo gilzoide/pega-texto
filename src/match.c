@@ -149,7 +149,7 @@ static pt_match_state *pt_match_error(pt_match_state_stack *s, pt_match_action_s
 pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_match_options *opts) {
 	int matched;
 	int matched_error = 0;
-	pt_data action_result = {};
+	pt_data result_data = {};
 	pt_match_state_stack S;
 	pt_match_action_stack A;
 	if(str == NULL) {
@@ -300,7 +300,10 @@ iterate_quantifier:
 
 			case PT_ERROR:
 				// mark that a syntactic error ocurred, so even syncing we remember this
-				matched_error = 1;
+				if(matched_error == 0) {
+					matched_error = 1;
+					result_data.i = e->N;
+				}
 				if(opts->on_error) {
 					opts->on_error(str, state->pos, e->N, opts->userdata);
 				}
@@ -320,10 +323,10 @@ iterate_quantifier:
 		matched = PT_MATCHED_ERROR;
 	}
 	else if(matched >= 0 && A.size > 0) {
-		action_result = pt_run_actions(&A, str, opts->userdata);
+		result_data = pt_run_actions(&A, str, opts->userdata);
 	}
 	if(opts->on_end) {
-		opts->on_end(&S, &A, str, (pt_match_result){matched, action_result}, opts->userdata);
+		opts->on_end(&S, &A, str, (pt_match_result){matched, result_data}, opts->userdata);
 	}
 
 	pt_destroy_action_stack(&A);
@@ -331,7 +334,7 @@ err_action_stack:
 	pt_destroy_state_stack(&S);
 err_state_stack:
 err_null_input:
-	return (pt_match_result){matched, action_result};
+	return (pt_match_result){matched, result_data};
 }
 
 pt_match_result pt_match_expr(pt_expr *e, const char *str, pt_match_options *opts) {
