@@ -5,7 +5,7 @@ find_program(VALGRIND valgrind)
 
 function(run_test_ext test_name pass ext)
 	add_executable(${test_name} "${test_name}.${ext}")
-	target_link_libraries(${test_name} pega-texto)
+	target_link_libraries(${test_name} $<TARGET_LINKER_FILE:pega-texto>)
 	add_test(${test_name} ${test_name} ${ARGN})
 
 	set(_pass ${pass})
