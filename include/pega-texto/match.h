@@ -97,7 +97,7 @@ typedef struct {
 } pt_match_options;
 
 /// Default match options: all 0 or NULL =P
-extern pt_match_options pt_default_match_options;
+extern const pt_match_options pt_default_match_options;
 
 /**
  * Try to match the string `str` with a PEG composed by Expressions and their names.
@@ -117,7 +117,7 @@ extern pt_match_options pt_default_match_options;
  *              @ref pt_default_match_options.
  * @return Number of matched characters/error code, result of Action folding.
  */
-pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_match_options *opts);
+pt_match_result pt_match(pt_expr **es, const char **names, const char *str, const pt_match_options *opts);
 /**
  * Try to match the string `str` with a PEG composed by an unamed single Expression.
  *
@@ -129,7 +129,7 @@ pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_m
  * @param opts Match options. If NULL, pega-texto will use the default value
  * @return Number of matched characters/error code, result of Action folding.
  */
-pt_match_result pt_match_expr(pt_expr *e, const char *str, pt_match_options *opts);
+pt_match_result pt_match_expr(pt_expr *e, const char *str, const pt_match_options *opts);
 /**
  * Try to match the string `str` with a PEG.
  *
@@ -140,7 +140,7 @@ pt_match_result pt_match_expr(pt_expr *e, const char *str, pt_match_options *opt
  * @param opts Match options. If NULL, pega-texto will use the default value
  * @return Number of matched characters/error code, result of Action folding.
  */
-pt_match_result pt_match_grammar(pt_grammar *g, const char *str, pt_match_options *opts);
+pt_match_result pt_match_grammar(pt_grammar *g, const char *str, const pt_match_options *opts);
 
 #ifdef __cplusplus
 }

@@ -250,7 +250,7 @@ pt_grammar *create_grammar_from_string(const char *str, ...) {
 	 * String <- '"' (!'"' Character)* '"' S
 	 *         / "'" (!"'" Character)* "'" S
 	 * CharacterSet <- "[" "^"? Item (!"]" Item)* "]" S
-	 * Item <- Defined / Range / .
+	 * Item <- Defined / Range / Character
 	 * Range <- . "-" [^]]
 	 * Character <- "\\" [abfnrtv'"\[\]\\]
 	 *            / "\\" [0-2][0-7][0-7]
@@ -319,20 +319,6 @@ pt_grammar *create_grammar_from_string(const char *str, ...) {
 	va_end(actions);
 	pt_destroy_grammar(re);
 	return g;
-}
-
-char *readfile(const char *filename) {
-	FILE *fp = fopen(filename, "r");
-	assert(fp != NULL && "Error reading file");
-	fseek(fp, 0, SEEK_END);
-	long size = ftell(fp);
-	fseek(fp, 0, SEEK_SET);
-	char *buffer = malloc((size + 1) * sizeof(char));
-	assert(buffer && "[readfile] Couldn't malloc buffer");
-	fread(buffer, sizeof(char), size, fp);
-	buffer[size] = '\0';
-	fclose(fp);
-	return buffer;
 }
 
 int main(int argc, char **argv) {

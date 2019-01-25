@@ -28,6 +28,12 @@
 #ifndef __PEGA_TEXTO_H__
 #define __PEGA_TEXTO_H__
 
+/// Pega-texto major version number
+#define PT_VERSION_MAJOR 2
+/// Pega-texto minor version number
+#define PT_VERSION_MINOR 1
+/// Pega-texto patch version number
+#define PT_VERSION_PATCH 0
 /// Pega-texto version string
 #define PT_VERSION "2.1.0"
 

@@ -35,7 +35,7 @@ static inline int pt_find_non_terminal_index(const char *name, const char **name
 
 /// Propagate success back until reach a Quantifier, Sequence, And or Not, changing it's position
 static pt_match_state *pt_match_succeed(pt_match_state_stack *s, pt_match_action_stack *a,
-		int *matched, const char *str, size_t new_pos, pt_match_options *opts) {
+		int *matched, const char *str, size_t new_pos, const pt_match_options *opts) {
 	pt_match_state *state = s->states + s->size - 1;
 	int i, queried_actions = state->qa;
 	if(opts->each_success) {
@@ -97,7 +97,7 @@ backtrack:
 
 /// Return to a backtrack point: either Quantifier, Choice or Not
 static pt_match_state *pt_match_fail(pt_match_state_stack *s, pt_match_action_stack *a,
-		const char *str, pt_match_options *opts) {
+		const char *str, const pt_match_options *opts) {
 	int i;
 	pt_match_state *state;
 	if(opts->each_fail) {
@@ -146,7 +146,7 @@ static pt_match_state *pt_match_error(pt_match_state_stack *s, pt_match_action_s
 }
 #include <pega-texto/macro-off.h>
 
-pt_match_result pt_match(pt_expr **es, const char **names, const char *str, pt_match_options *opts) {
+pt_match_result pt_match(pt_expr **es, const char **names, const char *str, const pt_match_options *opts) {
 	int matched;
 	int matched_error = 0;
 	pt_data result_data = {};
@@ -337,13 +337,13 @@ err_null_input:
 	return (pt_match_result){matched, result_data};
 }
 
-pt_match_result pt_match_expr(pt_expr *e, const char *str, pt_match_options *opts) {
+pt_match_result pt_match_expr(pt_expr *e, const char *str, const pt_match_options *opts) {
 	return pt_match(&e, NULL, str, opts);
 }
 
-pt_match_result pt_match_grammar(pt_grammar *g, const char *str, pt_match_options *opts) {
+pt_match_result pt_match_grammar(pt_grammar *g, const char *str, const pt_match_options *opts) {
 	return pt_match(g->es, g->names, str, opts);
 }
 
-pt_match_options pt_default_match_options = {};
+const pt_match_options pt_default_match_options = {};
 

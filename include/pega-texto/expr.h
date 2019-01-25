@@ -70,29 +70,29 @@ extern "C" {
  */
 typedef enum {
 	// Primary
-	PT_LITERAL,          // "string"
-	PT_CASE_INSENSITIVE, // I"string"
-	PT_CHARACTER_CLASS,  // int(char) // If return 0, match fails
-	                                  // If return non-zero, match succeeds, advance 1
-	PT_SET,              // [chars]
-	PT_RANGE,            // [c1-c2]
-	PT_ANY,              // .
+	PT_LITERAL = 0,          // "string"
+	PT_CASE_INSENSITIVE = 1, // I"string"
+	PT_CHARACTER_CLASS = 2,  // int(char) // If return 0, match fails
+	                                      // If return non-zero, match succeeds, advance 1
+	PT_SET = 3,              // [chars]
+	PT_RANGE = 4,            // [c1-c2]
+	PT_ANY = 5,              // .
 	// Unary
-	PT_NON_TERMINAL,     // <non-terminal> // Recurse to non-terminal expression
-	PT_QUANTIFIER,       // e^N // If positive, match N or more occurrences of `e`
-	                            // If negative, match at most N occurrences of `e`
-	                            // e^0  == e*
-	                            // e^1  == e+
-	                            // e^-1 == e?
-	PT_AND,              // &e
-	PT_NOT,              // !e
+	PT_NON_TERMINAL = 6,     // <non-terminal> // Recurse to non-terminal expression
+	PT_QUANTIFIER = 7,       // e^N // If positive, match N or more occurrences of `e`
+	                                // If negative, match at most N occurrences of `e`
+	                                // e^0  == e*
+	                                // e^1  == e+
+	                                // e^-1 == e?
+	PT_AND = 8,              // &e
+	PT_NOT = 9,              // !e
 	// N-ary
-	PT_SEQUENCE,         // e1 e2
-	PT_CHOICE,           // e1 / e2
+	PT_SEQUENCE = 10,        // e1 e2
+	PT_CHOICE = 11,          // e1 / e2
 	// Custom match by function
-	PT_CUSTOM_MATCHER,   // int(const char *, void *) // Return how many characters were matched
-	                                                  // Return non-positive values for no match to occur
-	PT_ERROR,            // ERROR // Represents a syntactic error
+	PT_CUSTOM_MATCHER = 12,  // int(const char *, void *) // Return how many characters were matched
+	                                                      // Return non-positive values for no match to occur
+	PT_ERROR = 13,           // ERROR // Represents a syntactic error
 } pt_operation;
 
 /// String version of the possible operations.
