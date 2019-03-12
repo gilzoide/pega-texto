@@ -13,7 +13,7 @@ else()
 	project(pega-texto)
 endif()
 
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Wall -Wno-parentheses -Wno-unused-function")
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -Wall -Wno-parentheses -Wno-unused-function")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2 -DNDEBUG")
 set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} -Os -DNDEBUG")
 add_definitions(-DPROJECT_VERSION="${PROJECT_VERSION}")
@@ -37,6 +37,12 @@ endif()
 option(COMPILE_EXAMPLES "Compile the examples" OFF)
 if(COMPILE_EXAMPLES)
 	add_subdirectory(examples)
+endif()
+
+# Benchmark
+option(COMPILE_BENCHMARK "Compile the benchmark programs" OFF)
+if(COMPILE_BENCHMARK)
+	add_subdirectory(benchmark)
 endif()
 
 # Process headers
