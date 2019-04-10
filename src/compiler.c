@@ -18,32 +18,22 @@
  * Any bugs should be reported to <gilzoide@gmail.com>
  */
 
-/** @file pega-texto.h
- * Main header file: include this and you're good to go!
- *
- * You may also want to include pega-texto/macro-on.h for turning the
- * Expression macros on, easing the writing of PEGs.
- */
+#include <pega-texto/compiler.h>
 
-#ifndef __PEGA_TEXTO_H__
-#define __PEGA_TEXTO_H__
+#include <stdlib.h>
 
-/// Pega-texto major version number
-#define PT_VERSION_MAJOR 2
-/// Pega-texto minor version number
-#define PT_VERSION_MINOR 1
-/// Pega-texto patch version number
-#define PT_VERSION_PATCH 0
-/// Pega-texto version string
-#define PT_VERSION "2.1.0"
+void pt_init_bytecode(pt_bytecode *bytecode) {
+	*bytecode = (pt_bytecode){};
+}
 
-#include "pega-texto/action.h"
-#include "pega-texto/compiler.h"
-#include "pega-texto/data.h"
-#include "pega-texto/expr.h"
-#include "pega-texto/grammar.h"
-#include "pega-texto/match.h"
-#include "pega-texto/match-state.h"
+void pt_release_bytecode(pt_bytecode *bytecode) {
+	if(bytecode) {
+		free(bytecode->chunk);
+		*bytecode = (pt_bytecode){};
+	}
+}
 
-#endif
+enum pt_compile_status pt_compile_grammar(pt_bytecode *bytecode, pt_grammar *g) {
+	return PT_COMPILE_SUCCESS;
+}
 

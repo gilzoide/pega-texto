@@ -53,18 +53,21 @@ typedef struct {
 } pt_grammar;
 
 /**
- * Create a Grammar from a NULL-terminated array of Rules.
+ * Initialize a Grammar with a NULL-terminated array of Rules.
  *
+ * @note It is not necessary to initialize `g` with any value.
  * @note Grammar owns the Expressions, and will destroy them on
- *       `pt_destroy_grammar`.
+ *       `pt_release_grammar`.
  *
+ * @param g         Grammar being initialized.
  * @param rules     Grammar Rules.
  * @param own_names Should Grammar own the names' buffers?
- * @return The created Grammar.
+ * @return 1 on success.
+ * @return 0 if there was any memory error.
  */
-pt_grammar *pt_create_grammar(pt_rule *rules, uint8_t own_names);
+int pt_init_grammar(pt_grammar *g, pt_rule *rules, uint8_t own_names);
 /**
- * Destroy a Grammar, freeing the memory used.
+ * Release the memory associated with a Grammar, reinitializing it to zeros.
  *
  * It is safe to pass a `NULL` pointer here.
  *
@@ -74,7 +77,7 @@ pt_grammar *pt_create_grammar(pt_rule *rules, uint8_t own_names);
  *
  * @param g Grammar to be destroyed.
  */
-void pt_destroy_grammar(pt_grammar *g);
+void pt_release_grammar(pt_grammar *g);
 
 #ifdef __cplusplus
 }

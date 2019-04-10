@@ -37,7 +37,7 @@ pt_data pt_run_actions(pt_match_action_stack *a, const char *str, void *userdata
 		// "pop" arguments
 		data_index -= action->argc;
 		// run action with arguments (which are still stacked in `data_stack` in the right position)
-		data_stack[data_index] = action->f(str, action->start, action->end, action->argc, data_stack + data_index, userdata);
+		data_stack[data_index] = action->f(str + action->start, action->end, action->argc, data_stack + data_index, userdata);
 		// "push" result
 		data_index++;
 	}

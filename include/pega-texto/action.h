@@ -48,9 +48,8 @@ typedef struct pt_match_result pt_match_result;
  * Expression Actions reduce inner Actions' result into a single value.
  *
  * Parameters:
- * - The original subject string
- * - Start index of the match/capture
- * - Final index of the match/capture
+ * - Pointer to the start of the match/capture
+ * - Number of bytes contained in the match/capture
  * - Number of #pt_data arguments 
  * - #pt_data arguments, processed on inner Actions. Currently, this array is
  *   reused, so you should not rely on it after Action has returned
@@ -65,7 +64,6 @@ typedef struct pt_match_result pt_match_result;
  * @sa @ref Re.c
  */
 typedef pt_data(*pt_expression_action)(const char *,
-                                       size_t,
                                        size_t,
                                        int,
                                        pt_data *,

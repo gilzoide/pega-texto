@@ -22,9 +22,8 @@
 
 #include <stdlib.h>
 
-pt_grammar *pt_create_grammar(pt_rule *rules, uint8_t own_names) {
-	pt_grammar *g;
-	if(g = malloc(sizeof(pt_grammar))) {
+int pt_init_grammar(pt_grammar *g, pt_rule *rules, uint8_t own_names) {
+	if(g) {
 		int i;
 		// find size
 		for(i = 0; rules[i].e != NULL; i++);
@@ -41,14 +40,12 @@ pt_grammar *pt_create_grammar(pt_rule *rules, uint8_t own_names) {
 			if(g->es) {
 				free(g->es);
 			}
-			free(g);
-			g = NULL;
+			*g = (pt_grammar){};
 		}
 	}
-	return g;
 }
 
-void pt_destroy_grammar(pt_grammar *g) {
+void pt_release_grammar(pt_grammar *g) {
 	if(g) {
 		int i;
 		// expressions
@@ -63,7 +60,7 @@ void pt_destroy_grammar(pt_grammar *g) {
 			}
 		}
 		free(g->names);
-		free(g);
+		*g = (pt_grammar){};
 	}
 }
 
