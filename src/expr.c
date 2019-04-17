@@ -20,8 +20,8 @@
 
 #include <pega-texto/expr.h>
 
-#include <stdlib.h>
 #include <assert.h>
+#include <stdlib.h>
 #include <string.h>
 
 const char * const pt_operation_names[] = {
@@ -40,6 +40,11 @@ const char * const pt_operation_names[] = {
 	"PT_CUSTOM_MATCHER",
 	"PT_ERROR",
 };
+
+#ifdef static_assert
+static_assert(sizeof(pt_operation_names) == PT_OPERATION_ENUM_COUNT * sizeof(const char *),
+              "Missing expression operation names");
+#endif
 
 #define NEW_EXPR(body)                       \
 	pt_expr *new_expr;                       \

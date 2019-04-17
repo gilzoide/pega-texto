@@ -40,7 +40,7 @@ const char * const pt_compile_status_description[] = {
 };
 
 #ifdef static_assert
-static_assert(sizeof(pt_compile_status_description) == PT_COMPILE_STATUS_MAX * sizeof(const char *),
+static_assert(sizeof(pt_compile_status_description) == PT_COMPILE_STATUS_ENUM_COUNT * sizeof(const char *),
               "Missing descriptions");
 #endif
 

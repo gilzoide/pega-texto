@@ -49,7 +49,7 @@ enum pt_compile_status {
 	PT_COMPILE_MEMORY_ERROR,  ///< Malloc error
 	PT_COMPILE_CONSTANTS_LIMIT,
 
-	PT_COMPILE_STATUS_MAX,
+	PT_COMPILE_STATUS_ENUM_COUNT,
 };
 
 /**

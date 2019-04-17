@@ -93,6 +93,8 @@ enum pt_operation {
 	PT_CUSTOM_MATCHER = 12,  // int(const char *, void *) // Return how many characters were matched
 	                                                      // Return non-positive values for no match to occur
 	PT_ERROR = 13,           // ERROR // Represents a syntactic error
+
+	PT_OPERATION_ENUM_COUNT,
 };
 
 /// String version of the possible operations.
