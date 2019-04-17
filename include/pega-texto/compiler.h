@@ -36,6 +36,7 @@ extern "C" {
  */
 enum pt_compile_status {
 	PT_COMPILE_SUCCESS = 0,  ///< No errors on compilation
+	// Grammar validation errors
 	PT_COMPILE_NULL_GRAMMAR,  ///< Grammar is a NULL pointer
 	PT_COMPILE_EMPTY_GRAMMAR,  ///< Grammar doesn't present any Rules
 	PT_COMPILE_NULL_POINTER,  ///< NULL pointer as Expression data
@@ -44,6 +45,11 @@ enum pt_compile_status {
 	PT_COMPILE_OUT_OF_BOUNDS,  ///< Non-terminal index is out of Grammar bounds
 	PT_COMPILE_UNDEFINED_RULE,  ///< Rule undefined in given Grammar
 	PT_COMPILE_LOOP_EMPTY_STRING,  ///< Loop body may accept empty string
+	// Other compiler errors
+	PT_COMPILE_MEMORY_ERROR,  ///< Malloc error
+	PT_COMPILE_CONSTANTS_LIMIT,
+
+	PT_COMPILE_STATUS_MAX,
 };
 
 /**
@@ -55,8 +61,17 @@ extern const char * const pt_compile_status_description[];
 
 enum pt_opcode {
 	// TODO
-	PT_TODO,
+	PT_OP_FAIL,
+	PT_OP_RETURN,
+	PT_OP_LITERAL, // 1 -> constant
 };
+
+typedef union pt_bytecode_constant {
+	const char *characters;
+	int offset;
+	void *ptr;
+} pt_bytecode_constant;
+#define PT_MAX_CONSTANTS 255
 
 /**
  * Compiled grammar.
@@ -65,12 +80,16 @@ typedef struct pt_bytecode {
 	uint8_t *chunk;
 	int chunk_size;
 	int chunk_capacity;
+
+	int constants_size;
+	pt_bytecode_constant constants[PT_MAX_CONSTANTS];
 } pt_bytecode;
 
 /**
  * Initialize a Bytecode struct with the expected values.
  */
 void pt_init_bytecode(pt_bytecode *bytecode);
+
 /**
  * Release the memory associated with Bytecode and reinitialize it with zeros.
  *

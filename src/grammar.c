@@ -41,8 +41,10 @@ int pt_init_grammar(pt_grammar *g, pt_rule *rules, uint8_t own_names) {
 				free(g->es);
 			}
 			*g = (pt_grammar){};
+			return 0;
 		}
 	}
+	return g != NULL;
 }
 
 void pt_release_grammar(pt_grammar *g) {

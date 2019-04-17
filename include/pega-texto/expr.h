@@ -68,7 +68,7 @@ extern "C" {
 /**
  * Operations for constructing Parsing Expressions.
  */
-typedef enum {
+enum pt_operation {
 	// Primary
 	PT_LITERAL = 0,          // "string"
 	PT_CASE_INSENSITIVE = 1, // I"string"
@@ -93,7 +93,7 @@ typedef enum {
 	PT_CUSTOM_MATCHER = 12,  // int(const char *, void *) // Return how many characters were matched
 	                                                      // Return non-positive values for no match to occur
 	PT_ERROR = 13,           // ERROR // Represents a syntactic error
-} pt_operation;
+};
 
 /// String version of the possible operations.
 extern const char * const pt_operation_names[];
