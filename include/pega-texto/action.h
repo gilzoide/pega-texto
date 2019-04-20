@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2018 Gil Barbosa Reis <gilzoide@gmail.com>
+ * Copyright 2017-2019 Gil Barbosa Reis <gilzoide@gmail.com>
  * This file is part of pega-texto.
  * 
  * Pega-texto is free software: you can redistribute it and/or modify
