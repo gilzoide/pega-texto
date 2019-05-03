@@ -19,10 +19,10 @@
  */
 
 #include <pega-texto/compiler.h>
+#include <pega-texto/bytecode.h>
+#include <pega-texto/grammar.h>
 
 #include <stdlib.h>
-#include <stddef.h>
-#include <string.h>
 #include <assert.h>
 
 const char * const pt_compile_status_description[] = {
@@ -36,63 +36,22 @@ const char * const pt_compile_status_description[] = {
 	"PT_COMPILE_UNDEFINED_RULE",
 	"PT_COMPILE_LOOP_EMPTY_STRING",
 	"PT_COMPILE_MEMORY_ERROR",
-	"PT_COMPILE_CONSTANTS_LIMIT",
 };
-
 #ifdef static_assert
 static_assert(sizeof(pt_compile_status_description) == PT_COMPILE_STATUS_ENUM_COUNT * sizeof(const char *),
-              "Missing descriptions");
+              "Missing compile status descriptions");
 #endif
 
-// Avoid clearing the `constants` array
-static inline void _pt_clear_bytecode(pt_bytecode *bytecode) {
-	memset(bytecode, 0, offsetof(pt_bytecode, constants));
-}
-
-void pt_init_bytecode(pt_bytecode *bytecode) {
-	_pt_clear_bytecode(bytecode);
-}
-
-void pt_release_bytecode(pt_bytecode *bytecode) {
-	if(bytecode) {
-		free(bytecode->chunk);
-		_pt_clear_bytecode(bytecode);
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////
-//  Helpers
-///////////////////////////////////////////////////////////////////////////////
-static int _pt_push_byte(pt_bytecode *bytecode, uint8_t byte) {
-	int chunk_size = bytecode->chunk_size;
-	if(chunk_size >= bytecode->chunk_capacity) {
-		int new_capacity = chunk_size ? bytecode->chunk_capacity * 2 : 8;
-		uint8_t *chunk = realloc(bytecode->chunk, new_capacity * sizeof(uint8_t));
-		if(!chunk) return PT_COMPILE_MEMORY_ERROR;
-		bytecode->chunk = chunk;
-		bytecode->chunk_capacity = new_capacity;
-	}
-	bytecode->chunk[chunk_size] = byte;
-	bytecode->chunk_size = chunk_size + 1;
-	return PT_COMPILE_SUCCESS;
-}
-
-static int _pt_push_constant(pt_bytecode *bytecode, pt_bytecode_constant constant) {
-	int constants_size = bytecode->constants_size;
-	if(constants_size >= PT_MAX_CONSTANTS) return PT_COMPILE_CONSTANTS_LIMIT;
-	bytecode->constants[constants_size] = constant;
-	bytecode->constants_size = constants_size + 1;
-	return _pt_push_byte(bytecode, constants_size);
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 //  Expression compilers
 ///////////////////////////////////////////////////////////////////////////////
 static int _pt_compile_literal(pt_bytecode *bytecode, pt_expr *literal) {
-	int res;
-	if(res = _pt_push_byte(bytecode, PT_OP_LITERAL)) return res;
-	return _pt_push_constant(bytecode, (pt_bytecode_constant){ .characters = literal->data.characters });
+	int res = pt_push_byte(bytecode, PT_OP_LITERAL)
+	       && pt_push_constant(bytecode, CONST_STRING(literal->data.characters));
+	return res ? PT_COMPILE_SUCCESS : PT_COMPILE_MEMORY_ERROR;
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //  Grammar compilers

@@ -29,7 +29,8 @@
 extern "C" {
 #endif
 
-#include "pega-texto/grammar.h"
+typedef struct pt_bytecode pt_bytecode;
+typedef struct pt_grammar pt_grammar;
 
 /**
  * Possible status codes for Grammar compilation.
@@ -47,7 +48,6 @@ enum pt_compile_status {
 	PT_COMPILE_LOOP_EMPTY_STRING,  ///< Loop body may accept empty string
 	// Other compiler errors
 	PT_COMPILE_MEMORY_ERROR,  ///< Malloc error
-	PT_COMPILE_CONSTANTS_LIMIT,
 
 	PT_COMPILE_STATUS_ENUM_COUNT,
 };
@@ -58,46 +58,6 @@ enum pt_compile_status {
  * @see pt_compile_status
  */
 extern const char * const pt_compile_status_description[];
-
-enum pt_opcode {
-	// TODO
-	PT_OP_FAIL,
-	PT_OP_RETURN,
-	PT_OP_LITERAL, // 1 -> constant
-};
-
-typedef union pt_bytecode_constant {
-	const char *characters;
-	int offset;
-	void *ptr;
-} pt_bytecode_constant;
-#define PT_MAX_CONSTANTS 255
-
-/**
- * Compiled grammar.
- */
-typedef struct pt_bytecode {
-	uint8_t *chunk;
-	int chunk_size;
-	int chunk_capacity;
-
-	int constants_size;
-	pt_bytecode_constant constants[PT_MAX_CONSTANTS];
-} pt_bytecode;
-
-/**
- * Initialize a Bytecode struct with the expected values.
- */
-void pt_init_bytecode(pt_bytecode *bytecode);
-
-/**
- * Release the memory associated with Bytecode and reinitialize it with zeros.
- *
- * @note It is safe to pass a NULL pointer here.
- *
- * @warning Never call this in an unitialized Bytecode.
- */
-void pt_release_bytecode(pt_bytecode *bytecode);
 
 /**
  * Compile a Grammar into a bytecode to be run by the VM.
@@ -112,7 +72,6 @@ void pt_release_bytecode(pt_bytecode *bytecode);
  * @return Compilation result.
  */
 enum pt_compile_status pt_compile_grammar(pt_bytecode *bytecode, pt_grammar *g);
-
 
 #ifdef __cplusplus
 }

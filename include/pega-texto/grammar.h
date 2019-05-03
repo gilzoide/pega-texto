@@ -45,7 +45,7 @@ typedef struct {
  * It is implemented as a SOA as the names are not used often, so there are less
  * cache miss.
  */
-typedef struct {
+typedef struct pt_grammar {
 	const char **names;  ///< Rules' names.
 	pt_expr **es;  ///< Rules' Expressions.
 	uint16_t N;  ///< Number of Rules.

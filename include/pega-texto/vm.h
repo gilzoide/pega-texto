@@ -18,33 +18,41 @@
  * Any bugs should be reported to <gilzoide@gmail.com>
  */
 
-/** @file pega-texto.h
- * Main header file: include this and you're good to go!
- *
- * You may also want to include pega-texto/macro-on.h for turning the
- * Expression macros on, easing the writing of PEGs.
+/** @file vm.h
+ * Virtual Machine for running compiled pega-texto grammar matches.
  */
 
-#ifndef __PEGA_TEXTO_H__
-#define __PEGA_TEXTO_H__
+#ifndef __PEGA_TEXTO_VM_H__
+#define __PEGA_TEXTO_VM_H__
 
-/// Pega-texto major version number
-#define PT_VERSION_MAJOR 2
-/// Pega-texto minor version number
-#define PT_VERSION_MINOR 1
-/// Pega-texto patch version number
-#define PT_VERSION_PATCH 0
-/// Pega-texto version string
-#define PT_VERSION "2.1.0"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#include "pega-texto/action.h"
-#include "pega-texto/bytecode.h"
-#include "pega-texto/compiler.h"
-#include "pega-texto/data.h"
-#include "pega-texto/expr.h"
-#include "pega-texto/grammar.h"
-#include "pega-texto/match.h"
-#include "pega-texto/match-state.h"
+#include "match.h"
+
+// Forward declarations
+typedef struct pt_bytecode pt_bytecode;
+
+/**
+ * Virtual Machine that runs `pt_bytecode` compiled grammars.
+ */
+typedef struct pt_vm {
+	pt_bytecode *bytecode;
+} pt_vm;
+
+void pt_init_vm(pt_vm *vm);
+void pt_release_vm(pt_vm *vm);
+
+void pt_vm_load_bytecode(pt_vm *vm, pt_bytecode *bytecode);
+pt_bytecode *pt_vm_unload_bytecode(pt_vm *vm);
+void pt_vm_unload_and_release_bytecode(pt_vm *vm);
+
+pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

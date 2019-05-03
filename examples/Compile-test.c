@@ -24,6 +24,10 @@ int main(int argc, char **argv) {
 	int result = pt_compile_grammar(&bytecode, &g);
 	printf("Compile result: %s\n", pt_compile_status_description[result]);
 
+	if(result == PT_COMPILE_SUCCESS) {
+		pt_dump_bytecode(&bytecode);
+	}
+
 	pt_release_bytecode(&bytecode);
 	pt_release_grammar(&g);
 	return 0;
