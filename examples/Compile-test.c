@@ -9,10 +9,11 @@
 int main(int argc, char **argv) {
 	/* assert(argc > 1 && "Please write something!"); */
 	/* char *str = argv[1]; */
-	char *str = "TODO";
+	char *str = "HELLO WORLD";
 
 	pt_rule R[] = {
 		{ "Hello", L("HELLO WORLD") },
+		/* { "Hello", S("helo") }, */
 		/* { "Hello", SEQ(L("HELLO WORLD"), NOT(ANY)) }, */
 		{ NULL, NULL },
 	};
@@ -26,6 +27,14 @@ int main(int argc, char **argv) {
 
 	if(result == PT_COMPILE_SUCCESS) {
 		pt_dump_bytecode(&bytecode);
+		pt_vm vm;
+		pt_init_vm(&vm);
+		pt_vm_load_bytecode(&vm, &bytecode);
+
+		pt_match_result match_result = pt_vm_match(&vm, str, NULL);
+		printf("Match result: %d\n", match_result.matched);
+
+		pt_release_vm(&vm);
 	}
 
 	pt_release_bytecode(&bytecode);

@@ -45,6 +45,7 @@
 #include "pega-texto/grammar.h"
 #include "pega-texto/match.h"
 #include "pega-texto/match-state.h"
+#include "pega-texto/vm.h"
 
 #endif
 

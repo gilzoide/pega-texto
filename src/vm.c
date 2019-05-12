@@ -46,25 +46,69 @@ void pt_vm_unload_and_release_bytecode(pt_vm *vm) {
 	vm->bytecode = NULL;
 }
 
+typedef struct pt_vm_match_state {
+	const char *sp;
+	uint8_t *ip;
+} pt_vm_match_state;
+
+#define NEXT_BYTE() \
+	*(++ip)
+#define NEXT_CONSTANT() \
+	pt_constant_at(bytecode, NEXT_BYTE())
+
 pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
-	int matched = PT_NO_MATCH;
-	int pc = 0, sp = 0;
-	uint8_t *ip = pt_byte_at(vm->bytecode, 0);
-	uint8_t instruction;
-	pt_bytecode_constant rc; // constant register
-	pt_data result_data = {};
+	pt_bytecode *bytecode = vm->bytecode;
+	pt_bytecode_constant *rc; // constant register
+	const char *sp = str; // string pointer
+	uint8_t *ip = pt_byte_at(bytecode, 0); // instruction pointer
+	enum pt_opcode instruction;
+
+	pt_vm_match_state state = {
+		.sp = sp,
+		.ip = ip,
+	};
+	pt_list_(pt_vm_match_state) state_stack;
+	pt_list_initialize_as(&state_stack, 8, pt_vm_match_state);
 
 	while(1) {
 		instruction = *ip;
 		switch(instruction) {
-			case PT_OP_FAIL:
 			case PT_OP_RETURN:
+				goto match_end;
+			case PT_OP_BYTE:
+				if(*sp == NEXT_BYTE()) {
+					sp++;
+					break;
+				}
+				else goto match_fail;
+			case PT_OP_SET:
+				rc = NEXT_CONSTANT();
+				if(strchr(rc->as_str, *sp) != NULL) {
+					sp++;
+					break;
+				}
+				else goto match_fail;
+match_fail:
+			case PT_OP_FAIL:
+				if(!pt_list_empty(&state_stack)) {
+					// TODO
+				}
+				else {
+					sp = PT_NO_MATCH + str;
+					goto match_end;
+				}
 				break;
-			case PT_OP_LITERAL:
-				break;
-		}
-	}
 
+			default: break; // unknown opcode
+		}
+		ip++;
+	}
+match_end:
+	pt_list_destroy(&state_stack);
+	pt_data result_data = {};
+	int matched = sp - str;
 	return (pt_match_result){matched, result_data};
 }
+#undef NEXT_BYTE
+#undef NEXT_CONSTANT
 

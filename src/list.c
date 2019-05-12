@@ -67,3 +67,7 @@ void *pt_list_peek(const pt_list *lst, unsigned int member_size) {
 	return lst->size > 0 ? lst->arr + (member_size * (lst->size - 1)) : NULL;
 }
 
+int pt_list_empty(const pt_list *lst) {
+	return lst->size <= 0;
+}
+

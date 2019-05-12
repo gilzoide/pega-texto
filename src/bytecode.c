@@ -28,7 +28,7 @@
 const char * const pt_opcode_description[] = {
 	"PT_OP_FAIL",
 	"PT_OP_RETURN",
-	"PT_OP_LITERAL",
+	"PT_OP_BYTE",
 	"PT_OP_SET",
 };
 #ifdef static_assert
@@ -53,12 +53,16 @@ void pt_clear_bytecode(pt_bytecode *bytecode) {
 
 int pt_push_byte(pt_bytecode *bytecode, uint8_t b) {
 	uint8_t *byte_ptr = pt_list_push_as(&bytecode->chunk, uint8_t);
-	return byte_ptr && (*byte_ptr = b);
+	return byte_ptr && (*byte_ptr = b, 1);
 }
 
 int pt_push_constant(pt_bytecode *bytecode, pt_bytecode_constant c) {
 	pt_bytecode_constant *const_ptr = pt_list_push_as(&bytecode->constants, pt_bytecode_constant);
-	return const_ptr && (*const_ptr = c, 1);
+	if(const_ptr) {
+		*const_ptr = c;
+		return pt_push_byte(bytecode, bytecode->constants.size - 1);
+	}
+	else return 0;
 }
 
 uint8_t * const pt_byte_at(const pt_bytecode *bytecode, int i) {
@@ -72,6 +76,7 @@ pt_bytecode_constant * const pt_constant_at(const pt_bytecode *bytecode, int i) 
 void pt_dump_bytecode(const pt_bytecode *bytecode) {
 	pt_bytecode_constant *constant;
 	uint8_t *pc, *bytecode_start = bytecode->chunk.arr, *bytecode_end = bytecode_start + bytecode->chunk.size;
+	printf("Size: %d\n", bytecode->chunk.size);
 #define PRINT_BYTE(fmt, ...) \
 	printf("%4ld | 0x%02x | " fmt "\n", pc - bytecode_start, *pc, ##__VA_ARGS__)
 #define PRINT_STR_CONSTANT(c) \
@@ -80,7 +85,11 @@ void pt_dump_bytecode(const pt_bytecode *bytecode) {
 		uint8_t b = *pc;
 		PRINT_BYTE("%s", pt_opcode_description[b]);
 		switch(b) {
-			case PT_OP_LITERAL:
+			case PT_OP_BYTE:
+				pc++;
+				PRINT_BYTE("'%c'", *pc);
+				break;
+			case PT_OP_SET:
 				constant = pt_constant_at(bytecode, *(++pc));
 				PRINT_STR_CONSTANT(constant);
 				break;
@@ -88,4 +97,6 @@ void pt_dump_bytecode(const pt_bytecode *bytecode) {
 		}
 	}
 }
+#undef PRINT_BYTE
+#undef PRINT_STR_CONSTANT
 

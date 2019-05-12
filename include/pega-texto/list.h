@@ -34,7 +34,7 @@ typedef struct pt_list {
 	unsigned int capacity;
 } pt_list;
 
-#define PT_LIST_GROWTH_RATE 1.5
+#define PT_LIST_GROWTH_RATE 2
 
 #define pt_list_(c_type) pt_list
 
@@ -56,6 +56,8 @@ void *pt_list_pop(pt_list *lst, unsigned int member_size);
 void *pt_list_peek(const pt_list *lst, unsigned int member_size);
 #define pt_list_peek_as(lst, type) \
 	((type *) pt_list_peek(lst, sizeof(type)))
+
+int pt_list_empty(const pt_list *lst);
 
 #define pt_list_at(lst, i, type) \
 	(((type *) (lst)->arr) + i)

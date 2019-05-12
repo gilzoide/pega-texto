@@ -55,7 +55,7 @@ enum pt_opcode {
 	// TODO
 	PT_OP_FAIL,
 	PT_OP_RETURN,
-	PT_OP_LITERAL, // +1 -> constant literal
+	PT_OP_BYTE,
 	PT_OP_SET, // +1 -> charset
 
 	PT_OPCODE_ENUM_COUNT,

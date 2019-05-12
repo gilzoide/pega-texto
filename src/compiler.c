@@ -47,11 +47,25 @@ static_assert(sizeof(pt_compile_status_description) == PT_COMPILE_STATUS_ENUM_CO
 //  Expression compilers
 ///////////////////////////////////////////////////////////////////////////////
 static int _pt_compile_literal(pt_bytecode *bytecode, pt_expr *literal) {
-	int res = pt_push_byte(bytecode, PT_OP_LITERAL)
+	int res = 1;
+	const char *s = literal->data.characters;
+	const char *s_end = s + literal->N;
+	for(; res && s < s_end; s++) {
+		res = pt_push_byte(bytecode, PT_OP_BYTE) && pt_push_byte(bytecode, *s);
+	}
+	return res ? PT_COMPILE_SUCCESS : PT_COMPILE_MEMORY_ERROR;
+}
+
+static int _pt_compile_set(pt_bytecode *bytecode, pt_expr *literal) {
+	int res = pt_push_byte(bytecode, PT_OP_SET)
 	       && pt_push_constant(bytecode, CONST_STRING(literal->data.characters));
 	return res ? PT_COMPILE_SUCCESS : PT_COMPILE_MEMORY_ERROR;
 }
 
+static int _pt_compile_success(pt_bytecode *bytecode) {
+	int res = pt_push_byte(bytecode, PT_OP_RETURN);
+	return res ? PT_COMPILE_SUCCESS : PT_COMPILE_MEMORY_ERROR;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 //  Grammar compilers
@@ -64,8 +78,12 @@ enum pt_compile_status pt_compile_grammar(pt_bytecode *bytecode, pt_grammar *g) 
 		int op = expr->op;
 		switch(op) {
 			case PT_LITERAL: result = _pt_compile_literal(bytecode, expr); break;
+			case PT_SET: result = _pt_compile_set(bytecode, expr); break;
 			default: break;
 		}
+	}
+	if(result == PT_COMPILE_SUCCESS) {
+		result = _pt_compile_success(bytecode);
 	}
 	return result;
 }
