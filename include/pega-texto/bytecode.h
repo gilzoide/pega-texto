@@ -52,8 +52,8 @@ typedef union pt_bytecode_constant {
 	((pt_bytecode_constant){ .as_offset = (offset) })
 
 enum pt_opcode {
-	// TODO
 	PT_OP_FAIL,
+	PT_OP_SUCCESS,
 	PT_OP_RETURN,
 	PT_OP_BYTE,
 	PT_OP_SET, // +1 -> charset

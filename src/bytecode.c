@@ -27,6 +27,7 @@
 
 const char * const pt_opcode_description[] = {
 	"PT_OP_FAIL",
+	"PT_OP_SUCCESS",
 	"PT_OP_RETURN",
 	"PT_OP_BYTE",
 	"PT_OP_SET",

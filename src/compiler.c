@@ -63,7 +63,7 @@ static int _pt_compile_set(pt_bytecode *bytecode, pt_expr *literal) {
 }
 
 static int _pt_compile_success(pt_bytecode *bytecode) {
-	int res = pt_push_byte(bytecode, PT_OP_RETURN);
+	int res = pt_push_byte(bytecode, PT_OP_SUCCESS);
 	return res ? PT_COMPILE_SUCCESS : PT_COMPILE_MEMORY_ERROR;
 }
 

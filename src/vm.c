@@ -57,7 +57,10 @@ typedef struct pt_vm_match_state {
 	pt_constant_at(bytecode, NEXT_BYTE())
 
 pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
+	if(str == NULL) return (pt_match_result){ PT_NULL_INPUT, PT_NULL_DATA };
 	pt_bytecode *bytecode = vm->bytecode;
+	if(bytecode == NULL) return (pt_match_result){ PT_VM_NULL_BYTECODE, PT_NULL_DATA };
+
 	pt_bytecode_constant *rc; // constant register
 	const char *sp = str; // string pointer
 	uint8_t *ip = pt_byte_at(bytecode, 0); // instruction pointer
@@ -70,10 +73,15 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 	pt_list_(pt_vm_match_state) state_stack;
 	pt_list_initialize_as(&state_stack, 8, pt_vm_match_state);
 
+	pt_data result_data = PT_NULL_DATA;
+	int matched;
+
 	while(1) {
 		instruction = *ip;
 		switch(instruction) {
-			case PT_OP_RETURN:
+			case PT_OP_SUCCESS:
+				matched = sp - str;
+				// TODO: actions
 				goto match_end;
 			case PT_OP_BYTE:
 				if(*sp == NEXT_BYTE()) {
@@ -94,7 +102,7 @@ match_fail:
 					// TODO
 				}
 				else {
-					sp = PT_NO_MATCH + str;
+					matched = PT_NO_MATCH;
 					goto match_end;
 				}
 				break;
@@ -105,8 +113,6 @@ match_fail:
 	}
 match_end:
 	pt_list_destroy(&state_stack);
-	pt_data result_data = {};
-	int matched = sp - str;
 	return (pt_match_result){matched, result_data};
 }
 #undef NEXT_BYTE
