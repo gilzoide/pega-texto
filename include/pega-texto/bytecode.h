@@ -55,7 +55,10 @@ enum pt_opcode {
 	PT_OP_FAIL,
 	PT_OP_SUCCESS,
 	PT_OP_RETURN,
-	PT_OP_BYTE,
+	PT_OP_BYTE, // +1 -> byte to be matched
+	PT_OP_NOT_BYTE, // +1 -> byte that should not be matched
+	PT_OP_N_BYTES, // +1 -> number of bytes, +X bytes for literal matching
+	PT_OP_CASE_INSENSITIVE, // +1 -> char to be matched, case insensitive
 	PT_OP_SET, // +1 -> charset
 
 	PT_OPCODE_ENUM_COUNT,
@@ -98,6 +101,13 @@ void pt_clear_bytecode(pt_bytecode *bytecode);
  * @return 1 otherwise.
  */
 int pt_push_byte(pt_bytecode *bytecode, uint8_t b);
+/**
+ * Push several bytes into bytecode chunk.
+ *
+ * @return 0 on memory allocation error.
+ * @return 1 otherwise.
+ */
+int pt_push_bytes(pt_bytecode *bytecode, int num_bytes, uint8_t *bs);
 
 /**
  * Push a constant into bytecode.

@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stddef.h>
+#include <string.h>
 #include <assert.h>
 
 const char * const pt_opcode_description[] = {
@@ -30,6 +31,9 @@ const char * const pt_opcode_description[] = {
 	"PT_OP_SUCCESS",
 	"PT_OP_RETURN",
 	"PT_OP_BYTE",
+	"PT_OP_NOT_BYTE",
+	"PT_OP_N_BYTES",
+	"PT_OP_CASE_INSENSITIVE",
 	"PT_OP_SET",
 };
 #ifdef static_assert
@@ -55,6 +59,14 @@ void pt_clear_bytecode(pt_bytecode *bytecode) {
 int pt_push_byte(pt_bytecode *bytecode, uint8_t b) {
 	uint8_t *byte_ptr = pt_list_push_as(&bytecode->chunk, uint8_t);
 	return byte_ptr && (*byte_ptr = b, 1);
+}
+
+int pt_push_bytes(pt_bytecode *bytecode, int num_bytes, uint8_t *bs) {
+	int res = pt_list_ensure_extra_capacity_as(&bytecode->chunk, num_bytes, uint8_t);
+	if(res) {
+		memcpy(pt_list_peek_as(&bytecode->chunk, uint8_t), bs, num_bytes * sizeof(uint8_t));
+	}
+	return res;
 }
 
 int pt_push_constant(pt_bytecode *bytecode, pt_bytecode_constant c) {
@@ -87,6 +99,8 @@ void pt_dump_bytecode(const pt_bytecode *bytecode) {
 		PRINT_BYTE("%s", pt_opcode_description[b]);
 		switch(b) {
 			case PT_OP_BYTE:
+			case PT_OP_NOT_BYTE:
+			case PT_OP_CASE_INSENSITIVE:
 				pc++;
 				PRINT_BYTE("'%c'", *pc);
 				break;

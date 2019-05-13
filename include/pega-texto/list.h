@@ -57,6 +57,14 @@ void *pt_list_peek(const pt_list *lst, unsigned int member_size);
 #define pt_list_peek_as(lst, type) \
 	((type *) pt_list_peek(lst, sizeof(type)))
 
+int pt_list_ensure_capacity(pt_list *lst, unsigned int capacity, unsigned int member_size);
+#define pt_list_ensure_capacity_as(lst, num_members, type) \
+	(pt_list_ensure_capacity(lst, num_members, sizeof(type)))
+
+int pt_list_ensure_extra_capacity(pt_list *lst, unsigned int extra_capacity, unsigned int member_size);
+#define pt_list_ensure_extra_capacity_as(lst, num_additional_members, type) \
+	(pt_list_ensure_extra_capacity(lst, num_additional_members, sizeof(type)))
+
 int pt_list_empty(const pt_list *lst);
 
 #define pt_list_at(lst, i, type) \

@@ -21,6 +21,11 @@
 #include <pega-texto/list.h>
 
 #include <stdlib.h>
+#include <assert.h>
+
+#ifdef static_assert
+static_assert(PT_LIST_GROWTH_RATE > 1.0, "Cannot grow list with a grouth rate that is less than 1.0");
+#endif
 
 int pt_list_initialize(pt_list *lst, unsigned int initial_capacity, unsigned int member_size) {
 	lst->size = 0;
@@ -65,6 +70,28 @@ void *pt_list_pop(pt_list *lst, unsigned int member_size) {
 
 void *pt_list_peek(const pt_list *lst, unsigned int member_size) {
 	return lst->size > 0 ? lst->arr + (member_size * (lst->size - 1)) : NULL;
+}
+
+int pt_list_ensure_capacity(pt_list *lst, unsigned int capacity, unsigned int member_size) {
+	unsigned int lst_capacity = lst->capacity;
+	if(lst_capacity < capacity) {
+		do {
+			lst_capacity *= PT_LIST_GROWTH_RATE;
+		} while(lst_capacity < capacity);
+		void *arr;
+		if(arr = realloc(lst->arr, lst_capacity * member_size)) {
+			lst->capacity = lst_capacity;
+			lst->arr = arr;
+		}
+		else {
+			return 0;
+		}
+	}
+	return 1;
+}
+
+int pt_list_ensure_extra_capacity(pt_list *lst, unsigned int extra_capacity, unsigned int member_size) {
+	return pt_list_ensure_capacity(lst, lst->capacity + extra_capacity, member_size);
 }
 
 int pt_list_empty(const pt_list *lst) {
