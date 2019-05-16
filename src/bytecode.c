@@ -32,8 +32,7 @@ const char * const pt_opcode_description[] = {
 	"PT_OP_RETURN",
 	"PT_OP_BYTE",
 	"PT_OP_NOT_BYTE",
-	"PT_OP_N_BYTES",
-	"PT_OP_CASE_INSENSITIVE",
+	"PT_OP_STRING",
 	"PT_OP_SET",
 };
 #ifdef static_assert
@@ -61,12 +60,9 @@ int pt_push_byte(pt_bytecode *bytecode, uint8_t b) {
 	return byte_ptr && (*byte_ptr = b, 1);
 }
 
-int pt_push_bytes(pt_bytecode *bytecode, int num_bytes, uint8_t *bs) {
-	int res = pt_list_ensure_extra_capacity_as(&bytecode->chunk, num_bytes, uint8_t);
-	if(res) {
-		memcpy(pt_list_peek_as(&bytecode->chunk, uint8_t), bs, num_bytes * sizeof(uint8_t));
-	}
-	return res;
+int pt_push_bytes(pt_bytecode *bytecode, int num_bytes, const uint8_t *bs) {
+	uint8_t *byte_ptr = pt_list_push_n_as(&bytecode->chunk, num_bytes, uint8_t);
+	return byte_ptr && (memcpy(byte_ptr, bs, num_bytes * sizeof(uint8_t)), 1);
 }
 
 int pt_push_constant(pt_bytecode *bytecode, pt_bytecode_constant c) {
@@ -91,22 +87,25 @@ void pt_dump_bytecode(const pt_bytecode *bytecode) {
 	uint8_t *pc, *bytecode_start = bytecode->chunk.arr, *bytecode_end = bytecode_start + bytecode->chunk.size;
 	printf("Size: %d\n", bytecode->chunk.size);
 #define PRINT_BYTE(fmt, ...) \
-	printf("%4ld | 0x%02x | " fmt "\n", pc - bytecode_start, *pc, ##__VA_ARGS__)
+	printf("%4ld | 0x%02x  | " fmt "\n", pc - bytecode_start, *pc, ##__VA_ARGS__)
+#define PRINT_STR(s) \
+	printf("%4ld | char* | \"%s\" \n", pc - bytecode_start, s)
 #define PRINT_STR_CONSTANT(c) \
-	PRINT_BYTE("const.as_str '%s'", c->as_str);
+	PRINT_BYTE("const.as_str '%s'", c->as_str)
 	for(pc = bytecode_start; pc < bytecode_end; pc++) {
 		uint8_t b = *pc;
 		PRINT_BYTE("%s", pt_opcode_description[b]);
 		switch(b) {
 			case PT_OP_BYTE:
 			case PT_OP_NOT_BYTE:
-			case PT_OP_CASE_INSENSITIVE:
 				pc++;
 				PRINT_BYTE("'%c'", *pc);
 				break;
+			case PT_OP_STRING:
 			case PT_OP_SET:
-				constant = pt_constant_at(bytecode, *(++pc));
-				PRINT_STR_CONSTANT(constant);
+				pc++;
+				PRINT_STR(pc);
+				pc += strlen((const char *)pc);
 				break;
 			default: break;
 		}

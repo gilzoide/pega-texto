@@ -36,6 +36,7 @@ const char * const pt_compile_status_description[] = {
 	"PT_COMPILE_UNDEFINED_RULE",
 	"PT_COMPILE_LOOP_EMPTY_STRING",
 	"PT_COMPILE_MEMORY_ERROR",
+	"PT_COMPILE_INVALID_EXPR",
 };
 #ifdef static_assert
 static_assert(sizeof(pt_compile_status_description) == PT_COMPILE_STATUS_ENUM_COUNT * sizeof(const char *),
@@ -47,18 +48,18 @@ static_assert(sizeof(pt_compile_status_description) == PT_COMPILE_STATUS_ENUM_CO
 //  Expression compilers
 ///////////////////////////////////////////////////////////////////////////////
 static int _pt_compile_literal(pt_bytecode *bytecode, pt_expr *literal) {
-	int res = 1;
-	const char *s = literal->data.characters;
-	const char *s_end = s + literal->N;
-	for(; res && s < s_end; s++) {
-		res = pt_push_byte(bytecode, PT_OP_BYTE) && pt_push_byte(bytecode, *s);
-	}
+	int literal_size = literal->N;
+	int res = literal_size <= 0
+	          || (pt_push_byte(bytecode, PT_OP_STRING)
+	              && pt_push_bytes(bytecode, literal_size + 1, (const uint8_t *)literal->data.characters));
 	return res ? PT_COMPILE_SUCCESS : PT_COMPILE_MEMORY_ERROR;
 }
 
 static int _pt_compile_set(pt_bytecode *bytecode, pt_expr *literal) {
-	int res = pt_push_byte(bytecode, PT_OP_SET)
-	       && pt_push_constant(bytecode, CONST_STRING(literal->data.characters));
+	int literal_size = literal->N;
+	int res = literal_size <= 0
+	          || (pt_push_byte(bytecode, PT_OP_SET)
+	              && pt_push_bytes(bytecode, literal_size + 1, (const uint8_t *)literal->data.characters));
 	return res ? PT_COMPILE_SUCCESS : PT_COMPILE_MEMORY_ERROR;
 }
 
@@ -70,17 +71,20 @@ static int _pt_compile_success(pt_bytecode *bytecode) {
 ///////////////////////////////////////////////////////////////////////////////
 //  Grammar compilers
 ///////////////////////////////////////////////////////////////////////////////
+enum pt_compile_status pt_compile_expr(pt_bytecode *bytecode, pt_expr *expr) {
+	int op = expr->op;
+	switch(op) {
+		case PT_LITERAL: return _pt_compile_literal(bytecode, expr);
+		case PT_SET: return _pt_compile_set(bytecode, expr);
+		default: return PT_COMPILE_INVALID_EXPR;
+	}
+}
 enum pt_compile_status pt_compile_grammar(pt_bytecode *bytecode, pt_grammar *g) {
 	// TODO: tratar erros
 	int i, result = PT_COMPILE_SUCCESS;
 	for(i = 0; result == PT_COMPILE_SUCCESS && i < g->N; i++) {
 		pt_expr *expr = g->es[i];
-		int op = expr->op;
-		switch(op) {
-			case PT_LITERAL: result = _pt_compile_literal(bytecode, expr); break;
-			case PT_SET: result = _pt_compile_set(bytecode, expr); break;
-			default: break;
-		}
+		result = pt_compile_expr(bytecode, expr);
 	}
 	if(result == PT_COMPILE_SUCCESS) {
 		result = _pt_compile_success(bytecode);

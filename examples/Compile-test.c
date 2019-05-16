@@ -12,8 +12,8 @@ int main(int argc, char **argv) {
 	char *str = "HELLO WORLD";
 
 	pt_rule R[] = {
-		/* { "Hello", L("HELLO WORLD") }, */
-		{ "Hello", S("HELO") },
+		{ "Hello", L("HELLO WORLD") },
+		/* { "Hello", S("HELO") }, */
 		/* { "Hello", SEQ(L("HELLO WORLD"), NOT(ANY)) }, */
 		{ NULL, NULL },
 	};

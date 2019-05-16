@@ -51,10 +51,26 @@ typedef struct pt_vm_match_state {
 	uint8_t *ip;
 } pt_vm_match_state;
 
+// Match flags
+enum pt_vm_match_flag {
+	FAILED_FLAG        = 0b0001,
+	SYNTAX_ERROR_FLAG  = 0b0010,
+};
+
+#define ADVANCE_BYTE() \
+	++ip
 #define NEXT_BYTE() \
 	*(++ip)
+#define ADVANCE_UNTIL_NULL() \
+	while(NEXT_BYTE())
 #define NEXT_CONSTANT() \
 	pt_constant_at(bytecode, NEXT_BYTE())
+#define SET_FLAG(flag) \
+	fr |= flag
+#define UNSET_FLAG(flag) \
+	fr &= ~flag
+#define TOGGLE_FLAG(flag) \
+	fr ^= flag
 
 pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 	if(str == NULL) return (pt_match_result){ PT_NULL_INPUT, PT_NULL_DATA };
@@ -65,6 +81,7 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 	const char *sp = str; // string pointer
 	uint8_t *ip = pt_byte_at(bytecode, 0); // instruction pointer
 	enum pt_opcode instruction;
+	enum pt_vm_match_flag fr = 0; // flag register
 
 	pt_vm_match_state state = {
 		.sp = sp,
@@ -89,13 +106,35 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 					break;
 				}
 				else goto match_fail;
-			case PT_OP_SET:
-				rc = NEXT_CONSTANT();
-				if(strchr(rc->as_str, *sp) != NULL) {
-					sp++;
-					break;
+			case PT_OP_STRING:
+				{
+					int c;
+					const char * str_aux = sp;
+					do {
+						c = NEXT_BYTE();
+					} while(c && c == *(str_aux++));
+					if(c != '\0') { // didn't reach end, failed!
+						ADVANCE_UNTIL_NULL();
+						goto match_fail;
+					}
+					else {
+						sp = str_aux;
+					}
 				}
-				else goto match_fail;
+				break;
+			case PT_OP_SET:
+				{
+					int base = *sp, c;
+					while(c = NEXT_BYTE()) {
+						if(c == base) {
+							sp++;
+							break;
+						}
+					}
+					ADVANCE_UNTIL_NULL();
+					if(c != base) goto match_fail;
+				}
+				break;
 match_fail:
 			case PT_OP_FAIL:
 				if(!pt_list_empty(&state_stack)) {
@@ -115,6 +154,11 @@ match_end:
 	pt_list_destroy(&state_stack);
 	return (pt_match_result){matched, result_data};
 }
+#undef ADVANCE_BYTE
 #undef NEXT_BYTE
+#undef ADVANCE_UNTIL_NULL
 #undef NEXT_CONSTANT
+#undef SET_FLAG
+#undef UNSET_FLAG
+#undef TOGGLE_FLAG
 

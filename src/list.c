@@ -29,10 +29,10 @@ static_assert(PT_LIST_GROWTH_RATE > 1.0, "Cannot grow list with a grouth rate th
 
 int pt_list_initialize(pt_list *lst, unsigned int initial_capacity, unsigned int member_size) {
 	lst->size = 0;
-	if(lst->arr = malloc(initial_capacity * member_size)) {
-		lst->capacity = initial_capacity;
-	}
-	return lst->arr != NULL;
+	lst->arr = malloc(initial_capacity * member_size);
+	int malloc_success = lst->arr != NULL;
+	lst->capacity = malloc_success * initial_capacity;
+	return malloc_success;
 }
 
 void pt_list_destroy(pt_list *lst) {
@@ -43,19 +43,13 @@ void pt_list_clear(pt_list *lst) {
 	lst->size = 0;
 }
 
-void *pt_list_push(pt_list *lst, unsigned int member_size) {
-	if(lst->size == lst->capacity) {
-		unsigned int new_capacity = lst->capacity * PT_LIST_GROWTH_RATE;
-		void *arr;
-		if(arr = realloc(lst->arr, new_capacity * member_size)) {
-			lst->capacity = new_capacity;
-			lst->arr = arr;
-		}
-		else {
-			return NULL;
-		}
+void *pt_list_push(pt_list *lst, unsigned int n_members, unsigned int member_size) {
+	if(pt_list_ensure_extra_capacity(lst, n_members, member_size)) {
+		void *slot_ptr = lst->arr + (member_size * lst->size);
+		lst->size += n_members;
+		return slot_ptr;
 	}
-	return lst->arr + (member_size * lst->size++);
+	else return NULL;
 }
 
 void *pt_list_pop(pt_list *lst, unsigned int member_size) {
@@ -63,9 +57,7 @@ void *pt_list_pop(pt_list *lst, unsigned int member_size) {
 		lst->size--;
 		return lst->arr + (member_size * lst->size);
 	}
-	else {
-		return NULL;
-	}
+	else return NULL;
 }
 
 void *pt_list_peek(const pt_list *lst, unsigned int member_size) {
@@ -83,9 +75,7 @@ int pt_list_ensure_capacity(pt_list *lst, unsigned int capacity, unsigned int me
 			lst->capacity = lst_capacity;
 			lst->arr = arr;
 		}
-		else {
-			return 0;
-		}
+		else return 0;
 	}
 	return 1;
 }

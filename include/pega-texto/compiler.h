@@ -48,6 +48,7 @@ enum pt_compile_status {
 	PT_COMPILE_LOOP_EMPTY_STRING,  ///< Loop body may accept empty string
 	// Other compiler errors
 	PT_COMPILE_MEMORY_ERROR,  ///< Malloc error
+	PT_COMPILE_INVALID_EXPR,  ///< Encountered an invalid or not yet supported Expression
 
 	PT_COMPILE_STATUS_ENUM_COUNT,
 };

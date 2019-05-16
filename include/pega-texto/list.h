@@ -45,9 +45,11 @@ int pt_list_initialize(pt_list *lst, unsigned int initial_capacity, unsigned int
 void pt_list_destroy(pt_list *lst);
 void pt_list_clear(pt_list *lst);
 
-void *pt_list_push(pt_list *lst, unsigned int member_size);
+void *pt_list_push(pt_list *lst, unsigned int n_members, unsigned int member_size);
 #define pt_list_push_as(lst, type) \
-	((type *) pt_list_push(lst, sizeof(type)))
+	((type *) pt_list_push(lst, 1, sizeof(type)))
+#define pt_list_push_n_as(lst, n, type) \
+	((type *) pt_list_push(lst, n, sizeof(type)))
 
 void *pt_list_pop(pt_list *lst, unsigned int member_size);
 #define pt_list_pop_as(lst, type) \

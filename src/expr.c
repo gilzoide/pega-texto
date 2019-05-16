@@ -85,6 +85,7 @@ pt_expr *pt_create_set(const char *str, uint8_t own_characters, pt_expression_ac
 	NEW_EXPR(
 		new_expr->op = PT_SET;
 		new_expr->data.characters = str;
+		new_expr->N = strlen(str);
 		new_expr->own_memory = own_characters;
 		new_expr->action = action;
 	)
