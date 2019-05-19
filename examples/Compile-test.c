@@ -17,7 +17,8 @@ int main(int argc, char **argv) {
 		/* { "Hello", C(PT_ALNUM) }, */
 		/* { "Hello", B('H') }, */
 		/* { "Hello", ANY }, */
-		{ "Hello", R('A', 'Z') },
+		/* { "Hello", R('A', 'Z') }, */
+		{ "Hello", SEQ(L("HELLO"), SEQ(NULL), C(PT_SPACE), L("WORLD"), B('\0')) },
 		/* { "Hello", SEQ(L("HELLO WORLD"), NOT(ANY)) }, */
 		{ NULL, NULL },
 	};

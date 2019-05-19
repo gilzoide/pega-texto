@@ -26,8 +26,8 @@
 
 // Auxiliary structure for keeping validations per Rule, to avoid Cycles between non-terminals.
 typedef struct {
-	uint8_t was_visited : 1;
-	uint8_t is_nullable_visited : 1;
+	uint8_t was_visited;
+	uint8_t is_nullable_visited;
 } pt_validation_per_rule;
 
 /// Look for a name in the array.
