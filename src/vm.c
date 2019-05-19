@@ -80,9 +80,10 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 	pt_bytecode_constant *rc; // constant register
 	const char *sp = str; // string pointer
 	uint8_t *ip = pt_byte_at(bytecode, 0); // instruction pointer
-	enum pt_opcode instruction, not_flag;
+	enum pt_opcode instruction, not_flag, and_flag;
 	enum pt_vm_match_flag fr = 0; // flag register
 	int b; // auxiliary byte holder
+	int sp_inc = 0;
 
 	pt_vm_match_state state = {
 		.sp = sp,
@@ -98,6 +99,7 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 		b = *ip;
 		instruction = b & PT_OP_MASK;
 		not_flag = b & PT_OP_NOT;
+		and_flag = b & PT_OP_AND;
 		switch(instruction) {
 			case PT_OP_SUCCESS:
 				matched = sp - str;
@@ -105,7 +107,7 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 				goto match_end;
 			case PT_OP_BYTE:
 				if(*sp == NEXT_BYTE()) {
-					sp++;
+					sp_inc = !and_flag;
 					break;
 				}
 				else goto match_fail;
@@ -121,7 +123,7 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 						goto match_fail;
 					}
 					else {
-						sp = str_aux;
+						sp_inc = !and_flag * (str_aux - sp);
 					}
 				}
 				break;
@@ -129,7 +131,7 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 				{
 					int (*f)(int) = pt_function_for_character_class(NEXT_BYTE());
 					if(f(*sp)) {
-						sp++;
+						sp_inc = !and_flag;
 					}
 					else goto match_fail;
 				}
@@ -139,7 +141,7 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 					int base = *sp, c;
 					while(c = NEXT_BYTE()) {
 						if(c == base) {
-							sp++;
+							sp_inc = !and_flag;
 							break;
 						}
 					}
@@ -153,7 +155,7 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 					int rangemin = NEXT_BYTE();
 					int rangemax = NEXT_BYTE();
 					if(b >= rangemin && b <= rangemax) {
-						sp++;
+						sp_inc = !and_flag;
 					}
 					else goto match_fail;
 				}
@@ -161,7 +163,7 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 match_fail:
 			case PT_OP_FAIL:
 				if(not_flag) {
-					sp++;
+					sp_inc = !and_flag;
 				}
 				else if(!pt_list_empty(&state_stack)) {
 					// TODO
@@ -177,6 +179,10 @@ match_fail:
 				goto match_end;
 		}
 		ip++;
+		if(sp_inc > 0) {
+			sp += sp_inc;
+			sp_inc = 0;
+		}
 	}
 match_end:
 	pt_list_destroy(&state_stack);

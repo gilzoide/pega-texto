@@ -63,8 +63,9 @@ enum pt_opcode {
 
 	PT_OPCODE_ENUM_COUNT,
 
-	PT_OP_MASK = 0b01111, // bit mask of the operation
-	PT_OP_NOT  = 0b10000, // bit that negates the operation to be performed
+	PT_OP_MASK = 0b00001111, // bit mask of the operation
+	PT_OP_NOT  = 0b00010000, // bit that negates the operation to be performed
+	PT_OP_AND  = 0b00100000, // bit that makes input to not be consumed on success
 };
 extern const char * const pt_opcode_description[];
 
@@ -120,7 +121,7 @@ int pt_push_bytes(pt_bytecode *bytecode, int num_bytes, const uint8_t *bs);
  */
 int pt_push_constant(pt_bytecode *bytecode, pt_bytecode_constant c);
 
-uint8_t * const pt_byte_at(const pt_bytecode *bytecode, int i);
+uint8_t *pt_byte_at(pt_bytecode *bytecode, int i);
 pt_bytecode_constant * const pt_constant_at(const pt_bytecode *bytecode, int i);
 
 /**

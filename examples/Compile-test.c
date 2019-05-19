@@ -16,10 +16,8 @@ int main(int argc, char **argv) {
 		/* { "Hello", S("HELO") }, */
 		/* { "Hello", C(PT_ALNUM) }, */
 		/* { "Hello", B('H') }, */
-		/* { "Hello", ANY }, */
 		/* { "Hello", R('A', 'Z') }, */
-		{ "Hello", SEQ(L("HELLO"), SEQ(NULL), C(PT_SPACE), L("WORLD"), B('\0')) },
-		/* { "Hello", SEQ(L("HELLO WORLD"), NOT(ANY)) }, */
+		{ "Hello", SEQ(NOT(B('a')), AND(ANY), L("HELLO"), SEQ(NULL), C(PT_SPACE), L("WORLD"), B('\0')) },
 		{ NULL, NULL },
 	};
 	pt_grammar g;
@@ -28,7 +26,7 @@ int main(int argc, char **argv) {
 	pt_bytecode bytecode;
 	pt_init_bytecode(&bytecode);
 	int result = pt_compile_grammar(&bytecode, &g);
-	printf("Compile result: %s\n", pt_compile_status_description[result]);
+	printf("Compile result: %s\n", pt_get_compile_status_description(result));
 
 	if(result == PT_COMPILE_SUCCESS) {
 		pt_dump_bytecode(&bytecode);

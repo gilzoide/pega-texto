@@ -38,20 +38,18 @@ typedef struct pt_grammar pt_grammar;
 enum pt_compile_status {
 	PT_COMPILE_SUCCESS = 0,  ///< No errors on compilation
 	// Grammar validation errors
-	PT_COMPILE_NULL_GRAMMAR,  ///< Grammar is a NULL pointer
-	PT_COMPILE_EMPTY_GRAMMAR,  ///< Grammar doesn't present any Rules
-	PT_COMPILE_NULL_POINTER,  ///< NULL pointer as Expression data
-	PT_COMPILE_RANGE_BUFFER,  ///< Range buffer must have at least 2 characters
-	PT_COMPILE_INVALID_RANGE,  ///< Range characters must be numerically ordered
-	PT_COMPILE_OUT_OF_BOUNDS,  ///< Non-terminal index is out of Grammar bounds
-	PT_COMPILE_UNDEFINED_RULE,  ///< Rule undefined in given Grammar
-	PT_COMPILE_LOOP_EMPTY_STRING,  ///< Loop body may accept empty string
+	PT_COMPILE_NULL_GRAMMAR = -1,  ///< Grammar is a NULL pointer
+	PT_COMPILE_EMPTY_GRAMMAR = -2,  ///< Grammar doesn't present any Rules
+	PT_COMPILE_NULL_POINTER = -3,  ///< NULL pointer as Expression data
+	PT_COMPILE_INVALID_RANGE = -4,  ///< Range characters must be numerically ordered
+	PT_COMPILE_OUT_OF_BOUNDS = -5,  ///< Non-terminal index is out of Grammar bounds
+	PT_COMPILE_UNDEFINED_RULE = -6,  ///< Rule undefined in given Grammar
+	PT_COMPILE_LOOP_EMPTY_STRING = -7,  ///< Loop body may accept empty string
 	// Other compiler errors
-	PT_COMPILE_MEMORY_ERROR,  ///< Malloc error
-	PT_COMPILE_INVALID_EXPR,  ///< Encountered an invalid or not yet supported Expression
-	PT_COMPILE_INVERTED_RANGE,  ///< Range Expression is inverted: first byte is greater than the second
+	PT_COMPILE_MEMORY_ERROR = -8,  ///< Malloc error
+	PT_COMPILE_INVALID_EXPR = -9,  ///< Encountered an invalid or not yet supported Expression
 
-	PT_COMPILE_STATUS_ENUM_COUNT,
+	PT_COMPILE_STATUS_ENUM_COUNT = 10,
 };
 
 /**
@@ -59,7 +57,7 @@ enum pt_compile_status {
  *
  * @see pt_compile_status
  */
-extern const char * const pt_compile_status_description[];
+const char *pt_get_compile_status_description(int compile_status);
 
 /**
  * Compile a Grammar into a bytecode to be run by the VM.

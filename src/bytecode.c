@@ -75,7 +75,8 @@ int pt_push_constant(pt_bytecode *bytecode, pt_bytecode_constant c) {
 	else return 0;
 }
 
-uint8_t * const pt_byte_at(const pt_bytecode *bytecode, int i) {
+uint8_t *pt_byte_at(pt_bytecode *bytecode, int i) {
+	if(i < 0) i = bytecode->chunk.size + i;
 	return pt_list_at(&bytecode->chunk, i, uint8_t);
 }
 
@@ -97,7 +98,8 @@ void pt_dump_bytecode(const pt_bytecode *bytecode) {
 		uint8_t b = *pc;
 		uint8_t instruction = b & PT_OP_MASK;
 		uint8_t not_flag = b & PT_OP_NOT;
-		PRINT_BYTE("%s%s", not_flag ? "!" : "", pt_opcode_description[instruction]);
+		uint8_t and_flag = b & PT_OP_AND;
+		PRINT_BYTE("%s%s%s", and_flag ? "&" : "", not_flag ? "!" : "", pt_opcode_description[instruction]);
 		switch(instruction) {
 			case PT_OP_BYTE:
 			case PT_OP_CHAR_CLASS:
