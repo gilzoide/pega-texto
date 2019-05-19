@@ -24,6 +24,8 @@
  * Include this header to `#undef` the constructor macros defined at @ref macro-on.h
  */
 
+#undef B
+#undef B_
 #undef L
 #undef L_
 #undef L_O

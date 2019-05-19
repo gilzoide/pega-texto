@@ -61,6 +61,9 @@ enum pt_opcode {
 	PT_OP_CHAR_CLASS, // +[wWaAcCdDgGlLpPsSuUxX] -> character class tested
 
 	PT_OPCODE_ENUM_COUNT,
+
+	PT_OP_MASK = 0b01111, // bit mask of the operation
+	PT_OP_NOT  = 0b10000, // bit that negates the operation to be performed
 };
 extern const char * const pt_opcode_description[];
 

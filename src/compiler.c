@@ -47,6 +47,12 @@ static_assert(sizeof(pt_compile_status_description) == PT_COMPILE_STATUS_ENUM_CO
 ///////////////////////////////////////////////////////////////////////////////
 //  Expression compilers
 ///////////////////////////////////////////////////////////////////////////////
+static int _pt_compile_byte(pt_bytecode *bytecode, pt_expr *expr) {
+	int res = pt_push_byte(bytecode, PT_OP_BYTE)
+	          && pt_push_byte(bytecode, expr->N);
+	return res ? PT_COMPILE_SUCCESS : PT_COMPILE_MEMORY_ERROR;
+}
+
 static int _pt_compile_literal(pt_bytecode *bytecode, pt_expr *expr) {
 	int literal_size = expr->N;
 	int res = literal_size <= 0
@@ -69,6 +75,12 @@ static int _pt_compile_char_class(pt_bytecode *bytecode, pt_expr *expr) {
 	return res ? PT_COMPILE_SUCCESS : PT_COMPILE_MEMORY_ERROR;
 }
 
+static int _pt_compile_any(pt_bytecode *bytecode, pt_expr *expr) {
+	int res = pt_push_byte(bytecode, PT_OP_BYTE | PT_OP_NOT)
+	          && pt_push_byte(bytecode, '\0');
+	return res ? PT_COMPILE_SUCCESS : PT_COMPILE_MEMORY_ERROR;
+}
+
 static int _pt_compile_success(pt_bytecode *bytecode) {
 	int res = pt_push_byte(bytecode, PT_OP_SUCCESS);
 	return res ? PT_COMPILE_SUCCESS : PT_COMPILE_MEMORY_ERROR;
@@ -80,9 +92,11 @@ static int _pt_compile_success(pt_bytecode *bytecode) {
 enum pt_compile_status pt_compile_expr(pt_bytecode *bytecode, pt_expr *expr) {
 	int op = expr->op;
 	switch(op) {
+		case PT_BYTE: return _pt_compile_byte(bytecode, expr);
 		case PT_LITERAL: return _pt_compile_literal(bytecode, expr);
 		case PT_SET: return _pt_compile_set(bytecode, expr);
 		case PT_CHARACTER_CLASS: return _pt_compile_char_class(bytecode, expr);
+		case PT_ANY: return _pt_compile_any(bytecode, expr);
 		default: return PT_COMPILE_INVALID_EXPR;
 	}
 }

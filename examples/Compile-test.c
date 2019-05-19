@@ -14,7 +14,9 @@ int main(int argc, char **argv) {
 	pt_rule R[] = {
 		/* { "Hello", L("HELLO WORLD") }, */
 		/* { "Hello", S("HELO") }, */
-		{ "Hello", C(PT_ALNUM) },
+		/* { "Hello", C(PT_ALNUM) }, */
+		/* { "Hello", B('H') }, */
+		{ "Hello", ANY },
 		/* { "Hello", SEQ(L("HELLO WORLD"), NOT(ANY)) }, */
 		{ NULL, NULL },
 	};

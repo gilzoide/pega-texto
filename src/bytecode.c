@@ -94,8 +94,10 @@ void pt_dump_bytecode(const pt_bytecode *bytecode) {
 	PRINT_BYTE("const.as_str '%s'", c->as_str)
 	for(pc = bytecode_start; pc < bytecode_end; pc++) {
 		uint8_t b = *pc;
-		PRINT_BYTE("%s", pt_opcode_description[b]);
-		switch(b) {
+		uint8_t instruction = b & PT_OP_MASK;
+		uint8_t not_flag = b & PT_OP_NOT;
+		PRINT_BYTE("%s%s", not_flag ? "!" : "", pt_opcode_description[instruction]);
+		switch(instruction) {
 			case PT_OP_BYTE:
 			case PT_OP_CHAR_CLASS:
 				pc++;

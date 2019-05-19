@@ -75,6 +75,9 @@ static pt_expr *__pt_expr_from_array(pt_expr *(*f)(pt_expr **, int, uint8_t, pt_
 }
 #endif  // __PEGA_TEXTO_MACRO_ON_H__
 
+/// Create a Byte Expression.
+#define B(b)            (pt_create_byte(b, NULL))
+#define B_(a, b)        (pt_create_byte(b, a))
 /// Create a Literal Expression.
 #define L(s)            (pt_create_literal(s, 0, NULL))
 #define L_(a, s)        (pt_create_literal(s, 0, a))

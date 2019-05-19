@@ -26,6 +26,7 @@
 #include <ctype.h>
 
 const char * const pt_operation_names[] = {
+	"PT_BYTE",
 	"PT_LITERAL",
 	"PT_CASE_INSENSITIVE",
 	"PT_CHARACTER_CLASS",
@@ -69,6 +70,14 @@ pt_character_class_function pt_function_for_character_class(enum pt_character_cl
 	    body                                 \
 	}                                        \
 	return new_expr;
+
+pt_expr *pt_create_byte(uint8_t b, pt_expression_action action) {
+	NEW_EXPR(
+		new_expr->op = PT_BYTE;
+		new_expr->N = b;
+		new_expr->action = action;
+	)
+}
 
 pt_expr *pt_create_literal(const char *str, uint8_t own_characters, pt_expression_action action) {
 	NEW_EXPR(

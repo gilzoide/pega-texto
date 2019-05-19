@@ -79,8 +79,8 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 
 	pt_bytecode_constant *rc; // constant register
 	const char *sp = str; // string pointer
-	uint8_t *ip = pt_byte_at(bytecode, 0); // instruction pointer
-	enum pt_opcode instruction;
+	uint8_t *ip = pt_byte_at(bytecode, 0), b; // instruction pointer
+	enum pt_opcode instruction, not_flag;
 	enum pt_vm_match_flag fr = 0; // flag register
 
 	pt_vm_match_state state = {
@@ -94,7 +94,9 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 	int matched;
 
 	while(1) {
-		instruction = *ip;
+		b = *ip;
+		instruction = b & PT_OP_MASK;
+		not_flag = b & PT_OP_NOT;
 		switch(instruction) {
 			case PT_OP_SUCCESS:
 				matched = sp - str;
@@ -146,7 +148,10 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 				break;
 match_fail:
 			case PT_OP_FAIL:
-				if(!pt_list_empty(&state_stack)) {
+				if(not_flag) {
+					sp++;
+				}
+				else if(!pt_list_empty(&state_stack)) {
 					// TODO
 				}
 				else {
