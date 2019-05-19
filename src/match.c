@@ -172,6 +172,7 @@ pt_match_result pt_match(pt_expr **es, const char **names, const char *str, cons
 	pt_match_state *state = pt_push_state(&S, es[0], 0, 0);
 	pt_expr *e;
 	const char *ptr;
+	uint8_t *byteptr;
 
 	// match loop
 	while(state) {
@@ -209,7 +210,8 @@ pt_match_result pt_match(pt_expr **es, const char **names, const char *str, cons
 				break;
 
 			case PT_RANGE:
-				if(*ptr >= e->data.characters[0] && *ptr <= e->data.characters[1]) {
+				byteptr = (uint8_t *)&e->N;
+				if(*ptr >= byteptr[0] && *ptr <= byteptr[1]) {
 					matched = 1;
 				}
 				break;

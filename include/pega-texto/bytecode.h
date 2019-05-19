@@ -59,6 +59,7 @@ enum pt_opcode {
 	PT_OP_STRING, // + NULL terminated string for literal matching
 	PT_OP_SET, // + NULL terminated string for character set
 	PT_OP_CHAR_CLASS, // +[wWaAcCdDgGlLpPsSuUxX] -> character class tested
+	PT_OP_RANGE, // +2 -> byte range
 
 	PT_OPCODE_ENUM_COUNT,
 

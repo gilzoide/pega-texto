@@ -114,14 +114,9 @@ static int pt_validate_expr_in_grammar(pt_grammar *g, pt_expr *e, uint16_t *rule
 			break;
 
 		case PT_RANGE:
-			if(e->data.characters == NULL) {
-				return PT_VALIDATE_NULL_POINTER;
-			}
-			else if(!should_skip) {
-				if(strlen(e->data.characters) < 2) {
-					return PT_VALIDATE_RANGE_BUFFER;
-				}
-				else if(e->data.characters[0] > e->data.characters[1]) {
+			if(!should_skip) {
+				uint8_t *ptr = (uint8_t *)&e->N;
+				if(ptr[0] > ptr[1]) {
 					return PT_VALIDATE_INVALID_RANGE;
 				}
 			}

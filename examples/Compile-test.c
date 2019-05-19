@@ -16,7 +16,8 @@ int main(int argc, char **argv) {
 		/* { "Hello", S("HELO") }, */
 		/* { "Hello", C(PT_ALNUM) }, */
 		/* { "Hello", B('H') }, */
-		{ "Hello", ANY },
+		/* { "Hello", ANY }, */
+		{ "Hello", R('A', 'Z') },
 		/* { "Hello", SEQ(L("HELLO WORLD"), NOT(ANY)) }, */
 		{ NULL, NULL },
 	};

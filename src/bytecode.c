@@ -34,6 +34,7 @@ const char * const pt_opcode_description[] = {
 	"PT_OP_STRING",
 	"PT_OP_SET",
 	"PT_OP_CHAR_CLASS",
+	"PT_OP_RANGE",
 };
 #ifdef static_assert
 static_assert(sizeof(pt_opcode_description) == PT_OPCODE_ENUM_COUNT * sizeof(const char *),
@@ -89,7 +90,7 @@ void pt_dump_bytecode(const pt_bytecode *bytecode) {
 #define PRINT_BYTE(fmt, ...) \
 	printf("%4ld | 0x%02x  | " fmt "\n", pc - bytecode_start, *pc, ##__VA_ARGS__)
 #define PRINT_STR(s) \
-	printf("%4ld | char* | \"%s\" \n", pc - bytecode_start, s)
+	printf("%4ld | char* | \"%s\"\n", pc - bytecode_start, s)
 #define PRINT_STR_CONSTANT(c) \
 	PRINT_BYTE("const.as_str '%s'", c->as_str)
 	for(pc = bytecode_start; pc < bytecode_end; pc++) {
@@ -100,6 +101,12 @@ void pt_dump_bytecode(const pt_bytecode *bytecode) {
 		switch(instruction) {
 			case PT_OP_BYTE:
 			case PT_OP_CHAR_CLASS:
+				pc++;
+				PRINT_BYTE("'%c'", *pc);
+				break;
+			case PT_OP_RANGE:
+				pc++;
+				PRINT_BYTE("'%c'", *pc);
 				pc++;
 				PRINT_BYTE("'%c'", *pc);
 				break;

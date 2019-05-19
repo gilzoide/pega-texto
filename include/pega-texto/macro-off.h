@@ -40,8 +40,6 @@
 #undef S_O_
 #undef R
 #undef R_
-#undef R_O
-#undef R_O_
 #undef ANY
 #undef ANY_
 #undef V

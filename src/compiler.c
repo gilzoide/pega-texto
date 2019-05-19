@@ -37,6 +37,7 @@ const char * const pt_compile_status_description[] = {
 	"PT_COMPILE_LOOP_EMPTY_STRING",
 	"PT_COMPILE_MEMORY_ERROR",
 	"PT_COMPILE_INVALID_EXPR",
+	"PT_COMPILE_INVERTED_RANGE",
 };
 #ifdef static_assert
 static_assert(sizeof(pt_compile_status_description) == PT_COMPILE_STATUS_ENUM_COUNT * sizeof(const char *),
@@ -75,6 +76,14 @@ static int _pt_compile_char_class(pt_bytecode *bytecode, pt_expr *expr) {
 	return res ? PT_COMPILE_SUCCESS : PT_COMPILE_MEMORY_ERROR;
 }
 
+static int _pt_compile_range(pt_bytecode *bytecode, pt_expr *expr) {
+	const uint8_t *range = (const uint8_t *)&expr->N;
+	if(range[0] > range[1]) return PT_COMPILE_INVERTED_RANGE;
+	int res = pt_push_byte(bytecode, PT_OP_RANGE)
+	          && pt_push_bytes(bytecode, 2, range);
+	return res ? PT_COMPILE_SUCCESS : PT_COMPILE_MEMORY_ERROR;
+}
+
 static int _pt_compile_any(pt_bytecode *bytecode, pt_expr *expr) {
 	int res = pt_push_byte(bytecode, PT_OP_BYTE | PT_OP_NOT)
 	          && pt_push_byte(bytecode, '\0');
@@ -96,6 +105,7 @@ enum pt_compile_status pt_compile_expr(pt_bytecode *bytecode, pt_expr *expr) {
 		case PT_LITERAL: return _pt_compile_literal(bytecode, expr);
 		case PT_SET: return _pt_compile_set(bytecode, expr);
 		case PT_CHARACTER_CLASS: return _pt_compile_char_class(bytecode, expr);
+		case PT_RANGE: return _pt_compile_range(bytecode, expr);
 		case PT_ANY: return _pt_compile_any(bytecode, expr);
 		default: return PT_COMPILE_INVALID_EXPR;
 	}

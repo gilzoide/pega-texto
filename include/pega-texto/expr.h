@@ -133,7 +133,7 @@ pt_character_class_function pt_function_for_character_class(enum pt_character_cl
 typedef struct pt_expr {
 	/// Expression data, depending on it's operation.
 	union {
-		/// Literals, Character Sets, Ranges and Non-Terminal names.
+		/// Literals, Character Sets and Non-Terminal names.
 		const char *characters;
 		/// Quantifier, And & Not: operand, Error sync Expression.
 		struct pt_expr *e;
@@ -145,7 +145,7 @@ typedef struct pt_expr {
 		pt_character_class_function test_character_class;
 	} data;
 	pt_expression_action action;  ///< Action to be called when the whole match succeeds.
-	int16_t N;  ///< Quantifier, array size for N-ary operations, Non-Terminal index, Literal length, Error code.
+	int16_t N;  ///< Quantifier, array size for N-ary operations, Range byte pair, Non-Terminal index, Literal length, Error code.
 	uint8_t op;  ///< Operation to be performed.
 	uint8_t own_memory : 1;  ///< Do Expression own the `characters`, `e` or `es` data buffer?
 } pt_expr;
@@ -191,11 +191,11 @@ pt_expr *pt_create_set(const char *str, uint8_t own_characters, pt_expression_ac
 /**
  * Create a Range Expression.
  *
- * @param str            Character range to be matched.
- * @param own_characters Should Expression own the `characters` buffer?
- * @param action         Action associated to the Expression.
+ * @param range_min  Minimum byte in range.
+ * @param range_max  Maximum byte in range.
+ * @param action     Action associated to the Expression.
  */
-pt_expr *pt_create_range(const char *str, uint8_t own_characters, pt_expression_action action);
+pt_expr *pt_create_range(uint8_t range_min, uint8_t range_max, pt_expression_action action);
 /**
  * Create a Any Expression.
  *

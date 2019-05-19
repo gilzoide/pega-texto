@@ -79,9 +79,10 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 
 	pt_bytecode_constant *rc; // constant register
 	const char *sp = str; // string pointer
-	uint8_t *ip = pt_byte_at(bytecode, 0), b; // instruction pointer
+	uint8_t *ip = pt_byte_at(bytecode, 0); // instruction pointer
 	enum pt_opcode instruction, not_flag;
 	enum pt_vm_match_flag fr = 0; // flag register
+	int b; // auxiliary byte holder
 
 	pt_vm_match_state state = {
 		.sp = sp,
@@ -146,6 +147,17 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 					if(c != base) goto match_fail;
 				}
 				break;
+			case PT_OP_RANGE:
+				{
+					b = *sp;
+					int rangemin = NEXT_BYTE();
+					int rangemax = NEXT_BYTE();
+					if(b >= rangemin && b <= rangemax) {
+						sp++;
+					}
+					else goto match_fail;
+				}
+				break;
 match_fail:
 			case PT_OP_FAIL:
 				if(not_flag) {
@@ -160,7 +172,9 @@ match_fail:
 				}
 				break;
 
-			default: break; // unknown opcode
+			default: // unknown opcode
+				matched = PT_VM_INVALID_INSTRUCTION;
+				goto match_end;
 		}
 		ip++;
 	}

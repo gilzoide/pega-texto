@@ -120,11 +120,12 @@ pt_expr *pt_create_set(const char *str, uint8_t own_characters, pt_expression_ac
 	)
 }
 
-pt_expr *pt_create_range(const char *str, uint8_t own_characters, pt_expression_action action) {
+pt_expr *pt_create_range(uint8_t range_min, uint8_t range_max, pt_expression_action action) {
 	NEW_EXPR(
 		new_expr->op = PT_RANGE;
-		new_expr->data.characters = str;
-		new_expr->own_memory = own_characters;
+		uint8_t *range_ptr = (uint8_t *)&new_expr->N;
+		range_ptr[0] = range_min;
+		range_ptr[1] = range_max;
 		new_expr->action = action;
 	)
 }
@@ -229,7 +230,7 @@ void pt_destroy_expr(pt_expr *e) {
 				if(!e->data.characters) {
 					break;
 				}
-			case PT_LITERAL: case PT_CASE_INSENSITIVE: case PT_SET: case PT_RANGE:
+			case PT_LITERAL: case PT_CASE_INSENSITIVE: case PT_SET:
 				if(e->own_memory) {
 					free((void *) e->data.characters);
 				}

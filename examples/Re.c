@@ -279,8 +279,8 @@ pt_grammar *create_grammar_from_string(const char *str, ...) {
 		{ "Range", SEQ_(range, ANY, L("-"), BUT(L("]"))) },
 		{ "Character", OR_(character,
 		                   SEQ(L("\\"), S("abfnrtv\'\"[]\\")),
-		                   SEQ(L("\\"), R("02"), R_(forward_character, "07"), R_(forward_character, "07")),
-		                   SEQ(L("\\"), R("07"), Q(R_(forward_character, "07"), -1)),
+		                   SEQ(L("\\"), R('0', '2'), R_(forward_character, '0', '7'), R_(forward_character, '0', '7')),
+		                   SEQ(L("\\"), R('0', '7'), Q(R_(forward_character, '0', '7'), -1)),
 		                   ANY) },
 		{ "Defined", SEQ(L("\\"), S_(defined, "wWaAcCdDgGlLpPsSuUxX"), V("S")) },
 

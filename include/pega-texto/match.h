@@ -48,8 +48,10 @@ typedef enum {
 	PT_MATCHED_ERROR = -3,
 	/// Provided string is a NULL pointer.
 	PT_NULL_INPUT = -4,
-	/// VM has no bytecode loaded
+	/// VM has no bytecode loaded.
 	PT_VM_NULL_BYTECODE = -5,
+	/// An invalid instruction was found in bytecode.
+	PT_VM_INVALID_INSTRUCTION = -6,
 } pt_macth_error_code;
 
 /**

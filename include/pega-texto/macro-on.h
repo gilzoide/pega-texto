@@ -97,10 +97,8 @@ static pt_expr *__pt_expr_from_array(pt_expr *(*f)(pt_expr **, int, uint8_t, pt_
 #define S_O(s)          (pt_create_set(s, 1, NULL))
 #define S_O_(a, s)      (pt_create_set(s, 1, a))
 /// Create a Range Expression.
-#define R(s)            (pt_create_range(s, 0, NULL))
-#define R_(a, s)        (pt_create_range(s, 0, a))
-#define R_O(s)          (pt_create_range(s, 1, NULL))
-#define R_O_(a, s)      (pt_create_range(s, 1, a))
+#define R(b1, b2)       (pt_create_range(b1, b2, NULL))
+#define R_(a, b1, b2)   (pt_create_range(b1, b2, a))
 /// Create a Any Expression.
 #define ANY             (pt_create_any(NULL))
 #define ANY_(a)         (pt_create_any(a))

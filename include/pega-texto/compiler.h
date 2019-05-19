@@ -49,6 +49,7 @@ enum pt_compile_status {
 	// Other compiler errors
 	PT_COMPILE_MEMORY_ERROR,  ///< Malloc error
 	PT_COMPILE_INVALID_EXPR,  ///< Encountered an invalid or not yet supported Expression
+	PT_COMPILE_INVERTED_RANGE,  ///< Range Expression is inverted: first byte is greater than the second
 
 	PT_COMPILE_STATUS_ENUM_COUNT,
 };
