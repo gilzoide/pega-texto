@@ -56,9 +56,9 @@ enum pt_opcode {
 	PT_OP_SUCCESS,
 	PT_OP_RETURN,
 	PT_OP_BYTE, // +1 -> byte to be matched
-	PT_OP_NOT_BYTE, // +1 -> byte that should not be matched
 	PT_OP_STRING, // + NULL terminated string for literal matching
 	PT_OP_SET, // + NULL terminated string for character set
+	PT_OP_CHAR_CLASS, // +[wWaAcCdDgGlLpPsSuUxX] -> character class tested
 
 	PT_OPCODE_ENUM_COUNT,
 };

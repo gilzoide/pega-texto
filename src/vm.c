@@ -122,6 +122,15 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 					}
 				}
 				break;
+			case PT_OP_CHAR_CLASS:
+				{
+					int (*f)(int) = pt_function_for_character_class(NEXT_BYTE());
+					if(f(*sp)) {
+						sp++;
+					}
+					else goto match_fail;
+				}
+				break;
 			case PT_OP_SET:
 				{
 					int base = *sp, c;

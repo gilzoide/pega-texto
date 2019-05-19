@@ -31,9 +31,9 @@ const char * const pt_opcode_description[] = {
 	"PT_OP_SUCCESS",
 	"PT_OP_RETURN",
 	"PT_OP_BYTE",
-	"PT_OP_NOT_BYTE",
 	"PT_OP_STRING",
 	"PT_OP_SET",
+	"PT_OP_CHAR_CLASS",
 };
 #ifdef static_assert
 static_assert(sizeof(pt_opcode_description) == PT_OPCODE_ENUM_COUNT * sizeof(const char *),
@@ -97,7 +97,7 @@ void pt_dump_bytecode(const pt_bytecode *bytecode) {
 		PRINT_BYTE("%s", pt_opcode_description[b]);
 		switch(b) {
 			case PT_OP_BYTE:
-			case PT_OP_NOT_BYTE:
+			case PT_OP_CHAR_CLASS:
 				pc++;
 				PRINT_BYTE("'%c'", *pc);
 				break;

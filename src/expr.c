@@ -23,6 +23,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 const char * const pt_operation_names[] = {
 	"PT_LITERAL",
@@ -45,6 +46,22 @@ const char * const pt_operation_names[] = {
 static_assert(sizeof(pt_operation_names) == PT_OPERATION_ENUM_COUNT * sizeof(const char *),
               "Missing expression operation names");
 #endif
+
+pt_character_class_function pt_function_for_character_class(enum pt_character_class c) {
+	switch(c) {
+		case 'w': return isalnum;
+		case 'a': return isalpha;
+		case 'c': return iscntrl;
+		case 'd': return isdigit;
+		case 'g': return isgraph;
+		case 'l': return islower;
+		case 'p': return ispunct;
+		case 's': return isspace;
+		case 'u': return isupper;
+		case 'x': return isxdigit;
+		default: return NULL;
+	}
+}
 
 #define NEW_EXPR(body)                       \
 	pt_expr *new_expr;                       \
@@ -73,10 +90,13 @@ pt_expr *pt_create_case_insensitive(const char *str, uint8_t own_characters, pt_
 	)
 }
 
-pt_expr *pt_create_character_class(pt_character_class_function f, pt_expression_action action) {
+pt_expr *pt_create_character_class(enum pt_character_class c, pt_expression_action action) {
+	int (*f)(int);
+	if((f = pt_function_for_character_class(c)) == NULL) return NULL;
 	NEW_EXPR(
 		new_expr->op = PT_CHARACTER_CLASS;
 		new_expr->data.test_character_class = f;
+		new_expr->N = c;
 		new_expr->action = action;
 	)
 }

@@ -24,21 +24,9 @@ pt_data identifier(const char *str, size_t start, size_t end, int argc, pt_data 
 }
 pt_data defined(const char *str, size_t start, size_t end, int argc, pt_data *argv, void *data) {
 	assert(argc == 0 && "Defined");
-	int (*f)(int);
 	char c = str[start];
-	switch(c) {
-		case 'w': case 'W': f = isalnum; break;
-		case 'a': case 'A': f = isalpha; break;
-		case 'c': case 'C': f = iscntrl; break;
-		case 'd': case 'D': f = isdigit; break;
-		case 'g': case 'G': f = isgraph; break;
-		case 'l': case 'L': f = islower; break;
-		case 'p': case 'P': f = ispunct; break;
-		case 's': case 'S': f = isspace; break;
-		case 'u': case 'U': f = isupper; break;
-		case 'x': case 'X': f = isxdigit; break;
-		default: assert(0 && "No way the class is not in [wWaAcCdDgGlLpPsSuUxX]"); break;
-	}
+	int (*f)(int) = pt_function_for_character_class(c);
+	assert(f != NULL && "No way the class is not in [wWaAcCdDgGlLpPsSuUxX]");
 	pt_expr *e = C(f);
 	if(isupper(c)) {
 		e = BUT(e);
@@ -296,10 +284,10 @@ pt_grammar *create_grammar_from_string(const char *str, ...) {
 		                   ANY) },
 		{ "Defined", SEQ(L("\\"), S_(defined, "wWaAcCdDgGlLpPsSuUxX"), V("S")) },
 
-		{ "S", Q(OR(C(isspace), SEQ(L("#"), Q(BUT(L("\n")), 0))), 0) },
-		{ "Identifier", SEQ(SEQ_(identifier, OR(C(isalpha), L("_")), Q(OR(C(isalnum), S("_-")), 0)), V("S")) },
+		{ "S", Q(OR(C(PT_SPACE), SEQ(L("#"), Q(BUT(L("\n")), 0))), 0) },
+		{ "Identifier", SEQ(SEQ_(identifier, OR(C(PT_ALPHA), L("_")), Q(OR(C(PT_ALNUM), S("_-")), 0)), V("S")) },
 		{ "Arrow", SEQ(L("<-"), V("S")) },
-		{ "Number", SEQ_(tonumber, Q(S("+-"), -1), Q(C(isdigit), 1), V("S")) },
+		{ "Number", SEQ_(tonumber, Q(S("+-"), -1), Q(C(PT_DIGIT), 1), V("S")) },
 		{ NULL, NULL },
 	};
 	pt_grammar *re = pt_create_grammar(rules, 0);

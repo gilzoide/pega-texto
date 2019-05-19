@@ -100,10 +100,33 @@ enum pt_operation {
 /// String version of the possible operations.
 extern const char * const pt_operation_names[];
 
+/**
+ * Character classes supported by pega-texto.
+ *
+ * Each of them correspond to the `is*` functions defined in `ctype.h` header.
+ */
+enum pt_character_class {
+	PT_ALNUM  = 'w',
+	PT_ALPHA  = 'a',
+	PT_CNTRL  = 'c',
+	PT_DIGIT  = 'd',
+	PT_GRAPH  = 'g',
+	PT_LOWER  = 'l',
+	PT_PUNCT  = 'p',
+	PT_SPACE  = 's',
+	PT_UPPER  = 'u',
+	PT_XDIGIT = 'x',
+};
+
 /// A function that receives a string and userdata and match it (positive) or not, advancing the matched number.
 typedef int(*pt_custom_matcher_function)(const char *, void *);
 /// A function that receives a character (int) and match it (non-zero) or not (0).
 typedef int(*pt_character_class_function)(int);
+
+/**
+ * Get the function to be used for matching a Character Class.
+ */
+pt_character_class_function pt_function_for_character_class(enum pt_character_class c);
 
 /// Parsing Expressions.
 typedef struct pt_expr {
@@ -148,7 +171,7 @@ pt_expr *pt_create_case_insensitive(const char *str, uint8_t own_characters, pt_
  * @param f      Custom function that returns true for characters in the class.
  * @param action Action associated to the Expression.
  */
-pt_expr *pt_create_character_class(pt_character_class_function f, pt_expression_action action);
+pt_expr *pt_create_character_class(enum pt_character_class c, pt_expression_action action);
 /**
  * Create a Set Expression.
  *

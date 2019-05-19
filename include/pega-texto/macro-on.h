@@ -86,8 +86,8 @@ static pt_expr *__pt_expr_from_array(pt_expr *(*f)(pt_expr **, int, uint8_t, pt_
 #define I_O(s)          (pt_create_case_insensitive(s, 1, NULL))
 #define I_O_(a, s)      (pt_create_case_insensitive(s, 1, a))
 /// Create a Character Class Expression.
-#define C(f)            (pt_create_character_class(f, NULL))
-#define C_(a, f)        (pt_create_character_class(f, a))
+#define C(c)            (pt_create_character_class(c, NULL))
+#define C_(a, c)        (pt_create_character_class(c, a))
 /// Create a Set Expression.
 #define S(s)            (pt_create_set(s, 0, NULL))
 #define S_(a, s)        (pt_create_set(s, 0, a))
