@@ -51,7 +51,7 @@ typedef union pt_bytecode_constant {
 #define CONST_OFFSET(offset) \
 	((pt_bytecode_constant){ .as_offset = (offset) })
 
-enum pt_opcode {
+enum pt_opcode { 
 	PT_OP_FAIL,
 	PT_OP_SUCCESS,
 	PT_OP_RETURN,
@@ -60,10 +60,11 @@ enum pt_opcode {
 	PT_OP_SET, // + NULL terminated string for character set
 	PT_OP_CHAR_CLASS, // +[wWaAcCdDgGlLpPsSuUxX] -> character class tested
 	PT_OP_RANGE, // +2 -> byte range
+	PT_OP_CALL, // +1 -> rule index to jump
 
 	PT_OPCODE_ENUM_COUNT,
 
-	PT_OP_MASK = 0b00001111, // bit mask of the operation
+	PT_OP_MASK = 0b00001111, // bit mask of the opcode
 	PT_OP_NOT  = 0b00010000, // bit that negates the operation to be performed
 	PT_OP_AND  = 0b00100000, // bit that makes input to not be consumed on success
 };
@@ -74,10 +75,12 @@ extern const char * const pt_opcode_description[];
  */
 typedef struct pt_bytecode {
 	pt_list_(uint8_t) chunk;
+	pt_list_(uint16_t) rule_addresses;
 	pt_list_(pt_bytecode_constant) constants;
 } pt_bytecode;
 #define PT_CHUNK_LIST_INITIAL_CAPACITY 256
-#define PT_CONSTANT_LIST_INITIAL_CAPACITY 64
+#define PT_RULE_ADDRESSES_LIST_INITIAL_CAPACITY 256
+#define PT_CONSTANTS_LIST_INITIAL_CAPACITY 64
 
 /**
  * Initialize a Bytecode struct with the expected values.

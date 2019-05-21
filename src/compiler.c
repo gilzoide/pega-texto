@@ -23,7 +23,13 @@
 #include <pega-texto/grammar.h>
 
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
+
+typedef struct pt_rule_compile_state {
+	uint8_t visited;
+	uint16_t address;
+} pt_rule_compile_state;
 
 const char * const pt_compile_status_description[] = {
 	"PT_COMPILE_SUCCESS",
@@ -55,7 +61,7 @@ const char *pt_get_compile_status_description(int compile_status) {
 ///////////////////////////////////////////////////////////////////////////////
 //  Expression compilers
 ///////////////////////////////////////////////////////////////////////////////
-enum pt_compile_status pt_compile_expr(pt_bytecode *bytecode, pt_expr *expr);
+enum pt_compile_status pt_compile_expr(pt_bytecode *bytecode, pt_grammar *g, pt_expr *expr, pt_rule_compile_state compile_state[]);
 
 static int _pt_compile_byte(pt_bytecode *bytecode, pt_expr *expr) {
 	int res = pt_push_byte(bytecode, PT_OP_BYTE)
@@ -101,37 +107,57 @@ static int _pt_compile_any(pt_bytecode *bytecode, pt_expr *expr) {
 	return res ? 2 : PT_COMPILE_MEMORY_ERROR;
 }
 
-static int _pt_compile_sequence(pt_bytecode *bytecode, pt_expr *expr) {
-	int i, res = 0, acc = 0;
-	if(expr->N > 0 && expr->data.es == NULL) return PT_COMPILE_NULL_POINTER;
-	for(i = 0; res >= 0 && i < expr->N; i++) {
-		res = pt_compile_expr(bytecode, expr->data.es[i]);
-		if(res < 0) return res;
-		acc += res;
+static int _pt_compile_non_terminal(pt_bytecode *bytecode, pt_grammar *g, pt_expr *expr, pt_rule_compile_state compile_state[]) {
+	int N = expr->N;
+	if(N < 0) {
+		int i;
+		const char *name = expr->data.characters, **names = g->names;
+		for(i = 0; i < g->N; i++) {
+			if(strcmp(name, names[i]) == 0) {
+				expr->N = N = i;
+				goto found_name;
+			}
+		}
+		return PT_COMPILE_UNDEFINED_RULE;
 	}
-	return acc;
+found_name: {}
+	int result = pt_push_byte(bytecode, PT_OP_CALL) && pt_push_byte(bytecode, N);
+	return result ? 2 : PT_COMPILE_MEMORY_ERROR;
 }
 
-static int _pt_compile_and(pt_bytecode *bytecode, pt_expr *expr) {
+static int _pt_compile_and(pt_bytecode *bytecode, pt_grammar *g, pt_expr *expr, pt_rule_compile_state compile_state[]) {
 	pt_expr *subexpr = expr->data.e;
 	if(subexpr == NULL) return PT_COMPILE_NULL_POINTER;
-	int res = pt_compile_expr(bytecode, subexpr);
+	int current_size = bytecode->chunk.size;
+	int res = pt_compile_expr(bytecode, g, subexpr, compile_state);
 	if(res > 0) {
-		uint8_t *instr = pt_byte_at(bytecode, -res);
+		uint8_t *instr = pt_byte_at(bytecode, current_size);
 		*instr ^= PT_OP_AND;
 	}
 	return res;
 }
 
-static int _pt_compile_not(pt_bytecode *bytecode, pt_expr *expr) {
+static int _pt_compile_not(pt_bytecode *bytecode, pt_grammar *g, pt_expr *expr, pt_rule_compile_state compile_state[]) {
 	pt_expr *subexpr = expr->data.e;
 	if(subexpr == NULL) return PT_COMPILE_NULL_POINTER;
-	int res = pt_compile_expr(bytecode, subexpr);
+	int current_size = bytecode->chunk.size;
+	int res = pt_compile_expr(bytecode, g, subexpr, compile_state);
 	if(res > 0) {
-		uint8_t *instr = pt_byte_at(bytecode, -res);
+		uint8_t *instr = pt_byte_at(bytecode, current_size);
 		*instr ^= PT_OP_NOT | PT_OP_AND;
 	}
 	return res;
+}
+
+static int _pt_compile_sequence(pt_bytecode *bytecode, pt_grammar *g, pt_expr *expr, pt_rule_compile_state compile_state[]) {
+	int i, res = 0, acc = 0;
+	if(expr->N > 0 && expr->data.es == NULL) return PT_COMPILE_NULL_POINTER;
+	for(i = 0; res >= 0 && i < expr->N; i++) {
+		res = pt_compile_expr(bytecode, g, expr->data.es[i], compile_state);
+		if(res < 0) return res;
+		acc += res;
+	}
+	return acc;
 }
 
 static int _pt_compile_success(pt_bytecode *bytecode) {
@@ -142,7 +168,7 @@ static int _pt_compile_success(pt_bytecode *bytecode) {
 ///////////////////////////////////////////////////////////////////////////////
 //  Grammar compilers
 ///////////////////////////////////////////////////////////////////////////////
-enum pt_compile_status pt_compile_expr(pt_bytecode *bytecode, pt_expr *expr) {
+enum pt_compile_status pt_compile_expr(pt_bytecode *bytecode, pt_grammar *g, pt_expr *expr, pt_rule_compile_state compile_state[]) {
 	int op = expr->op;
 	switch(op) {
 		// Primary
@@ -153,24 +179,30 @@ enum pt_compile_status pt_compile_expr(pt_bytecode *bytecode, pt_expr *expr) {
 		case PT_RANGE: return _pt_compile_range(bytecode, expr);
 		case PT_ANY: return _pt_compile_any(bytecode, expr);
 		// Unary
-		case PT_AND: return _pt_compile_and(bytecode, expr);
-		case PT_NOT: return _pt_compile_not(bytecode, expr);
+		case PT_NON_TERMINAL: return _pt_compile_non_terminal(bytecode, g, expr, compile_state);
+		case PT_AND: return _pt_compile_and(bytecode, g, expr, compile_state);
+		case PT_NOT: return _pt_compile_not(bytecode, g, expr, compile_state);
 		// N-Ary
-		case PT_SEQUENCE: return _pt_compile_sequence(bytecode, expr);
+		case PT_SEQUENCE: return _pt_compile_sequence(bytecode, g, expr, compile_state);
 		default: return PT_COMPILE_INVALID_EXPR;
 	}
 }
 enum pt_compile_status pt_compile_grammar(pt_bytecode *bytecode, pt_grammar *g) {
 	// TODO: tratar erros
-	int i, result = PT_COMPILE_SUCCESS;
-	for(i = 0; result >= PT_COMPILE_SUCCESS && i < g->N; i++) {
+	int i, result = 0, N = g->N;
+	pt_rule_compile_state compile_state[N];
+	memset(compile_state, 0, N);
+	pt_list_push_n_as(&bytecode->rule_addresses, N, uint16_t);
+	for(i = 0; result >= 0 && i < N; i++) {
+		compile_state[i] = (pt_rule_compile_state){
+			.visited = 1,
+			.address = bytecode->chunk.size,
+		};
+		*pt_list_at(&bytecode->rule_addresses, i, uint16_t) = bytecode->chunk.size;
 		pt_expr *expr = g->es[i];
-		result = pt_compile_expr(bytecode, expr);
+		result = pt_compile_expr(bytecode, g, expr, compile_state) && pt_push_byte(bytecode, PT_OP_RETURN);
 	}
-	if(result >= PT_COMPILE_SUCCESS) {
-		result = _pt_compile_success(bytecode);
-		result = PT_COMPILE_SUCCESS;
-	}
-	return result;
+
+	return result > 0 ? PT_COMPILE_SUCCESS : result;
 }
 

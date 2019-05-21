@@ -17,7 +17,8 @@ int main(int argc, char **argv) {
 		/* { "Hello", C(PT_ALNUM) }, */
 		/* { "Hello", B('H') }, */
 		/* { "Hello", R('A', 'Z') }, */
-		{ "Hello", SEQ(NOT(B('a')), AND(ANY), L("HELLO"), SEQ(NULL), C(PT_SPACE), L("WORLD"), B('\0')) },
+		{ "Hello", SEQ(NOT(B('a')), AND(ANY), L("HELLO"), SEQ(NULL), C(PT_SPACE), V("World"), AND(B('\0'))) },
+		{ "World", L("WORLD") },
 		{ NULL, NULL },
 	};
 	pt_grammar g;

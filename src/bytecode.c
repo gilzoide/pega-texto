@@ -35,6 +35,7 @@ const char * const pt_opcode_description[] = {
 	"PT_OP_SET",
 	"PT_OP_CHAR_CLASS",
 	"PT_OP_RANGE",
+	"PT_OP_CALL",
 };
 #ifdef static_assert
 static_assert(sizeof(pt_opcode_description) == PT_OPCODE_ENUM_COUNT * sizeof(const char *),
@@ -43,11 +44,13 @@ static_assert(sizeof(pt_opcode_description) == PT_OPCODE_ENUM_COUNT * sizeof(con
 
 void pt_init_bytecode(pt_bytecode *bytecode) {
 	pt_list_initialize_as(&bytecode->chunk, PT_CHUNK_LIST_INITIAL_CAPACITY, uint8_t);
-	pt_list_initialize_as(&bytecode->constants, PT_CONSTANT_LIST_INITIAL_CAPACITY, pt_bytecode_constant);
+	pt_list_initialize_as(&bytecode->rule_addresses, PT_RULE_ADDRESSES_LIST_INITIAL_CAPACITY, uint16_t);
+	pt_list_initialize_as(&bytecode->constants, PT_CONSTANTS_LIST_INITIAL_CAPACITY, pt_bytecode_constant);
 }
 
 void pt_release_bytecode(pt_bytecode *bytecode) {
 	pt_list_destroy(&bytecode->chunk);
+	pt_list_destroy(&bytecode->rule_addresses);
 	pt_list_destroy(&bytecode->constants);
 }
 
@@ -63,7 +66,7 @@ int pt_push_byte(pt_bytecode *bytecode, uint8_t b) {
 
 int pt_push_bytes(pt_bytecode *bytecode, int num_bytes, const uint8_t *bs) {
 	uint8_t *byte_ptr = pt_list_push_n_as(&bytecode->chunk, num_bytes, uint8_t);
-	return byte_ptr && (memcpy(byte_ptr, bs, num_bytes * sizeof(uint8_t)), 1);
+	return byte_ptr && (memcpy(byte_ptr, bs, num_bytes * sizeof(uint8_t)), num_bytes);
 }
 
 int pt_push_constant(pt_bytecode *bytecode, pt_bytecode_constant c) {
@@ -76,7 +79,7 @@ int pt_push_constant(pt_bytecode *bytecode, pt_bytecode_constant c) {
 }
 
 uint8_t *pt_byte_at(pt_bytecode *bytecode, int i) {
-	if(i < 0) i = bytecode->chunk.size + i;
+	/* if(i < 0) i = bytecode->chunk.size + i; */
 	return pt_list_at(&bytecode->chunk, i, uint8_t);
 }
 
@@ -99,12 +102,16 @@ void pt_dump_bytecode(const pt_bytecode *bytecode) {
 		uint8_t instruction = b & PT_OP_MASK;
 		uint8_t not_flag = b & PT_OP_NOT;
 		uint8_t and_flag = b & PT_OP_AND;
-		PRINT_BYTE("%s%s%s", and_flag ? "&" : "", not_flag ? "!" : "", pt_opcode_description[instruction]);
+		PRINT_BYTE("%s%s%s", and_flag ? "&" : "", not_flag ? "!" : "", pt_opcode_description[instruction] + 3);
 		switch(instruction) {
 			case PT_OP_BYTE:
 			case PT_OP_CHAR_CLASS:
 				pc++;
 				PRINT_BYTE("'%c'", *pc);
+				break;
+			case PT_OP_CALL:
+				pc++;
+				PRINT_BYTE("%d", (int)*pc);
 				break;
 			case PT_OP_RANGE:
 				pc++;
@@ -120,6 +127,12 @@ void pt_dump_bytecode(const pt_bytecode *bytecode) {
 				break;
 			default: break;
 		}
+	}
+
+	uint16_t *addr, *addr_start = bytecode->rule_addresses.arr, *addr_end = addr_start + bytecode->rule_addresses.size;
+	printf("Rules: %d\n", bytecode->rule_addresses.size);
+	for(addr = addr_start; addr < addr_end; addr++) {
+		printf("%3ld | %d\n", addr - addr_start, *addr);
 	}
 }
 #undef PRINT_BYTE

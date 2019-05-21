@@ -22,6 +22,7 @@
 #include <pega-texto/bytecode.h>
 #include <pega-texto/compiler.h>
 
+#include <stdio.h>
 #include <string.h>
 
 void pt_init_vm(pt_vm *vm) {
@@ -72,23 +73,28 @@ enum pt_vm_match_flag {
 #define TOGGLE_FLAG(flag) \
 	fr ^= flag
 
+#define PUSH_STATE() \
+	if(state = pt_list_push_as(&state_stack, pt_vm_match_state)) { \
+		*state = (pt_vm_match_state){ sp, ip }; \
+	} \
+	else { \
+		matched = PT_NO_STACK_MEM; \
+		goto match_end; \
+	}
+
 pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 	if(str == NULL) return (pt_match_result){ PT_NULL_INPUT, PT_NULL_DATA };
 	pt_bytecode *bytecode = vm->bytecode;
 	if(bytecode == NULL) return (pt_match_result){ PT_VM_NULL_BYTECODE, PT_NULL_DATA };
 
-	pt_bytecode_constant *rc; // constant register
+	/* pt_bytecode_constant *rc; // constant register */
 	const char *sp = str; // string pointer
 	uint8_t *ip = pt_byte_at(bytecode, 0); // instruction pointer
-	enum pt_opcode instruction, not_flag, and_flag;
-	enum pt_vm_match_flag fr = 0; // flag register
-	int b; // auxiliary byte holder
+	enum pt_opcode instruction, opcode, not_flag, and_flag;
+	/* enum pt_vm_match_flag fr = 0; // flag register */
 	int sp_inc = 0;
 
-	pt_vm_match_state state = {
-		.sp = sp,
-		.ip = ip,
-	};
+	pt_vm_match_state *state;
 	pt_list_(pt_vm_match_state) state_stack;
 	pt_list_initialize_as(&state_stack, 8, pt_vm_match_state);
 
@@ -96,15 +102,24 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 	int matched;
 
 	while(1) {
-		b = *ip;
-		instruction = b & PT_OP_MASK;
-		not_flag = b & PT_OP_NOT;
-		and_flag = b & PT_OP_AND;
-		switch(instruction) {
-			case PT_OP_SUCCESS:
-				matched = sp - str;
-				// TODO: actions
-				goto match_end;
+		instruction = *ip;
+		opcode = instruction & PT_OP_MASK;
+		not_flag = instruction & PT_OP_NOT;
+		and_flag = instruction & PT_OP_AND;
+		/* printf("- ip = %ld, sp = '%s'\n", ip - (uint8_t *)bytecode->chunk.arr, sp); */
+		switch(opcode) {
+			case PT_OP_RETURN:
+				state = pt_list_pop_as(&state_stack, pt_vm_match_state);
+				if(state) {
+					ip = state->ip;
+					// don't reset sp
+				}
+				else {
+					matched = sp - str;
+					// TODO: actions
+					goto match_end;
+				}
+				break;
 			case PT_OP_BYTE:
 				if(*sp == NEXT_BYTE()) {
 					sp_inc = !and_flag;
@@ -151,13 +166,21 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 				break;
 			case PT_OP_RANGE:
 				{
-					b = *sp;
+					int b = *sp;
 					int rangemin = NEXT_BYTE();
 					int rangemax = NEXT_BYTE();
 					if(b >= rangemin && b <= rangemax) {
 						sp_inc = !and_flag;
 					}
 					else goto match_fail;
+				}
+				break;
+			case PT_OP_CALL:
+				{
+					int address = *(pt_list_at(&bytecode->rule_addresses, NEXT_BYTE(), uint16_t));
+					PUSH_STATE();
+					ip = bytecode->chunk.arr + address;
+					continue;
 				}
 				break;
 match_fail:
@@ -176,6 +199,7 @@ match_fail:
 
 			default: // unknown opcode
 				matched = PT_VM_INVALID_INSTRUCTION;
+				/* printf("!!! Unknow opcode: 0x%02x; ip = %ld, sp = %s\n", opcode, ip - (uint8_t *)bytecode->chunk.arr, sp); */
 				goto match_end;
 		}
 		ip++;
