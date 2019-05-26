@@ -28,7 +28,7 @@
 
 const char * const pt_opcode_description[] = {
 	"PT_OP_FAIL",
-	"PT_OP_SUCCESS",
+	"PT_OP_POP_AND_FAIL",
 	"PT_OP_RETURN",
 	"PT_OP_BYTE",
 	"PT_OP_STRING",
@@ -36,6 +36,8 @@ const char * const pt_opcode_description[] = {
 	"PT_OP_CHAR_CLASS",
 	"PT_OP_RANGE",
 	"PT_OP_CALL",
+	"PT_OP_PUSH_ADDRESS",
+	"PT_OP_RETURN_ON_SUCCESS",
 };
 #ifdef static_assert
 static_assert(sizeof(pt_opcode_description) == PT_OPCODE_ENUM_COUNT * sizeof(const char *),
@@ -69,6 +71,10 @@ int pt_push_bytes(pt_bytecode *bytecode, int num_bytes, const uint8_t *bs) {
 	return byte_ptr && (memcpy(byte_ptr, bs, num_bytes * sizeof(uint8_t)), num_bytes);
 }
 
+int pt_reserve_bytes(pt_bytecode *bytecode, int num_bytes) {
+	return pt_list_push_n_as(&bytecode->chunk, num_bytes, uint8_t) != NULL;
+}
+
 int pt_push_constant(pt_bytecode *bytecode, pt_bytecode_constant c) {
 	pt_bytecode_constant *const_ptr = pt_list_push_as(&bytecode->constants, pt_bytecode_constant);
 	if(const_ptr) {
@@ -90,18 +96,21 @@ pt_bytecode_constant * const pt_constant_at(const pt_bytecode *bytecode, int i) 
 void pt_dump_bytecode(const pt_bytecode *bytecode) {
 	pt_bytecode_constant *constant;
 	uint8_t *pc, *bytecode_start = bytecode->chunk.arr, *bytecode_end = bytecode_start + bytecode->chunk.size;
+	int b, instruction, not_flag, and_flag;
 	printf("Size: %d\n", bytecode->chunk.size);
 #define PRINT_BYTE(fmt, ...) \
 	printf("%4ld | 0x%02x  | " fmt "\n", pc - bytecode_start, *pc, ##__VA_ARGS__)
+#define PRINT_SHORT(s) \
+	printf("%4ld | addr  | %d\n", pc - bytecode_start, s)
 #define PRINT_STR(s) \
 	printf("%4ld | char* | \"%s\"\n", pc - bytecode_start, s)
 #define PRINT_STR_CONSTANT(c) \
 	PRINT_BYTE("const.as_str '%s'", c->as_str)
 	for(pc = bytecode_start; pc < bytecode_end; pc++) {
-		uint8_t b = *pc;
-		uint8_t instruction = b & PT_OP_MASK;
-		uint8_t not_flag = b & PT_OP_NOT;
-		uint8_t and_flag = b & PT_OP_AND;
+		b = *pc;
+		instruction = b & PT_OP_MASK;
+		not_flag = b & PT_OP_NOT;
+		and_flag = b & PT_OP_AND;
 		PRINT_BYTE("%s%s%s", and_flag ? "&" : "", not_flag ? "!" : "", pt_opcode_description[instruction] + 3);
 		switch(instruction) {
 			case PT_OP_BYTE:
@@ -124,6 +133,12 @@ void pt_dump_bytecode(const pt_bytecode *bytecode) {
 				pc++;
 				PRINT_STR(pc);
 				pc += strlen((const char *)pc);
+				break;
+			case PT_OP_PUSH_ADDRESS:
+				pc++;
+				b = (uint16_t)*((uint16_t *)pc);
+				PRINT_SHORT(b);
+				pc++;
 				break;
 			default: break;
 		}

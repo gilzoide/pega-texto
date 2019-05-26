@@ -53,14 +53,16 @@ typedef union pt_bytecode_constant {
 
 enum pt_opcode { 
 	PT_OP_FAIL,
-	PT_OP_SUCCESS,
-	PT_OP_RETURN,
+	PT_OP_POP_AND_FAIL, // discard top and fail
+	PT_OP_RETURN, // pop ip
 	PT_OP_BYTE, // +1 -> byte to be matched
 	PT_OP_STRING, // + NULL terminated string for literal matching
 	PT_OP_SET, // + NULL terminated string for character set
 	PT_OP_CHAR_CLASS, // +[wWaAcCdDgGlLpPsSuUxX] -> character class tested
 	PT_OP_RANGE, // +2 -> byte range
 	PT_OP_CALL, // +1 -> rule index to jump
+	PT_OP_PUSH_ADDRESS, // +1 -> address to push as ip
+	PT_OP_RETURN_ON_SUCCESS, // if `!fail register` PT_OP_RETURN
 
 	PT_OPCODE_ENUM_COUNT,
 
@@ -115,6 +117,10 @@ int pt_push_byte(pt_bytecode *bytecode, uint8_t b);
  * @return 1 otherwise.
  */
 int pt_push_bytes(pt_bytecode *bytecode, int num_bytes, const uint8_t *bs);
+/**
+ * Push bytes into bytecode chunk without initialization.
+ */
+int pt_reserve_bytes(pt_bytecode *bytecode, int num_bytes);
 
 /**
  * Push a constant into bytecode.

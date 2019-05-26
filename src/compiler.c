@@ -128,10 +128,10 @@ found_name: {}
 static int _pt_compile_and(pt_bytecode *bytecode, pt_grammar *g, pt_expr *expr, pt_rule_compile_state compile_state[]) {
 	pt_expr *subexpr = expr->data.e;
 	if(subexpr == NULL) return PT_COMPILE_NULL_POINTER;
-	int current_size = bytecode->chunk.size;
+	int previous_size = bytecode->chunk.size;
 	int res = pt_compile_expr(bytecode, g, subexpr, compile_state);
 	if(res > 0) {
-		uint8_t *instr = pt_byte_at(bytecode, current_size);
+		uint8_t *instr = pt_byte_at(bytecode, previous_size);
 		*instr ^= PT_OP_AND;
 	}
 	return res;
@@ -140,29 +140,43 @@ static int _pt_compile_and(pt_bytecode *bytecode, pt_grammar *g, pt_expr *expr, 
 static int _pt_compile_not(pt_bytecode *bytecode, pt_grammar *g, pt_expr *expr, pt_rule_compile_state compile_state[]) {
 	pt_expr *subexpr = expr->data.e;
 	if(subexpr == NULL) return PT_COMPILE_NULL_POINTER;
-	int current_size = bytecode->chunk.size;
+	int previous_size = bytecode->chunk.size;
 	int res = pt_compile_expr(bytecode, g, subexpr, compile_state);
 	if(res > 0) {
-		uint8_t *instr = pt_byte_at(bytecode, current_size);
+		uint8_t *instr = pt_byte_at(bytecode, previous_size);
 		*instr ^= PT_OP_NOT | PT_OP_AND;
 	}
 	return res;
 }
 
 static int _pt_compile_sequence(pt_bytecode *bytecode, pt_grammar *g, pt_expr *expr, pt_rule_compile_state compile_state[]) {
-	int i, res = 0, acc = 0;
-	if(expr->N > 0 && expr->data.es == NULL) return PT_COMPILE_NULL_POINTER;
-	for(i = 0; res >= 0 && i < expr->N; i++) {
+	int N = expr->N;
+	if(N > 0 && expr->data.es == NULL) return PT_COMPILE_NULL_POINTER;
+	int i, res = 0, previous_size = bytecode->chunk.size;
+	for(i = 0; res >= 0 && i < N; i++) {
 		res = pt_compile_expr(bytecode, g, expr->data.es[i], compile_state);
-		if(res < 0) return res;
-		acc += res;
 	}
-	return acc;
+	return res >= 0 ? bytecode->chunk.size - previous_size : res;
 }
 
-static int _pt_compile_success(pt_bytecode *bytecode) {
-	int res = pt_push_byte(bytecode, PT_OP_SUCCESS);
-	return res ? 1 : PT_COMPILE_MEMORY_ERROR;
+static int _pt_compile_choice(pt_bytecode *bytecode, pt_grammar *g, pt_expr *expr, pt_rule_compile_state compile_state[]) {
+	int N = expr->N;
+	if(N > 0 && expr->data.es == NULL) return PT_COMPILE_NULL_POINTER;
+	if(!pt_reserve_bytes(bytecode, 3)) return PT_COMPILE_MEMORY_ERROR;
+	int i, res, previous_size = bytecode->chunk.size - 3;
+	for(i = 0; res >= 0 && i < N; i++) {
+		res = pt_compile_expr(bytecode, g, expr->data.es[i], compile_state);
+		if(res >= 0) res = pt_push_byte(bytecode, PT_OP_RETURN_ON_SUCCESS);
+	}
+	if(res >= 0) {
+		if(!pt_push_byte(bytecode, PT_OP_POP_AND_FAIL)) return PT_COMPILE_MEMORY_ERROR;
+		int current_size = bytecode->chunk.size;
+		uint8_t *push_op_ptr = pt_byte_at(bytecode, previous_size);
+		push_op_ptr[0] = PT_OP_PUSH_ADDRESS;
+		*((uint16_t *)(push_op_ptr + 1)) = (uint16_t)current_size;
+		return current_size - previous_size;
+	}
+	else return res;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -174,8 +188,8 @@ enum pt_compile_status pt_compile_expr(pt_bytecode *bytecode, pt_grammar *g, pt_
 		// Primary
 		case PT_BYTE: return _pt_compile_byte(bytecode, expr);
 		case PT_LITERAL: return _pt_compile_literal(bytecode, expr);
-		case PT_SET: return _pt_compile_set(bytecode, expr);
 		case PT_CHARACTER_CLASS: return _pt_compile_char_class(bytecode, expr);
+		case PT_SET: return _pt_compile_set(bytecode, expr);
 		case PT_RANGE: return _pt_compile_range(bytecode, expr);
 		case PT_ANY: return _pt_compile_any(bytecode, expr);
 		// Unary
@@ -184,6 +198,7 @@ enum pt_compile_status pt_compile_expr(pt_bytecode *bytecode, pt_grammar *g, pt_
 		case PT_NOT: return _pt_compile_not(bytecode, g, expr, compile_state);
 		// N-Ary
 		case PT_SEQUENCE: return _pt_compile_sequence(bytecode, g, expr, compile_state);
+		case PT_CHOICE: return _pt_compile_choice(bytecode, g, expr, compile_state);
 		default: return PT_COMPILE_INVALID_EXPR;
 	}
 }

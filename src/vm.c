@@ -62,6 +62,8 @@ enum pt_vm_match_flag {
 	++ip
 #define NEXT_BYTE() \
 	*(++ip)
+#define NEXT_2_BYTES() \
+	*((uint16_t *)(++ip)); ip++
 #define ADVANCE_UNTIL_NULL() \
 	while(NEXT_BYTE())
 #define NEXT_CONSTANT() \
@@ -81,6 +83,22 @@ enum pt_vm_match_flag {
 		matched = PT_NO_STACK_MEM; \
 		goto match_end; \
 	}
+#define PUSH_STATE_WITH_OFFSET(offset) \
+	if(state = pt_list_push_as(&state_stack, pt_vm_match_state)) { \
+		*state = (pt_vm_match_state){ sp, ip + offset }; \
+	} \
+	else { \
+		matched = PT_NO_STACK_MEM; \
+		goto match_end; \
+	}
+#define PUSH_STATE_WITH_ADDRESS(address) \
+	if(state = pt_list_push_as(&state_stack, pt_vm_match_state)) { \
+		*state = (pt_vm_match_state){ sp, pt_byte_at(bytecode, address) }; \
+	} \
+	else { \
+		matched = PT_NO_STACK_MEM; \
+		goto match_end; \
+	}
 
 pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 	if(str == NULL) return (pt_match_result){ PT_NULL_INPUT, PT_NULL_DATA };
@@ -90,8 +108,8 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 	/* pt_bytecode_constant *rc; // constant register */
 	const char *sp = str; // string pointer
 	uint8_t *ip = pt_byte_at(bytecode, 0); // instruction pointer
-	enum pt_opcode instruction, opcode, not_flag, and_flag;
-	/* enum pt_vm_match_flag fr = 0; // flag register */
+	enum pt_opcode instruction, opcode, and_flag;
+	int fail_register = 0;
 	int sp_inc = 0;
 
 	pt_vm_match_state *state;
@@ -104,15 +122,18 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 	while(1) {
 		instruction = *ip;
 		opcode = instruction & PT_OP_MASK;
-		not_flag = instruction & PT_OP_NOT;
 		and_flag = instruction & PT_OP_AND;
 		/* printf("- ip = %ld, sp = '%s'\n", ip - (uint8_t *)bytecode->chunk.arr, sp); */
 		switch(opcode) {
+			case PT_OP_RETURN_ON_SUCCESS:
+				if(fail_register) break;
+				// fallthrough
 			case PT_OP_RETURN:
 				state = pt_list_pop_as(&state_stack, pt_vm_match_state);
 				if(state) {
 					ip = state->ip;
 					// don't reset sp
+					continue;
 				}
 				else {
 					matched = sp - str;
@@ -178,18 +199,28 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 			case PT_OP_CALL:
 				{
 					int address = *(pt_list_at(&bytecode->rule_addresses, NEXT_BYTE(), uint16_t));
-					PUSH_STATE();
+					PUSH_STATE_WITH_OFFSET(1);
 					ip = bytecode->chunk.arr + address;
 					continue;
 				}
 				break;
+			case PT_OP_PUSH_ADDRESS:
+				{
+					int address = NEXT_2_BYTES();
+					PUSH_STATE_WITH_ADDRESS(address);
+				}
+				break;
+			case PT_OP_POP_AND_FAIL:
+				state_stack.size--;
+				// fallthrough
 match_fail:
 			case PT_OP_FAIL:
-				if(not_flag) {
+				if(instruction & PT_OP_NOT) {
 					sp_inc = !and_flag;
 				}
 				else if(!pt_list_empty(&state_stack)) {
 					// TODO
+					fail_register = 1;
 				}
 				else {
 					matched = PT_NO_MATCH;
@@ -199,13 +230,14 @@ match_fail:
 
 			default: // unknown opcode
 				matched = PT_VM_INVALID_INSTRUCTION;
-				/* printf("!!! Unknow opcode: 0x%02x; ip = %ld, sp = %s\n", opcode, ip - (uint8_t *)bytecode->chunk.arr, sp); */
+				/* printf("!!! Unknow opcode: 0x%02x; ip = %ld, sp = '%s'\n", opcode, ip - (uint8_t *)bytecode->chunk.arr, sp); */
 				goto match_end;
 		}
 		ip++;
 		if(sp_inc > 0) {
 			sp += sp_inc;
 			sp_inc = 0;
+			fail_register = 0;
 		}
 	}
 match_end:
