@@ -18,8 +18,9 @@ int main(int argc, char **argv) {
 		/* { "Hello", B('H') }, */
 		/* { "Hello", R('A', 'Z') }, */
 		/* { "Hello", SEQ(NOT(B('a')), AND(ANY), L("HELLO"), SEQ(NULL), C(PT_SPACE), V("WORLD"), AND(B('\0'))) }, */
-		{ "HelloOrWorld", OR(L("HELLO"), V("WORLD")) },
-		{ "WORLD", L("WORLD") },
+		/* { "HelloOrWorld", OR(L("HELLO"), V("WORLD")) }, */
+		/* { "WORLD", L("WORLD") }, */
+		{ ".*", Q(ANY, 0) },
 		{ NULL, NULL },
 	};
 	pt_grammar g;

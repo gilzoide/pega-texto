@@ -53,7 +53,7 @@ typedef union pt_bytecode_constant {
 
 enum pt_opcode { 
 	PT_OP_FAIL,
-	PT_OP_POP_AND_FAIL, // discard top and fail
+	PT_OP_POP, // discard top
 	PT_OP_RETURN, // pop ip
 	PT_OP_BYTE, // +1 -> byte to be matched
 	PT_OP_STRING, // + NULL terminated string for literal matching
@@ -63,6 +63,9 @@ enum pt_opcode {
 	PT_OP_CALL, // +1 -> rule index to jump
 	PT_OP_PUSH_ADDRESS, // +1 -> address to push as ip
 	PT_OP_RETURN_ON_SUCCESS, // if `!fail register` PT_OP_RETURN
+	PT_OP_JUMP_ABSOLUTE, // +1 -> address to jump
+	PT_OP_JUMP_RELATIVE, // +1 -> address offset to jump
+	PT_OP_SAVE_SP, // save string pointer to top
 
 	PT_OPCODE_ENUM_COUNT,
 

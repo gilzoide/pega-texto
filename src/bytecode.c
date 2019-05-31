@@ -28,7 +28,7 @@
 
 const char * const pt_opcode_description[] = {
 	"PT_OP_FAIL",
-	"PT_OP_POP_AND_FAIL",
+	"PT_OP_POP",
 	"PT_OP_RETURN",
 	"PT_OP_BYTE",
 	"PT_OP_STRING",
@@ -38,6 +38,9 @@ const char * const pt_opcode_description[] = {
 	"PT_OP_CALL",
 	"PT_OP_PUSH_ADDRESS",
 	"PT_OP_RETURN_ON_SUCCESS",
+	"PT_OP_JUMP_ABSOLUTE",
+	"PT_OP_JUMP_RELATIVE",
+	"PT_OP_SAVE_SP",
 };
 #ifdef static_assert
 static_assert(sizeof(pt_opcode_description) == PT_OPCODE_ENUM_COUNT * sizeof(const char *),
@@ -134,9 +137,11 @@ void pt_dump_bytecode(const pt_bytecode *bytecode) {
 				PRINT_STR(pc);
 				pc += strlen((const char *)pc);
 				break;
+			case PT_OP_JUMP_ABSOLUTE:
+			case PT_OP_JUMP_RELATIVE:
 			case PT_OP_PUSH_ADDRESS:
 				pc++;
-				b = (uint16_t)*((uint16_t *)pc);
+				b = (int16_t)*((int16_t *)pc);
 				PRINT_SHORT(b);
 				pc++;
 				break;

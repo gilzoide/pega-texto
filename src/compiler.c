@@ -125,6 +125,32 @@ found_name: {}
 	return result ? 2 : PT_COMPILE_MEMORY_ERROR;
 }
 
+static int _pt_compile_quantifier(pt_bytecode *bytecode, pt_grammar *g, pt_expr *expr, pt_rule_compile_state compile_state[]) {
+	int previous_size = bytecode->chunk.size;
+	if(!pt_reserve_bytes(bytecode, 3)) return PT_COMPILE_MEMORY_ERROR; // PUSH_ADDRESS addr
+	int result = pt_compile_expr(bytecode, g, expr->data.e, compile_state);
+	if(result < 0) return result;
+	int N = expr->N;
+	if(N < 0) {  // at most N
+		if(!pt_push_byte(bytecode, PT_OP_POP)) return PT_COMPILE_MEMORY_ERROR;
+	}
+	else {  // at least N
+		int current_size = bytecode->chunk.size;
+		if(!pt_reserve_bytes(bytecode, 4)) return PT_COMPILE_MEMORY_ERROR;
+		uint8_t *jmp_op_ptr = pt_byte_at(bytecode, current_size);
+		jmp_op_ptr[0] = PT_OP_SAVE_SP;
+		jmp_op_ptr[1] = PT_OP_JUMP_ABSOLUTE;
+		*((int16_t *)(jmp_op_ptr + 2)) = (int16_t)previous_size + 3;
+	}
+
+	int current_size = bytecode->chunk.size;
+	uint8_t *jmp_op_ptr = pt_byte_at(bytecode, previous_size);
+	jmp_op_ptr[0] = PT_OP_PUSH_ADDRESS;
+	*((uint16_t *)(jmp_op_ptr + 1)) = (uint16_t)current_size;
+
+	return result;
+}
+
 static int _pt_compile_and(pt_bytecode *bytecode, pt_grammar *g, pt_expr *expr, pt_rule_compile_state compile_state[]) {
 	pt_expr *subexpr = expr->data.e;
 	if(subexpr == NULL) return PT_COMPILE_NULL_POINTER;
@@ -163,13 +189,13 @@ static int _pt_compile_choice(pt_bytecode *bytecode, pt_grammar *g, pt_expr *exp
 	int N = expr->N;
 	if(N > 0 && expr->data.es == NULL) return PT_COMPILE_NULL_POINTER;
 	if(!pt_reserve_bytes(bytecode, 3)) return PT_COMPILE_MEMORY_ERROR;
-	int i, res, previous_size = bytecode->chunk.size - 3;
+	int i, res = 0, previous_size = bytecode->chunk.size - 3;
 	for(i = 0; res >= 0 && i < N; i++) {
 		res = pt_compile_expr(bytecode, g, expr->data.es[i], compile_state);
 		if(res >= 0) res = pt_push_byte(bytecode, PT_OP_RETURN_ON_SUCCESS);
 	}
 	if(res >= 0) {
-		if(!pt_push_byte(bytecode, PT_OP_POP_AND_FAIL)) return PT_COMPILE_MEMORY_ERROR;
+		if(!(pt_push_byte(bytecode, PT_OP_POP) && pt_push_byte(bytecode, PT_OP_FAIL))) return PT_COMPILE_MEMORY_ERROR;
 		int current_size = bytecode->chunk.size;
 		uint8_t *push_op_ptr = pt_byte_at(bytecode, previous_size);
 		push_op_ptr[0] = PT_OP_PUSH_ADDRESS;
@@ -194,6 +220,7 @@ enum pt_compile_status pt_compile_expr(pt_bytecode *bytecode, pt_grammar *g, pt_
 		case PT_ANY: return _pt_compile_any(bytecode, expr);
 		// Unary
 		case PT_NON_TERMINAL: return _pt_compile_non_terminal(bytecode, g, expr, compile_state);
+		case PT_QUANTIFIER: return _pt_compile_quantifier(bytecode, g, expr, compile_state);
 		case PT_AND: return _pt_compile_and(bytecode, g, expr, compile_state);
 		case PT_NOT: return _pt_compile_not(bytecode, g, expr, compile_state);
 		// N-Ary

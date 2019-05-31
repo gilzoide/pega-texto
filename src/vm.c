@@ -105,6 +105,8 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 	pt_bytecode *bytecode = vm->bytecode;
 	if(bytecode == NULL) return (pt_match_result){ PT_VM_NULL_BYTECODE, PT_NULL_DATA };
 
+	pt_data result_data = PT_NULL_DATA;
+
 	/* pt_bytecode_constant *rc; // constant register */
 	const char *sp = str; // string pointer
 	uint8_t *ip = pt_byte_at(bytecode, 0); // instruction pointer
@@ -116,7 +118,6 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 	pt_list_(pt_vm_match_state) state_stack;
 	pt_list_initialize_as(&state_stack, 8, pt_vm_match_state);
 
-	pt_data result_data = PT_NULL_DATA;
 	int matched;
 
 	while(1) {
@@ -146,7 +147,7 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 					sp_inc = !and_flag;
 					break;
 				}
-				else goto match_fail;
+				else goto failed_match;
 			case PT_OP_STRING:
 				{
 					int c;
@@ -156,7 +157,7 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 					} while(c && c == *(str_aux++));
 					if(c != '\0') { // didn't reach end, failed!
 						ADVANCE_UNTIL_NULL();
-						goto match_fail;
+						goto failed_match;
 					}
 					else {
 						sp_inc = !and_flag * (str_aux - sp);
@@ -169,7 +170,7 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 					if(f(*sp)) {
 						sp_inc = !and_flag;
 					}
-					else goto match_fail;
+					else goto failed_match;
 				}
 				break;
 			case PT_OP_SET:
@@ -182,7 +183,7 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 						}
 					}
 					ADVANCE_UNTIL_NULL();
-					if(c != base) goto match_fail;
+					if(c != base) goto failed_match;
 				}
 				break;
 			case PT_OP_RANGE:
@@ -193,7 +194,7 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 					if(b >= rangemin && b <= rangemax) {
 						sp_inc = !and_flag;
 					}
-					else goto match_fail;
+					else goto failed_match;
 				}
 				break;
 			case PT_OP_CALL:
@@ -210,17 +211,35 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 					PUSH_STATE_WITH_ADDRESS(address);
 				}
 				break;
-			case PT_OP_POP_AND_FAIL:
+			case PT_OP_POP:
 				state_stack.size--;
-				// fallthrough
-match_fail:
+				break;
+			case PT_OP_JUMP_RELATIVE: {
+					int offset = NEXT_2_BYTES();
+					ip += offset;
+					continue;
+				}
+			case PT_OP_JUMP_ABSOLUTE: {
+					int address = NEXT_2_BYTES();
+					ip = bytecode->chunk.arr + address;
+					continue;
+				}
+			case PT_OP_SAVE_SP:
+				state->sp = sp;
+				break;
+failed_match:
 			case PT_OP_FAIL:
 				if(instruction & PT_OP_NOT) {
 					sp_inc = !and_flag;
+					goto succeeded_not_match;
 				}
-				else if(!pt_list_empty(&state_stack)) {
+failed_not_match:
+				if(state = pt_list_pop_as(&state_stack, pt_vm_match_state)) {
 					// TODO
 					fail_register = 1;
+					ip = state->ip;
+					sp = state->sp;
+					continue;
 				}
 				else {
 					matched = PT_NO_MATCH;
@@ -233,6 +252,10 @@ match_fail:
 				/* printf("!!! Unknow opcode: 0x%02x; ip = %ld, sp = '%s'\n", opcode, ip - (uint8_t *)bytecode->chunk.arr, sp); */
 				goto match_end;
 		}
+		if(instruction & PT_OP_NOT) {
+			goto failed_not_match;
+		}
+succeeded_not_match:
 		ip++;
 		if(sp_inc > 0) {
 			sp += sp_inc;
