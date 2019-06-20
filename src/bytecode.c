@@ -23,24 +23,33 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stddef.h>
+#include <stdarg.h>
 #include <string.h>
 #include <assert.h>
 
 const char * const pt_opcode_description[] = {
 	"PT_OP_FAIL",
-	"PT_OP_POP",
-	"PT_OP_RETURN",
+	"PT_OP_ACCEPT",
+
+	"PT_OP_SET_ADDRESS_FAIL",
+	"PT_OP_SET_ADDRESS_ACCEPT",
+	"PT_OP_PUSH",
+	"PT_OP_POP_ACCEPT",
+	"PT_OP_POP_FAIL",
+
 	"PT_OP_BYTE",
 	"PT_OP_STRING",
 	"PT_OP_SET",
 	"PT_OP_CHAR_CLASS",
 	"PT_OP_RANGE",
 	"PT_OP_CALL",
-	"PT_OP_PUSH_ADDRESS",
-	"PT_OP_RETURN_ON_SUCCESS",
 	"PT_OP_JUMP_ABSOLUTE",
-	"PT_OP_JUMP_RELATIVE",
 	"PT_OP_SAVE_SP",
+
+	"PT_OP_RESET_QC",
+	"PT_OP_INC_QC",
+	"PT_OP_FAIL_QC_LESS_THAN",
+	"PT_OP_JUMP_QC_GREATER_EQUAL_THAN",
 };
 #ifdef static_assert
 static_assert(sizeof(pt_opcode_description) == PT_OPCODE_ENUM_COUNT * sizeof(const char *),
@@ -69,7 +78,22 @@ int pt_push_byte(pt_bytecode *bytecode, uint8_t b) {
 	return byte_ptr && (*byte_ptr = b, 1);
 }
 
-int pt_push_bytes(pt_bytecode *bytecode, int num_bytes, const uint8_t *bs) {
+int pt_push_bytes(pt_bytecode *bytecode, int num_bytes, ...) {
+	uint8_t *byte_ptr = pt_list_push_n_as(&bytecode->chunk, num_bytes, uint8_t);
+	if(byte_ptr) {
+		va_list args;
+		va_start(args, num_bytes);
+		int i;
+		for(i = 0; i < num_bytes; i++) {
+			*byte_ptr = (uint8_t)va_arg(args, int);
+			byte_ptr++;
+		}
+		return 1;
+	}
+	else return 0;
+}
+
+int pt_push_byte_array(pt_bytecode *bytecode, int num_bytes, const uint8_t *bs) {
 	uint8_t *byte_ptr = pt_list_push_n_as(&bytecode->chunk, num_bytes, uint8_t);
 	return byte_ptr && (memcpy(byte_ptr, bs, num_bytes * sizeof(uint8_t)), num_bytes);
 }
@@ -97,7 +121,7 @@ pt_bytecode_constant * const pt_constant_at(const pt_bytecode *bytecode, int i) 
 }
 
 void pt_dump_bytecode(const pt_bytecode *bytecode) {
-	pt_bytecode_constant *constant;
+	/* pt_bytecode_constant *constant; */
 	uint8_t *pc, *bytecode_start = bytecode->chunk.arr, *bytecode_end = bytecode_start + bytecode->chunk.size;
 	int b, instruction, not_flag, and_flag;
 	printf("Size: %d\n", bytecode->chunk.size);
@@ -122,6 +146,7 @@ void pt_dump_bytecode(const pt_bytecode *bytecode) {
 				PRINT_BYTE("'%c'", *pc);
 				break;
 			case PT_OP_CALL:
+			case PT_OP_FAIL_QC_LESS_THAN:
 				pc++;
 				PRINT_BYTE("%d", (int)*pc);
 				break;
@@ -138,8 +163,8 @@ void pt_dump_bytecode(const pt_bytecode *bytecode) {
 				pc += strlen((const char *)pc);
 				break;
 			case PT_OP_JUMP_ABSOLUTE:
-			case PT_OP_JUMP_RELATIVE:
-			case PT_OP_PUSH_ADDRESS:
+			case PT_OP_SET_ADDRESS_FAIL:
+			case PT_OP_SET_ADDRESS_ACCEPT:
 				pc++;
 				b = (int16_t)*((int16_t *)pc);
 				PRINT_SHORT(b);

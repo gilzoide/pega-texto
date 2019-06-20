@@ -52,26 +52,34 @@ typedef union pt_bytecode_constant {
 	((pt_bytecode_constant){ .as_offset = (offset) })
 
 enum pt_opcode { 
-	PT_OP_FAIL,
-	PT_OP_POP, // discard top
-	PT_OP_RETURN, // pop ip
+	PT_OP_FAIL, // pop state and fail it, rewinding `ip` to `addr_fail` and `sp` register
+	PT_OP_ACCEPT, // jump to `addr_accept`
+
+	PT_OP_SET_ADDRESS_FAIL, // +1 -> set `addr_fail` register value
+	PT_OP_SET_ADDRESS_ACCEPT, // +1 -> set `addr_accept` register value
+	PT_OP_PUSH, // push registers
+	PT_OP_POP_ACCEPT, // pop state without rewinding `sp` and accept
+	PT_OP_POP_FAIL, // pop state and fail
+
 	PT_OP_BYTE, // +1 -> byte to be matched
 	PT_OP_STRING, // + NULL terminated string for literal matching
 	PT_OP_SET, // + NULL terminated string for character set
 	PT_OP_CHAR_CLASS, // +[wWaAcCdDgGlLpPsSuUxX] -> character class tested
 	PT_OP_RANGE, // +2 -> byte range
 	PT_OP_CALL, // +1 -> rule index to jump
-	PT_OP_PUSH_ADDRESS, // +1 -> address to push as ip
-	PT_OP_RETURN_ON_SUCCESS, // if `!fail register` PT_OP_RETURN
 	PT_OP_JUMP_ABSOLUTE, // +1 -> address to jump
-	PT_OP_JUMP_RELATIVE, // +1 -> address offset to jump
 	PT_OP_SAVE_SP, // save string pointer to top
+
+	PT_OP_RESET_QC, // reset qc to 0
+	PT_OP_INC_QC, // increment qc
+	PT_OP_FAIL_QC_LESS_THAN, // +1 -> fail if `qc` is less than value
+	PT_OP_JUMP_QC_GREATER_EQUAL_THAN, // +1 -> fail if `qc` is less than value
 
 	PT_OPCODE_ENUM_COUNT,
 
-	PT_OP_MASK = 0b00001111, // bit mask of the opcode
-	PT_OP_NOT  = 0b00010000, // bit that negates the operation to be performed
-	PT_OP_AND  = 0b00100000, // bit that makes input to not be consumed on success
+	PT_OP_MASK = 0b00011111, // bit mask of the opcode
+	PT_OP_NOT  = 0b00100000, // bit that negates the operation to be performed
+	PT_OP_AND  = 0b01000000, // bit that makes input to not be consumed on success
 };
 extern const char * const pt_opcode_description[];
 
@@ -83,7 +91,7 @@ typedef struct pt_bytecode {
 	pt_list_(uint16_t) rule_addresses;
 	pt_list_(pt_bytecode_constant) constants;
 } pt_bytecode;
-#define PT_CHUNK_LIST_INITIAL_CAPACITY 256
+#define PT_CHUNK_LIST_INITIAL_CAPACITY 2048
 #define PT_RULE_ADDRESSES_LIST_INITIAL_CAPACITY 256
 #define PT_CONSTANTS_LIST_INITIAL_CAPACITY 64
 
@@ -119,7 +127,14 @@ int pt_push_byte(pt_bytecode *bytecode, uint8_t b);
  * @return 0 on memory allocation error.
  * @return 1 otherwise.
  */
-int pt_push_bytes(pt_bytecode *bytecode, int num_bytes, const uint8_t *bs);
+int pt_push_bytes(pt_bytecode *bytecode, int num_bytes, ...);
+/**
+ * Push several bytes into bytecode chunk.
+ *
+ * @return 0 on memory allocation error.
+ * @return 1 otherwise.
+ */
+int pt_push_byte_array(pt_bytecode *bytecode, int num_bytes, const uint8_t *bs);
 /**
  * Push bytes into bytecode chunk without initialization.
  */

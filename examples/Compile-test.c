@@ -9,7 +9,7 @@
 int main(int argc, char **argv) {
 	/* assert(argc > 1 && "Please write something!"); */
 	/* char *str = argv[1]; */
-	char *str = "HELLO WORLD";
+	char *str = "WORLD\0 HELLO WORLD";
 
 	pt_rule R[] = {
 		/* { "Hello", L("HELLO WORLD") }, */
@@ -18,9 +18,9 @@ int main(int argc, char **argv) {
 		/* { "Hello", B('H') }, */
 		/* { "Hello", R('A', 'Z') }, */
 		/* { "Hello", SEQ(NOT(B('a')), AND(ANY), L("HELLO"), SEQ(NULL), C(PT_SPACE), V("WORLD"), AND(B('\0'))) }, */
-		/* { "HelloOrWorld", OR(L("HELLO"), V("WORLD")) }, */
+		/* { "HelloOrWorld", SEQ(OR(L("HELLO"), V("WORLD")), B(' ')) }, */
 		/* { "WORLD", L("WORLD") }, */
-		{ ".*", Q(ANY, 0) },
+		{ ".+", Q(ANY, 1) },
 		{ NULL, NULL },
 	};
 	pt_grammar g;

@@ -48,13 +48,15 @@ void pt_vm_unload_and_release_bytecode(pt_vm *vm) {
 }
 
 typedef struct pt_vm_match_state {
-	const char *sp;
-	uint8_t *ip;
+	const char *sp; // string pointer
+	uint16_t addr_fail; // addres to jump to on fail
+	uint16_t addr_accept; // address to jump to on success
+	int qc; // quantifier counter
 } pt_vm_match_state;
 
 // Match flags
 enum pt_vm_match_flag {
-	FAILED_FLAG        = 0b0001,
+	FAIL_HANDLER_FLAG  = 0b0001,
 	SYNTAX_ERROR_FLAG  = 0b0010,
 };
 
@@ -68,6 +70,8 @@ enum pt_vm_match_flag {
 	while(NEXT_BYTE())
 #define NEXT_CONSTANT() \
 	pt_constant_at(bytecode, NEXT_BYTE())
+#define GET_FLAG(flag) \
+	fr & flag
 #define SET_FLAG(flag) \
 	fr |= flag
 #define UNSET_FLAG(flag) \
@@ -77,23 +81,7 @@ enum pt_vm_match_flag {
 
 #define PUSH_STATE() \
 	if(state = pt_list_push_as(&state_stack, pt_vm_match_state)) { \
-		*state = (pt_vm_match_state){ sp, ip }; \
-	} \
-	else { \
-		matched = PT_NO_STACK_MEM; \
-		goto match_end; \
-	}
-#define PUSH_STATE_WITH_OFFSET(offset) \
-	if(state = pt_list_push_as(&state_stack, pt_vm_match_state)) { \
-		*state = (pt_vm_match_state){ sp, ip + offset }; \
-	} \
-	else { \
-		matched = PT_NO_STACK_MEM; \
-		goto match_end; \
-	}
-#define PUSH_STATE_WITH_ADDRESS(address) \
-	if(state = pt_list_push_as(&state_stack, pt_vm_match_state)) { \
-		*state = (pt_vm_match_state){ sp, pt_byte_at(bytecode, address) }; \
+		*state = (pt_vm_match_state){ .sp = sp, .addr_fail = addr_fail, .addr_accept = addr_accept, .qc = qc }; \
 	} \
 	else { \
 		matched = PT_NO_STACK_MEM; \
@@ -107,11 +95,15 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 
 	pt_data result_data = PT_NULL_DATA;
 
+	uint8_t *chunk_ptr = pt_byte_at(bytecode, 0);
+	uint_fast16_t chunk_fail = bytecode->chunk.size - 1;
+
 	/* pt_bytecode_constant *rc; // constant register */
 	const char *sp = str; // string pointer
-	uint8_t *ip = pt_byte_at(bytecode, 0); // instruction pointer
+	uint8_t *ip = chunk_ptr; // instruction pointer
+	uint16_t addr_fail = chunk_fail, addr_accept = chunk_fail - 1;
+	int qc = 0; // quantifier counter
 	enum pt_opcode instruction, opcode, and_flag;
-	int fail_register = 0;
 	int sp_inc = 0;
 
 	pt_vm_match_state *state;
@@ -124,16 +116,26 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 		instruction = *ip;
 		opcode = instruction & PT_OP_MASK;
 		and_flag = instruction & PT_OP_AND;
-		/* printf("- ip = %ld, sp = '%s'\n", ip - (uint8_t *)bytecode->chunk.arr, sp); */
+#if 0
+		int i;
+		printf("{ accept = %d, fail = %d, qc = %d }\n", addr_accept, addr_fail, qc);
+		for(i = state_stack.size - 1; i >= 0; i--) {
+			pt_vm_match_state *aux = pt_list_at(&state_stack, i, pt_vm_match_state);
+			printf("{ accept = %d, fail = %d, qc = %d }\n", aux->addr_accept, aux->addr_fail, aux->qc);
+		}
+		printf("\nip = %ld \n'%.*s...'", ip - (uint8_t *)bytecode->chunk.arr, 40, sp);
+		int fodas;
+		scanf("%d", &fodas);
+		printf("\n\n");
+#endif
 		switch(opcode) {
-			case PT_OP_RETURN_ON_SUCCESS:
-				if(fail_register) break;
-				// fallthrough
-			case PT_OP_RETURN:
+			case PT_OP_POP_ACCEPT:
 				state = pt_list_pop_as(&state_stack, pt_vm_match_state);
 				if(state) {
-					ip = state->ip;
-					// don't reset sp
+					ip = chunk_ptr + addr_accept;
+					addr_fail = state->addr_fail;
+					addr_accept = state->addr_accept;
+					qc = state->qc;
 					continue;
 				}
 				else {
@@ -141,6 +143,14 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 					// TODO: actions
 					goto match_end;
 				}
+			case PT_OP_SET_ADDRESS_FAIL:
+				addr_fail = NEXT_2_BYTES();
+				break;
+			case PT_OP_SET_ADDRESS_ACCEPT:
+				addr_accept = NEXT_2_BYTES();
+				break;
+			case PT_OP_PUSH:
+				PUSH_STATE();
 				break;
 			case PT_OP_BYTE:
 				if(*sp == NEXT_BYTE()) {
@@ -200,52 +210,57 @@ pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 			case PT_OP_CALL:
 				{
 					int address = *(pt_list_at(&bytecode->rule_addresses, NEXT_BYTE(), uint16_t));
-					PUSH_STATE_WITH_OFFSET(1);
-					ip = bytecode->chunk.arr + address;
+					PUSH_STATE();
+					addr_accept = ip - chunk_ptr + 1;
+					addr_fail = chunk_fail;
+					ip = chunk_ptr + address;
 					continue;
 				}
 				break;
-			case PT_OP_PUSH_ADDRESS:
+			case PT_OP_JUMP_ABSOLUTE:
 				{
 					int address = NEXT_2_BYTES();
-					PUSH_STATE_WITH_ADDRESS(address);
-				}
-				break;
-			case PT_OP_POP:
-				state_stack.size--;
-				break;
-			case PT_OP_JUMP_RELATIVE: {
-					int offset = NEXT_2_BYTES();
-					ip += offset;
+					ip = chunk_ptr + address;
 					continue;
 				}
-			case PT_OP_JUMP_ABSOLUTE: {
-					int address = NEXT_2_BYTES();
-					ip = bytecode->chunk.arr + address;
-					continue;
-				}
+				break;
 			case PT_OP_SAVE_SP:
-				state->sp = sp;
+				/* state->sp = sp; */
 				break;
-failed_match:
-			case PT_OP_FAIL:
-				if(instruction & PT_OP_NOT) {
-					sp_inc = !and_flag;
-					goto succeeded_not_match;
+			case PT_OP_RESET_QC:
+				qc = 0;
+				break;
+			case PT_OP_INC_QC:
+				qc++;
+				break;
+			case PT_OP_FAIL_QC_LESS_THAN:
+				if(qc < NEXT_BYTE()) {
+					goto failed_match;
 				}
-failed_not_match:
-				if(state = pt_list_pop_as(&state_stack, pt_vm_match_state)) {
-					// TODO
-					fail_register = 1;
-					ip = state->ip;
+				break;
+			case PT_OP_POP_FAIL:
+				state = pt_list_pop_as(&state_stack, pt_vm_match_state);
+				if(state) {
 					sp = state->sp;
-					continue;
+					addr_fail = state->addr_fail;
+					addr_accept = state->addr_accept;
+					qc = state->qc;
 				}
 				else {
 					matched = PT_NO_MATCH;
 					goto match_end;
 				}
-				break;
+				// fallthrough
+			case PT_OP_FAIL:
+failed_match:
+				if(instruction & PT_OP_NOT) {
+					sp_inc = !and_flag;
+					goto succeeded_not_match;
+				}
+failed_not_match:
+				ip = chunk_ptr + addr_fail;
+				continue;
+				
 
 			default: // unknown opcode
 				matched = PT_VM_INVALID_INSTRUCTION;
@@ -260,7 +275,6 @@ succeeded_not_match:
 		if(sp_inc > 0) {
 			sp += sp_inc;
 			sp_inc = 0;
-			fail_register = 0;
 		}
 	}
 match_end:

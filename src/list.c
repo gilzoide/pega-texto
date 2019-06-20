@@ -64,12 +64,12 @@ void *pt_list_peek(const pt_list *lst, unsigned int member_size) {
 	return lst->size > 0 ? lst->arr + (member_size * (lst->size - 1)) : NULL;
 }
 
-int pt_list_ensure_capacity(pt_list *lst, unsigned int capacity, unsigned int member_size) {
-	unsigned int lst_capacity = lst->capacity;
+int pt_list_ensure_capacity(pt_list *lst, int capacity, unsigned int member_size) {
+	int lst_capacity = lst->capacity;
 	if(lst_capacity < capacity) {
 		do {
 			lst_capacity *= PT_LIST_GROWTH_RATE;
-		} while(lst_capacity < capacity);
+		} while(lst_capacity > 0 && lst_capacity < capacity);
 		void *arr;
 		if(arr = realloc(lst->arr, lst_capacity * member_size)) {
 			lst->capacity = lst_capacity;
@@ -80,8 +80,8 @@ int pt_list_ensure_capacity(pt_list *lst, unsigned int capacity, unsigned int me
 	return 1;
 }
 
-int pt_list_ensure_extra_capacity(pt_list *lst, unsigned int extra_capacity, unsigned int member_size) {
-	return pt_list_ensure_capacity(lst, lst->capacity + extra_capacity, member_size);
+int pt_list_ensure_extra_capacity(pt_list *lst, int extra_capacity, unsigned int member_size) {
+	return pt_list_ensure_capacity(lst, lst->size + extra_capacity, member_size);
 }
 
 int pt_list_empty(const pt_list *lst) {
