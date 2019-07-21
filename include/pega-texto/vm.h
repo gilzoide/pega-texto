@@ -30,6 +30,7 @@ extern "C" {
 #endif
 
 #include "match.h"
+#include "memory.h"
 
 // Forward declarations
 typedef struct pt_bytecode pt_bytecode;
@@ -39,9 +40,10 @@ typedef struct pt_bytecode pt_bytecode;
  */
 typedef struct pt_vm {
 	pt_bytecode *bytecode;
+	pt_memory memory;
 } pt_vm;
 
-void pt_init_vm(pt_vm *vm);
+int pt_init_vm(pt_vm *vm);
 void pt_release_vm(pt_vm *vm);
 
 void pt_vm_load_bytecode(pt_vm *vm, pt_bytecode *bytecode);

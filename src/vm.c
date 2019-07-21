@@ -25,11 +25,13 @@
 #include <stdio.h>
 #include <string.h>
 
-void pt_init_vm(pt_vm *vm) {
-	memset(vm, 0, sizeof(pt_vm));
+int pt_init_vm(pt_vm *vm) {
+	vm->bytecode = NULL;
+	return pt_memory_init(&vm->memory);
 }
 
 void pt_release_vm(pt_vm *vm) {
+	pt_memory_release(&vm->memory);
 }
 
 void pt_vm_load_bytecode(pt_vm *vm, pt_bytecode *bytecode) {
