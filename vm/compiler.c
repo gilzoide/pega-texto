@@ -247,7 +247,7 @@ enum pt_compile_status pt_compile_expr(pt_bytecode *bytecode, pt_grammar *g, pt_
 		default: return PT_COMPILE_INVALID_EXPR;
 	}
 }
-enum pt_compile_status pt_compile_grammar(pt_bytecode *bytecode, pt_grammar *g) {
+enum pt_compile_status pt_compile_grammar(pt_bytecode *bytecode, pt_grammar *g, pt_memory *memory) {
 	// TODO: tratar erros
 	int i, result = 0, N = g->N;
 	pt_rule_compile_state compile_state[N];

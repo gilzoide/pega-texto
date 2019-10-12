@@ -3,7 +3,7 @@
 int main() {
 	pt_expr *literal = L("Hello");
 	pt_expr *set = S("abcde");
-	pt_expr *range = R("az");
+	pt_expr *range = R('a', 'z');
 	pt_expr *any = ANY;
 	pt_expr *case_insensitive = I("latex");
 	char control_stuff[] = {1, 0};

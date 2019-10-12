@@ -185,6 +185,12 @@ pt_match_result pt_match(pt_expr **es, const char **names, const char *str, cons
 
 		switch(e->op) {
 			// Primary
+			case PT_BYTE:
+				if(*ptr == e->N) {
+					matched = 1;
+				}
+				break;
+
 			case PT_LITERAL:
 				if(strncmp(ptr, e->data.characters, e->N) == 0) {
 					matched = e->N;

@@ -3,10 +3,10 @@
 #include <ctype.h>
 
 int main() {
-	pt_expr *integer = Q(C(isdigit), 1);
+	pt_expr *integer = Q(C(PT_DIGIT), 1);
 	pt_expr *abc3 = Q(S("abc"), -3);
 	pt_expr *this_or_that = OR(L("this"), L("that"));
-	pt_expr *num_letter = SEQ(C(isdigit), C(isalpha));
+	pt_expr *num_letter = SEQ(C(PT_DIGIT), C(PT_ALPHA));
 
 	puts(
 		Yes(integer, "0") && Res(integer, "123", 3) && Res(integer, "1only", 1) &&

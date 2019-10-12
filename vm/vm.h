@@ -46,6 +46,8 @@ typedef struct pt_vm {
 int pt_init_vm(pt_vm *vm);
 void pt_release_vm(pt_vm *vm);
 
+pt_bytecode *pt_vm_compile_grammar(pt_vm *vm, pt_grammar *g);
+pt_bytecode *pt_vm_compile_grammar_and_load(pt_vm *vm, pt_grammar *g);
 void pt_vm_load_bytecode(pt_vm *vm, pt_bytecode *bytecode);
 pt_bytecode *pt_vm_unload_bytecode(pt_vm *vm);
 void pt_vm_unload_and_release_bytecode(pt_vm *vm);

@@ -31,6 +31,7 @@ extern "C" {
 
 typedef struct pt_bytecode pt_bytecode;
 typedef struct pt_grammar pt_grammar;
+typedef struct pt_memory pt_memory;
 
 /**
  * Possible status codes for Grammar compilation.
@@ -71,7 +72,7 @@ const char *pt_get_compile_status_description(int compile_status);
  * @param g             Grammar to be compiled.
  * @return Compilation result.
  */
-enum pt_compile_status pt_compile_grammar(pt_bytecode *bytecode, pt_grammar *g);
+enum pt_compile_status pt_compile_grammar(pt_bytecode *bytecode, pt_grammar *g, pt_memory *memory);
 
 #ifdef __cplusplus
 }

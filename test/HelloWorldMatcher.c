@@ -3,7 +3,7 @@
 #include <ctype.h>
 
 int main() {
-	pt_expr *hello = SEQ(L("Hello"), Q(C(isspace), 1), S("Ww"), L("orld"), Q(L("!"), -1));
+	pt_expr *hello = SEQ(L("Hello"), Q(C(PT_SPACE), 1), S("Ww"), L("orld"), Q(L("!"), -1));
 	puts(
 		Yes(hello, "Hello world!") && Yes(hello, "Hello World") && Yes(hello, "Hello        world!") &&
 		Yes(hello, "Hello\tworld with tab") && Yes(hello, "Hello world!!!!") &&

@@ -9,14 +9,15 @@ int main() {
 		{ "NotParen", BUT(S("()")) },
 		{ NULL, NULL },
 	};
-	pt_grammar *g = pt_create_grammar(R, 0);
+	pt_grammar g;
+	pt_init_grammar(&g, R, 0);
 
 	puts(
-		gYes(g, "()") && gYes(g, "(hell() there, f()lks)") &&
-		gYes(g, "(let ((a 1) (b 2)) (+ a b))") && gYes(g, "())") &&
-		gNo(g, "(()") && gNo(g, "(hi-there (fella) ()")
+		gYes(&g, "()") && gYes(&g, "(hell() there, f()lks)") &&
+		gYes(&g, "(let ((a 1) (b 2)) (+ a b))") && gYes(&g, "())") &&
+		gNo(&g, "(()") && gNo(&g, "(hi-there (fella) ()")
 		? "PASS" : "FAIL");
 
-	pt_destroy_grammar(g);
+	pt_release_grammar(&g);
 	return 0;
 }

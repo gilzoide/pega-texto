@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Gil Barbosa Reis <gilzoide@gmail.com>
+ * Copyright 2017, 2018 Gil Barbosa Reis <gilzoide@gmail.com>
  * This file is part of pega-texto.
  * 
  * Pega-texto is free software: you can redistribute it and/or modify
@@ -26,8 +26,8 @@
 
 // Auxiliary structure for keeping validations per Rule, to avoid Cycles between non-terminals.
 typedef struct {
-	uint8_t was_visited;
-	uint8_t is_nullable_visited;
+	uint8_t was_visited : 1;
+	uint8_t is_nullable_visited : 1;
 } pt_validation_per_rule;
 
 /// Look for a name in the array.
@@ -115,8 +115,8 @@ static int pt_validate_expr_in_grammar(pt_grammar *g, pt_expr *e, uint16_t *rule
 
 		case PT_RANGE:
 			if(!should_skip) {
-				uint8_t *ptr = (uint8_t *)&e->N;
-				if(ptr[0] > ptr[1]) {
+				uint8_t *byteptr = (uint8_t *)&e->N;
+				if(byteptr[0] >= byteptr[1]) {
 					return PT_VALIDATE_INVALID_RANGE;
 				}
 			}

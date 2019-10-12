@@ -7,9 +7,9 @@ typedef struct {
 	int sum;
 } count_and_sum;
 
-pt_data count_and_sum_number(const char *str, size_t start, size_t end, int argc, pt_data *argv, void *_data) {
+pt_data count_and_sum_number(const char *str, size_t end, int argc, pt_data *argv, void *_data) {
 	count_and_sum *data = (count_and_sum *) _data;
-	int num = atoi(str + start);
+	int num = atoi(str);
 	printf("%d\n", num);
 	data->count++;
 	data->sum += num;
@@ -18,7 +18,7 @@ pt_data count_and_sum_number(const char *str, size_t start, size_t end, int argc
 
 int main() {
 	// Numbers <- ({%d+} / .)*
-	pt_expr *e = Q(OR(Q_(&count_and_sum_number, C(isdigit), 1), ANY), 0);
+	pt_expr *e = Q(OR(Q_(&count_and_sum_number, C(PT_DIGIT), 1), ANY), 0);
 	count_and_sum cs = {};
 	pt_match_options opts = {
 		.userdata = &cs,

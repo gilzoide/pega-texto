@@ -1,14 +1,13 @@
 #include <pega-texto.h>
 #include <pega-texto/macro-on.h>
 
-#include <ctype.h>
 #include <string.h>
 
 int main() {
 	pt_expr *e[] = {
 		SEQ(L("hi there,"), VI(1), Q(VI(2), 1)),
-		C(isspace), // space
-		C(isalpha), // letters
+		C(PT_SPACE), // space
+		C(PT_ALPHA), // letters
 		L_O(strdup("Expression may own strings, which will be `free`d")),
 		L_O(strdup("just use the `*_O` macros =]")),
 		V("Memory management is important in C, be careful with"),

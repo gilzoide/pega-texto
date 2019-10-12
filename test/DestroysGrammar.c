@@ -8,13 +8,13 @@ int main() {
 	// No-own
 	pt_rule R[] = {
 		{ "Axiom", SEQ(L("oi"), V("space"), Q(V("Letters"), 1)) },
-		{ "Space", C(isspace) }, // space
-		{ "Letters", C(isalpha) }, // letters
+		{ "Space", C(PT_SPACE) }, // space
+		{ "Letters", C(PT_ALPHA) }, // letters
 		{ NULL, NULL },
 	};
-	pt_grammar *g;
-	if(g = pt_create_grammar(R, 0)) {
-		pt_destroy_grammar(g);
+	pt_grammar g;
+	if(pt_init_grammar(&g, R, 0)) {
+		pt_release_grammar(&g);
 	}
 
 	// Own
@@ -23,11 +23,11 @@ int main() {
 		{ strdup("You must own'em all"), L("But for Expressions, it is not necessary") },
 		{ NULL, NULL },
 	};
-	if(g = pt_create_grammar(R2, 1)) {
-		pt_destroy_grammar(g);
+	if(pt_init_grammar(&g, R2, 1)) {
+		pt_release_grammar(&g);
 	}
 
 	// Nothing
-	pt_destroy_grammar(NULL);
+	pt_release_grammar(NULL);
 	return 0;
 }

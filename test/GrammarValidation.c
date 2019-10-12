@@ -4,9 +4,10 @@
 #include <stdio.h>
 
 int test(pt_rule *R, int expected_output) {
-	pt_grammar *g = pt_create_grammar(R, 0);
-	pt_validate_result res = pt_validate_grammar(g, PT_VALIDATE_DEFAULT);
-	pt_destroy_grammar(g);
+	pt_grammar g;
+	pt_init_grammar(&g, R, 0);
+	pt_validate_result res = pt_validate_grammar(&g, PT_VALIDATE_DEFAULT);
+	pt_release_grammar(&g);
 
 	if(res.status == expected_output) return 1;
 	printf("Results don't match: expected %d, found %d\n", expected_output, res.status);
@@ -14,9 +15,10 @@ int test(pt_rule *R, int expected_output) {
 }
 
 int test_skip(pt_rule *R, int expected_output) {
-	pt_grammar *g = pt_create_grammar(R, 0);
-	pt_validate_result res = pt_validate_grammar(g, PT_VALIDATE_SKIP);
-	pt_destroy_grammar(g);
+	pt_grammar g;
+	pt_init_grammar(&g, R, 0);
+	pt_validate_result res = pt_validate_grammar(&g, PT_VALIDATE_SKIP);
+	pt_release_grammar(&g);
 
 	if(res.status == expected_output) return 1;
 	printf("Results don't match: expected %d, found %d\n", expected_output, res.status);
@@ -35,11 +37,7 @@ int main() {
 			{ NULL, NULL },
 		}, PT_VALIDATE_SUCCESS) &&
 		test((pt_rule[]){
-			{ "1 char @ Range", R("a") },
-			{ NULL, NULL },
-		}, PT_VALIDATE_RANGE_BUFFER) &&
-		test((pt_rule[]){
-			{ "Reverse chars @ Range", R("za") },
+			{ "Reverse chars @ Range", R('z', 'a') },
 			{ NULL, NULL },
 		}, PT_VALIDATE_INVALID_RANGE) &&
 		test((pt_rule[]){

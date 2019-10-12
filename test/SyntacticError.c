@@ -27,31 +27,32 @@ int main() {
 	pt_rule R[] = {
 		{ "S", SEQ(V("Id"), V("List")) },
 		{ "List", OR(NOT(ANY), SEQ(V("Comma"), V("Id"), V("List"))) },
-		{ "Id", OR(SEQ(V("Sp"), Q(C(islower), 1)), E(IDENTIFIER_EXPECTED, L(","))) },
-		{ "Comma", OR(SEQ(V("Sp"), L(",")), E(COMMA_EXPECTED, Q(C(islower), 1))) },
-		{ "Sp", Q(C(isspace), 0) },
+		{ "Id", OR(SEQ(V("Sp"), Q(C(PT_LOWER), 1)), E(IDENTIFIER_EXPECTED, L(","))) },
+		{ "Comma", OR(SEQ(V("Sp"), L(",")), E(COMMA_EXPECTED, Q(C(PT_LOWER), 1))) },
+		{ "Sp", Q(C(PT_SPACE), 0) },
 		{ NULL, NULL },
 	};
-	pt_grammar *g = pt_create_grammar(R, 0);
-	pt_validate_grammar(g, PT_VALIDATE_ABORT);
+	pt_grammar g;
+	pt_init_grammar(&g, R, 0);
+	pt_validate_grammar(&g, PT_VALIDATE_ABORT);
 	pt_match_options opts = { .on_error = print_error, .on_end = on_end };
 
-	if(pt_match_grammar(g, "one,two", NULL).matched < 0) {
+	if(pt_match_grammar(&g, "one,two", NULL).matched < 0) {
 		puts("FAIL");
 	}
-	else if(pt_match_grammar(g, "one\n two", &opts).matched != PT_MATCHED_ERROR) {
+	else if(pt_match_grammar(&g, "one\n two", &opts).matched != PT_MATCHED_ERROR) {
 		puts("FAIL - no error!");
 	}
-	else if(pt_match_grammar(g, "one\n, two,", &opts).matched != PT_MATCHED_ERROR) {
+	else if(pt_match_grammar(&g, "one\n, two,", &opts).matched != PT_MATCHED_ERROR) {
 		puts("FAIL - no error!");
 	}
-	else if(pt_match_grammar(g, "one\n two,", &opts).data.i != COMMA_EXPECTED) {
+	else if(pt_match_grammar(&g, "one\n two,", &opts).data.i != COMMA_EXPECTED) {
 		puts("FAIL - wrong error code!");
 	}
 	else {
 		puts("PASS");
 	}
 
-	pt_destroy_grammar(g);
+	pt_release_grammar(&g);
 	return 0;
 }

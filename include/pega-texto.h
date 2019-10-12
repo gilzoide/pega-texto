@@ -38,15 +38,12 @@
 #define PT_VERSION "2.1.0"
 
 #include "pega-texto/action.h"
-#include "pega-texto/bytecode.h"
-#include "pega-texto/compiler.h"
 #include "pega-texto/data.h"
 #include "pega-texto/expr.h"
 #include "pega-texto/grammar.h"
 #include "pega-texto/match.h"
 #include "pega-texto/match-state.h"
-#include "pega-texto/memory.h"
-#include "pega-texto/vm.h"
+#include "pega-texto/validate.h"
 
 #endif
 
