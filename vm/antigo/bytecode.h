@@ -29,32 +29,51 @@
 extern "C" {
 #endif
 
-#include "pega-texto/list.h"
+#include "list.h"
 
 #include <stdint.h>
 
+typedef union pt_bytecode_constant {
+	const char *as_str;
+	void *as_ptr;
+	int as_offset;
+} pt_bytecode_constant;
+
+/// Create a constant from a string
+#define CONST_STRING(str) \
+	((pt_bytecode_constant){ .as_str = (str) })
+
+/// Create a constant from a pointer
+#define CONST_PTR(ptr) \
+	((pt_bytecode_constant){ .as_ptr = (ptr) })
+
+/// Create an offset constant from int value
+#define CONST_OFFSET(offset) \
+	((pt_bytecode_constant){ .as_offset = (offset) })
+
 enum pt_opcode { 
-	NOP,
-	SUCCEED,
-	FAIL,
-	FAIL_LESS_THEN,
-	QC_ZERO,
-	QC_INC,
-	JUMP_RELATIVE,
-	JUMP,
-	JUMP_RELATIVE_IF_FAIL,
-	JUMP_IF_FAIL,
-	CALL,
-	RET,
-	PUSH,
-	PEEK,
-	POP,
-	BYTE,
-	NOT_BYTE,
-	STRING,
-	CLASS,
-	SET,
-	RANGE,
+	PT_OP_FAIL, // pop state and fail it, rewinding `ip` to `addr_fail` and `sp` register
+	PT_OP_ACCEPT, // jump to `addr_accept`
+
+	PT_OP_SET_ADDRESS_FAIL, // +1 -> set `addr_fail` register value
+	PT_OP_SET_ADDRESS_ACCEPT, // +1 -> set `addr_accept` register value
+	PT_OP_PUSH, // push registers
+	PT_OP_POP_ACCEPT, // pop state without rewinding `sp` and accept
+	PT_OP_POP_FAIL, // pop state and fail
+
+	PT_OP_BYTE, // +1 -> byte to be matched
+	PT_OP_STRING, // + NULL terminated string for literal matching
+	PT_OP_SET, // + NULL terminated string for character set
+	PT_OP_CHAR_CLASS, // +[wWaAcCdDgGlLpPsSuUxX] -> character class tested
+	PT_OP_RANGE, // +2 -> byte range
+	PT_OP_CALL, // +1 -> rule index to jump
+	PT_OP_JUMP_ABSOLUTE, // +1 -> address to jump
+	PT_OP_SAVE_SP, // save string pointer to top
+
+	PT_OP_RESET_QC, // reset qc to 0
+	PT_OP_INC_QC, // increment qc
+	PT_OP_FAIL_QC_LESS_THAN, // +1 -> fail if `qc` is less than value
+	PT_OP_JUMP_QC_GREATER_EQUAL_THAN, // +1 -> fail if `qc` is less than value
 
 	PT_OPCODE_ENUM_COUNT,
 
@@ -69,8 +88,12 @@ extern const char * const pt_opcode_description[];
  */
 typedef struct pt_bytecode {
 	pt_list_(uint8_t) chunk;
+	pt_list_(uint16_t) rule_addresses;
+	pt_list_(pt_bytecode_constant) constants;
 } pt_bytecode;
 #define PT_CHUNK_LIST_INITIAL_CAPACITY 2048
+#define PT_RULE_ADDRESSES_LIST_INITIAL_CAPACITY 256
+#define PT_CONSTANTS_LIST_INITIAL_CAPACITY 64
 
 /**
  * Initialize a Bytecode struct with the expected values.
@@ -117,7 +140,16 @@ int pt_push_byte_array(pt_bytecode *bytecode, int num_bytes, const uint8_t *bs);
  */
 int pt_reserve_bytes(pt_bytecode *bytecode, int num_bytes);
 
+/**
+ * Push a constant into bytecode.
+ *
+ * @return 0 on memory allocation error.
+ * @return 1 otherwise.
+ */
+int pt_push_constant(pt_bytecode *bytecode, pt_bytecode_constant c);
+
 uint8_t *pt_byte_at(pt_bytecode *bytecode, int i);
+pt_bytecode_constant * const pt_constant_at(const pt_bytecode *bytecode, int i);
 
 /**
  * Utility to dump a bytecode textual representation into stdout, for debugging

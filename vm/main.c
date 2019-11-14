@@ -18,42 +18,35 @@
  * Any bugs should be reported to <gilzoide@gmail.com>
  */
 
-/** @file vm.h
- * Virtual Machine for running compiled pega-texto grammar matches.
- */
+#include "pega-texto/list.h"
+#include "bytecode.h"
+#include "vm.h"
 
-#ifndef __PEGA_TEXTO_VM_H__
-#define __PEGA_TEXTO_VM_H__
+#include <stdio.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+int main(int argc, char **argv) {
+	uint8_t code[] = {
+		QC_ZERO,
+		CLASS, 'w',
+		JUMP_RELATIVE_IF_FAIL, 5,
+		QC_INC,
+		JUMP_RELATIVE, -5,
+		// label Fail
+		FAIL_LESS_THEN, 1,
+	};
+	pt_bytecode bytecode = {
+		.chunk = { .arr = code, .size = sizeof(code), .capacity = sizeof(code) }
+	};
+	pt_dump_bytecode(&bytecode);
 
-#include "double_stack_allocator.h"
+	pt_vm vm;
+	pt_init_vm(&vm);
+	pt_vm_load_bytecode(&vm, &bytecode);
 
-// Forward declarations
-typedef struct pt_bytecode pt_bytecode;
+	int matched = pt_vm_match(&vm, "olars", NULL);
+	printf("Matched %d\n", matched);
 
-/**
- * Virtual Machine that runs `pt_bytecode`.
- */
-typedef struct pt_vm {
-	double_stack_allocator memory;
-	pt_bytecode *bytecode;
-} pt_vm;
-
-int pt_init_vm(pt_vm *vm);
-void pt_release_vm(pt_vm *vm);
-
-void pt_vm_load_bytecode(pt_vm *vm, pt_bytecode *bytecode);
-pt_bytecode *pt_vm_unload_bytecode(pt_vm *vm);
-void pt_vm_unload_and_release_bytecode(pt_vm *vm);
-
-int pt_vm_match(pt_vm *vm, const char *str, void *userdata);
-
-#ifdef __cplusplus
+	pt_release_vm(&vm);
+	return 0;
 }
-#endif
-
-#endif
 

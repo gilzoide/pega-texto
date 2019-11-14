@@ -18,20 +18,20 @@
  * Any bugs should be reported to <gilzoide@gmail.com>
  */
 
-#include <pega-texto/vm.h>
-#include <pega-texto/bytecode.h>
-#include <pega-texto/compiler.h>
+#include "vm.h"
+#include "bytecode.h"
+#include "pega-texto/match.h"
 
 #include <stdio.h>
 #include <string.h>
 
 int pt_init_vm(pt_vm *vm) {
 	vm->bytecode = NULL;
-	return pt_memory_init(&vm->memory);
+	return dsa_init_with_size(&vm->memory, 4096);
 }
 
 void pt_release_vm(pt_vm *vm) {
-	pt_memory_release(&vm->memory);
+	dsa_release(&vm->memory);
 }
 
 void pt_vm_load_bytecode(pt_vm *vm, pt_bytecode *bytecode) {
@@ -51,8 +51,6 @@ void pt_vm_unload_and_release_bytecode(pt_vm *vm) {
 
 typedef struct pt_vm_match_state {
 	const char *sp; // string pointer
-	uint16_t addr_fail; // addres to jump to on fail
-	uint16_t addr_accept; // address to jump to on success
 	int qc; // quantifier counter
 } pt_vm_match_state;
 
@@ -62,226 +60,185 @@ enum pt_vm_match_flag {
 	SYNTAX_ERROR_FLAG  = 0b0010,
 };
 
-#define ADVANCE_BYTE() \
-	++ip
 #define NEXT_BYTE() \
 	*(++ip)
 #define NEXT_2_BYTES() \
 	*((uint16_t *)(++ip)); ip++
 #define ADVANCE_UNTIL_NULL() \
 	while(NEXT_BYTE())
-#define NEXT_CONSTANT() \
-	pt_constant_at(bytecode, NEXT_BYTE())
-#define GET_FLAG(flag) \
-	fr & flag
-#define SET_FLAG(flag) \
-	fr |= flag
-#define UNSET_FLAG(flag) \
-	fr &= ~flag
-#define TOGGLE_FLAG(flag) \
-	fr ^= flag
+#define PEEK_NEXT_BYTE() \
+	((int8_t *)ip)[1]
 
-#define PUSH_STATE() \
-	if(state = pt_list_push_as(&state_stack, pt_vm_match_state)) { \
-		*state = (pt_vm_match_state){ .sp = sp, .addr_fail = addr_fail, .addr_accept = addr_accept, .qc = qc }; \
-	} \
-	else { \
-		matched = PT_NO_STACK_MEM; \
-		goto match_end; \
-	}
-
-pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
-	if(str == NULL) return (pt_match_result){ PT_NULL_INPUT, PT_NULL_DATA };
+int pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
+	if(str == NULL) return PT_NULL_INPUT;
 	pt_bytecode *bytecode = vm->bytecode;
-	if(bytecode == NULL) return (pt_match_result){ PT_VM_NULL_BYTECODE, PT_NULL_DATA };
-
-	pt_data result_data = PT_NULL_DATA;
+	if(bytecode == NULL) return PT_VM_NULL_BYTECODE;
 
 	uint8_t *chunk_ptr = pt_byte_at(bytecode, 0);
-	uint_fast16_t chunk_fail = bytecode->chunk.size - 1;
+	/* uint_fast16_t chunk_fail = bytecode->chunk.size - 1; */
 
 	/* pt_bytecode_constant *rc; // constant register */
-	const char *sp = str; // string pointer
+	const char *sp = str;    // string pointer
 	uint8_t *ip = chunk_ptr; // instruction pointer
-	uint16_t addr_fail = chunk_fail, addr_accept = chunk_fail - 1;
-	int qc = 0; // quantifier counter
-	enum pt_opcode instruction, opcode, and_flag;
-	int sp_inc = 0;
+	int rf = 1;              // result (0 if failing)
+	int qc = 0;              // quantifier counter
+	enum pt_opcode instruction, opcode;
 
 	pt_vm_match_state *state;
 	pt_list_(pt_vm_match_state) state_stack;
 	pt_list_initialize_as(&state_stack, 8, pt_vm_match_state);
 
 	int matched;
-
-	while(1) {
+	
+	uint8_t *chunk_end = bytecode->chunk.arr + bytecode->chunk.size;
+	while(ip < chunk_end) {
 		instruction = *ip;
-		opcode = instruction & PT_OP_MASK;
-		and_flag = instruction & PT_OP_AND;
-#if 0
+		opcode = instruction;
+#if 1
 		int i;
-		printf("{ accept = %d, fail = %d, qc = %d }\n", addr_accept, addr_fail, qc);
-		for(i = state_stack.size - 1; i >= 0; i--) {
-			pt_vm_match_state *aux = pt_list_at(&state_stack, i, pt_vm_match_state);
-			printf("{ accept = %d, fail = %d, qc = %d }\n", aux->addr_accept, aux->addr_fail, aux->qc);
-		}
-		printf("\nip = %ld \n'%.*s...'", ip - (uint8_t *)bytecode->chunk.arr, 40, sp);
-		int fodas;
-		scanf("%d", &fodas);
-		printf("\n\n");
+		/* printf("{ qc = %d }\n", qc); */
+		/* for(i = state_stack.size - 1; i >= 0; i--) { */
+			/* pt_vm_match_state *aux = pt_list_at(&state_stack, i, pt_vm_match_state); */
+			/* printf("{ qc = %d }\n", aux->qc); */
+		/* } */
+		printf("\nip = %ld, qc = %d - '%.*s'", ip - (uint8_t *)bytecode->chunk.arr, qc, 40, sp);
+		/* int fodas; */
+		/* scanf("%d", &fodas); */
+		/* printf("\n\n"); */
 #endif
+
 		switch(opcode) {
-			case PT_OP_POP_ACCEPT:
-				state = pt_list_pop_as(&state_stack, pt_vm_match_state);
-				if(state) {
-					ip = chunk_ptr + addr_accept;
-					addr_fail = state->addr_fail;
-					addr_accept = state->addr_accept;
-					qc = state->qc;
-					continue;
-				}
-				else {
-					matched = sp - str;
-					// TODO: actions
-					goto match_end;
-				}
-			case PT_OP_SET_ADDRESS_FAIL:
-				addr_fail = NEXT_2_BYTES();
+			case NOP:
 				break;
-			case PT_OP_SET_ADDRESS_ACCEPT:
-				addr_accept = NEXT_2_BYTES();
+			case SUCCEED:
+				rf = 1;
 				break;
-			case PT_OP_PUSH:
-				PUSH_STATE();
+			case FAIL:
+				rf = 0;
 				break;
-			case PT_OP_BYTE:
-				if(*sp == NEXT_BYTE()) {
-					sp_inc = !and_flag;
-					break;
-				}
-				else goto failed_match;
-			case PT_OP_STRING:
-				{
-					int c;
-					const char * str_aux = sp;
-					do {
-						c = NEXT_BYTE();
-					} while(c && c == *(str_aux++));
-					if(c != '\0') { // didn't reach end, failed!
-						ADVANCE_UNTIL_NULL();
-						goto failed_match;
-					}
-					else {
-						sp_inc = !and_flag * (str_aux - sp);
-					}
-				}
+			case FAIL_LESS_THEN:
+				rf = qc >= NEXT_BYTE();
 				break;
-			case PT_OP_CHAR_CLASS:
-				{
-					int (*f)(int) = pt_function_for_character_class(NEXT_BYTE());
-					if(f(*sp)) {
-						sp_inc = !and_flag;
-					}
-					else goto failed_match;
-				}
-				break;
-			case PT_OP_SET:
-				{
-					int base = *sp, c;
-					while(c = NEXT_BYTE()) {
-						if(c == base) {
-							sp_inc = !and_flag;
-							break;
-						}
-					}
-					ADVANCE_UNTIL_NULL();
-					if(c != base) goto failed_match;
-				}
-				break;
-			case PT_OP_RANGE:
-				{
-					int b = *sp;
-					int rangemin = NEXT_BYTE();
-					int rangemax = NEXT_BYTE();
-					if(b >= rangemin && b <= rangemax) {
-						sp_inc = !and_flag;
-					}
-					else goto failed_match;
-				}
-				break;
-			case PT_OP_CALL:
-				{
-					int address = *(pt_list_at(&bytecode->rule_addresses, NEXT_BYTE(), uint16_t));
-					PUSH_STATE();
-					addr_accept = ip - chunk_ptr + 1;
-					addr_fail = chunk_fail;
-					ip = chunk_ptr + address;
-					continue;
-				}
-				break;
-			case PT_OP_JUMP_ABSOLUTE:
-				{
-					int address = NEXT_2_BYTES();
-					ip = chunk_ptr + address;
-					continue;
-				}
-				break;
-			case PT_OP_SAVE_SP:
-				/* state->sp = sp; */
-				break;
-			case PT_OP_RESET_QC:
+			case QC_ZERO:
 				qc = 0;
 				break;
-			case PT_OP_INC_QC:
+			case QC_INC:
 				qc++;
 				break;
-			case PT_OP_FAIL_QC_LESS_THAN:
-				if(qc < NEXT_BYTE()) {
-					goto failed_match;
-				}
-				break;
-			case PT_OP_POP_FAIL:
-				state = pt_list_pop_as(&state_stack, pt_vm_match_state);
-				if(state) {
-					sp = state->sp;
-					addr_fail = state->addr_fail;
-					addr_accept = state->addr_accept;
-					qc = state->qc;
+
+			case JUMP: {
+				int address = NEXT_2_BYTES();
+				ip = chunk_ptr + address;
+				continue;
+			}
+			case JUMP_RELATIVE: {
+				int offset = PEEK_NEXT_BYTE();
+				ip += offset;
+				continue;
+			}
+			case JUMP_RELATIVE_IF_FAIL: {
+				int offset = PEEK_NEXT_BYTE();
+				if(!rf) {
+					ip += offset;
+					continue;
 				}
 				else {
-					matched = PT_NO_MATCH;
+					ip++;
+				}
+				break;
+			}
+			case JUMP_IF_FAIL: {
+				int address = NEXT_2_BYTES();
+				if(!rf) {
+					ip = chunk_ptr + address;
+					continue;
+				}
+				break;
+			}
+			case CALL: //TODO
+			case RET: //TODO
+			case PUSH:
+				if(state = pt_list_push_as(&state_stack, pt_vm_match_state)) { \
+					*state = (pt_vm_match_state){ .sp = sp, .qc = qc };
+				}
+				else {
+					matched = PT_NO_STACK_MEM;
 					goto match_end;
 				}
-				// fallthrough
-			case PT_OP_FAIL:
-failed_match:
-				if(instruction & PT_OP_NOT) {
-					sp_inc = !and_flag;
-					goto succeeded_not_match;
+				break;
+			case PEEK:
+				state = pt_list_peek_as(&state_stack, pt_vm_match_state);
+				sp = state->sp;
+				qc = state->qc;
+				break;
+			case POP:
+				pt_list_pop_as(&state_stack, pt_vm_match_state);
+				break;
+
+			case BYTE:
+				rf = *sp == NEXT_BYTE();
+				sp += rf;
+				break;
+			case NOT_BYTE:
+				rf = *sp != NEXT_BYTE();
+				sp += rf;
+				break;
+			case STRING: {
+				int c;
+				const char *str_aux = sp;
+				do {
+					c = NEXT_BYTE();
+				} while(c && c == *(str_aux++));
+				if(c != '\0') { // didn't reach end, failed!
+					ADVANCE_UNTIL_NULL();
+					rf = 0;
 				}
-failed_not_match:
-				ip = chunk_ptr + addr_fail;
-				continue;
-				
+				else {
+					sp = str_aux;
+					rf = 1;
+				}
+				break;
+			}
+			case CLASS: {
+				int (*f)(int) = pt_function_for_character_class(NEXT_BYTE());
+				rf = f(*sp) != 0;
+				sp += rf;
+				break;
+			}
+			case SET: {
+				rf = 0;
+				int base = *sp, c;
+				while(c = NEXT_BYTE()) {
+					if(c == base) {
+						rf = 1;
+						sp++;
+						break;
+					}
+				}
+				ADVANCE_UNTIL_NULL();
+				break;
+			}
+			case RANGE: {
+				int b = *sp;
+				int rangemin = NEXT_BYTE();
+				int rangemax = NEXT_BYTE();
+				rf = b >= rangemin && b <= rangemax;
+				sp += rf;
+				break;
+			}
 
 			default: // unknown opcode
 				matched = PT_VM_INVALID_INSTRUCTION;
-				/* printf("!!! Unknow opcode: 0x%02x; ip = %ld, sp = '%s'\n", opcode, ip - (uint8_t *)bytecode->chunk.arr, sp); */
+				printf("!!! Unknow opcode: 0x%02x; ip = %ld, sp = '%s'\n", opcode, ip - (uint8_t *)bytecode->chunk.arr, sp);
 				goto match_end;
 		}
-		if(instruction & PT_OP_NOT) {
-			goto failed_not_match;
-		}
-succeeded_not_match:
 		ip++;
-		if(sp_inc > 0) {
-			sp += sp_inc;
-			sp_inc = 0;
-		}
 	}
+	matched = rf ? sp - str : PT_NO_MATCH;
 match_end:
 	pt_list_destroy(&state_stack);
-	return (pt_match_result){matched, result_data};
+	return matched;
+	/* return (pt_match_result){matched, result_data}; */
 }
 #undef ADVANCE_BYTE
 #undef NEXT_BYTE

@@ -24,6 +24,7 @@ if(UNIX)
 	option(LINK_SONAME_FILE "Create an additional symlink and pkg-config script for library based on it's SONAME" ON)
 endif()
 add_subdirectory(src)
+add_subdirectory(vm)
 add_subdirectory(pkg-config)
 
 # Test

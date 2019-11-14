@@ -29,27 +29,30 @@
 extern "C" {
 #endif
 
-#include "double_stack_allocator.h"
+#include "match.h"
+#include "memory.h"
 
 // Forward declarations
 typedef struct pt_bytecode pt_bytecode;
 
 /**
- * Virtual Machine that runs `pt_bytecode`.
+ * Virtual Machine that runs `pt_bytecode` compiled grammars.
  */
 typedef struct pt_vm {
-	double_stack_allocator memory;
 	pt_bytecode *bytecode;
+	pt_memory memory;
 } pt_vm;
 
 int pt_init_vm(pt_vm *vm);
 void pt_release_vm(pt_vm *vm);
 
+pt_bytecode *pt_vm_compile_grammar(pt_vm *vm, pt_grammar *g);
+pt_bytecode *pt_vm_compile_grammar_and_load(pt_vm *vm, pt_grammar *g);
 void pt_vm_load_bytecode(pt_vm *vm, pt_bytecode *bytecode);
 pt_bytecode *pt_vm_unload_bytecode(pt_vm *vm);
 void pt_vm_unload_and_release_bytecode(pt_vm *vm);
 
-int pt_vm_match(pt_vm *vm, const char *str, void *userdata);
+pt_match_result pt_vm_match(pt_vm *vm, const char *str, void *userdata);
 
 #ifdef __cplusplus
 }
