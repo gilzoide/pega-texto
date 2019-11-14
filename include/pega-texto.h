@@ -29,13 +29,13 @@
 #define __PEGA_TEXTO_H__
 
 /// Pega-texto major version number
-#define PT_VERSION_MAJOR 2
+#define PT_VERSION_MAJOR 3
 /// Pega-texto minor version number
-#define PT_VERSION_MINOR 1
+#define PT_VERSION_MINOR 0
 /// Pega-texto patch version number
 #define PT_VERSION_PATCH 0
 /// Pega-texto version string
-#define PT_VERSION "2.1.0"
+#define PT_VERSION "3.0.0"
 
 #include "pega-texto/action.h"
 #include "pega-texto/data.h"

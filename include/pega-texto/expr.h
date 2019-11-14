@@ -22,12 +22,13 @@
  * Parsing Expressions that can be combined to create PEGs, which can match text.
  *
  * Types of Expressions:
+ * - __Byte__ ('b'): match a single byte.
  * - __Literal__ (`"string"`): match a string literally.
  * - __Case Insensitive__ (`I"string"`): match a string literally, insensitive
  *   to case.
- * - __Character class__ (`int(*)(char)`): match character if function applied
- *   to it returns non-zero. Perfect for the `"is?????"` function family from
- *   "ctype.h".
+ * - __Character class__ (`\w|\a|\c|\d|\g|\l|\p|\s|\u|\x`): match character if
+ *   character is of some of the classes as defined by applying the functions
+ *   in `<ctype.h>`.
  * - __Set__ (`[chars]`): match any character in a set.
  * - __Range__ (`[c1-c2]`): match a character between a range.
  * - __Any__ (`.`): only fail at end of stream ('\0').

@@ -63,6 +63,11 @@ Also check out the [tutorial](tutorial.md).
 
 Change log
 ----------
++ 3.0.0 - Change actions to receive the capture with pointer and size, instead
+  of pointer to input string, start and end of capture; add Byte expression,
+  change Character Class Expressions to use only functions defined in `ctype.h`,
+  change Range Expressions to use 2 bytes instead of a NULL terminated string;
+  use Grammars without malloc'ing them.
 + 2.1.0 - Populate `pt_match_result.data.i` with the first syntactic error code
   when syntactic errors occur.
 + 2.0.1 - Put `extern "C"` declarations in inner headers.
