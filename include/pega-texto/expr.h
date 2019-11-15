@@ -65,6 +65,7 @@ extern "C" {
 #include "pega-texto/action.h"
 
 #include <stdint.h>
+#include <ctype.h>
 
 /**
  * Operations for constructing Parsing Expressions.
@@ -128,7 +129,21 @@ typedef int(*pt_character_class_function)(int);
 /**
  * Get the function to be used for matching a Character Class.
  */
-pt_character_class_function pt_function_for_character_class(enum pt_character_class c);
+static inline pt_character_class_function pt_function_for_character_class(enum pt_character_class c) {
+	switch(c) {
+		case PT_ALNUM:  return isalnum;
+		case PT_ALPHA:  return isalpha;
+		case PT_CNTRL:  return iscntrl;
+		case PT_DIGIT:  return isdigit;
+		case PT_GRAPH:  return isgraph;
+		case PT_LOWER:  return islower;
+		case PT_PUNCT:  return ispunct;
+		case PT_SPACE:  return isspace;
+		case PT_UPPER:  return isupper;
+		case PT_XDIGIT: return isxdigit;
+		default:        return NULL;
+	}
+}
 
 /// Parsing Expressions.
 typedef struct pt_expr {

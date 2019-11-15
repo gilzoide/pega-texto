@@ -16,7 +16,6 @@ Opcode    | Argument | Description
 0x03 flt  | 1 - Value expected | Set `rf` with fail status 0 if `qc` is less than the given expected value
 0x04 qcz  |          | Set `qc` with success status 0
 0x05 qci  |          | Increment `qc`
-<!-- 0x00 mct  |          | Toggle `qc` between fail and success status -->
 
 0x06 jr   | 1 - Offset  | Add offset to `ip`
 0x07 jmp  | 2 - Address | Set `ip` to address
@@ -29,12 +28,12 @@ Opcode    | Argument | Description
 0x0d peek |          | Reset state with state stack top
 0x0e pop  |          | Pop state stack top
 
-0x0f b    | 1 - Byte | Match the given byte
-0x10 nb   | 1 - Byte | Match anything else than the given byte
-0x11 str  | N - String literal | Match the given null terminated string
-0x12 cls  | 1 - Char class identifier | Match character class from ctype functions
-0x13 set  | N - Character set | Match byte with any from the given null terminated string
-0x14 rng  | 2 - Minimum and maximum byte | Match within range
+0x0f byte  | 1 - Byte | Match the given byte
+0x10 nbyte | 1 - Byte | Match anything else than the given byte
+0x11 str   | N - String literal | Match the given null terminated string
+0x12 cls   | 1 - Char class identifier | Match character class from ctype functions
+0x13 set   | N - Character set | Match byte with any from the given null terminated string
+0x14 rng   | 2 - Minimum and maximum byte | Match within range
 
 
 PEG -> bytecode
@@ -44,16 +43,17 @@ Being `T(e, L)` the transformation of expression `e` with failure label `L`
 e1 / e2:
 ```
   push
-  T(e1, fail)
-  pop
+  T(e1, fail1)
   jmp success
-fail:
+fail1:
   peek
-  pop
-  mcz
-  T(e2, L)
+  T(e2, fail2)
+  jum success
+fail2:
+  peek
 success:
-  nop
+  pop
+  jmpf L
 ```
 
 &e:
@@ -84,15 +84,12 @@ e?:
 ```
   push
   T(e, fail)
-  pop
   jmp success
 fail:
   peek
-  pop
-  mcz
-  jmp L
 success:
-  nop
+  pop
+  succ
 ```
 
 e*:

@@ -23,7 +23,6 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
 const char * const pt_operation_names[] = {
 	"PT_BYTE",
@@ -47,22 +46,6 @@ const char * const pt_operation_names[] = {
 static_assert(sizeof(pt_operation_names) == PT_OPERATION_ENUM_COUNT * sizeof(const char *),
               "Missing expression operation names");
 #endif
-
-pt_character_class_function pt_function_for_character_class(enum pt_character_class c) {
-	switch(c) {
-		case 'w': return isalnum;
-		case 'a': return isalpha;
-		case 'c': return iscntrl;
-		case 'd': return isdigit;
-		case 'g': return isgraph;
-		case 'l': return islower;
-		case 'p': return ispunct;
-		case 's': return isspace;
-		case 'u': return isupper;
-		case 'x': return isxdigit;
-		default: return NULL;
-	}
-}
 
 #define NEW_EXPR(body)                       \
 	pt_expr *new_expr;                       \

@@ -18,7 +18,7 @@
  * Any bugs should be reported to <gilzoide@gmail.com>
  */
 
-#include <pega-texto/list.h>
+#include "list.h"
 
 #include <stdlib.h>
 #include <assert.h>

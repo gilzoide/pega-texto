@@ -18,35 +18,25 @@
  * Any bugs should be reported to <gilzoide@gmail.com>
  */
 
-#include "pega-texto/list.h"
+#include "list.h"
+#include "assembler_parser.h"
 #include "bytecode.h"
 #include "vm.h"
 
 #include <stdio.h>
 
 int main(int argc, char **argv) {
-	uint8_t code[] = {
-		QC_ZERO,
-		CLASS, 'w',
-		JUMP_RELATIVE_IF_FAIL, 5,
-		QC_INC,
-		JUMP_RELATIVE, -5,
-		// label Fail
-		FAIL_LESS_THEN, 1,
-	};
-	pt_bytecode bytecode = {
-		.chunk = { .arr = code, .size = sizeof(code), .capacity = sizeof(code) }
-	};
-	pt_dump_bytecode(&bytecode);
+	// ("hello" / "world") '\0'
+	pt_bytecode *bytecode = pt_assembly_bytecode;
+	pt_dump_bytecode(bytecode);
 
 	pt_vm vm;
 	pt_init_vm(&vm);
-	pt_vm_load_bytecode(&vm, &bytecode);
+	pt_vm_load_bytecode(&vm, bytecode);
 
-	int matched = pt_vm_match(&vm, "olars", NULL);
+	int matched = pt_vm_match(&vm, "", NULL);
 	printf("Matched %d\n", matched);
 
 	pt_release_vm(&vm);
 	return 0;
 }
-

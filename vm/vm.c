@@ -83,6 +83,7 @@ int pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 	int rf = 1;              // result (0 if failing)
 	int qc = 0;              // quantifier counter
 	enum pt_opcode instruction, opcode;
+	char current;
 
 	pt_vm_match_state *state;
 	pt_list_(pt_vm_match_state) state_stack;
@@ -91,10 +92,10 @@ int pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 	int matched;
 	
 	uint8_t *chunk_end = bytecode->chunk.arr + bytecode->chunk.size;
-	while(ip < chunk_end) {
+	while((current = *sp) && ip < chunk_end) {
 		instruction = *ip;
 		opcode = instruction;
-#if 1
+#if 0
 		int i;
 		/* printf("{ qc = %d }\n", qc); */
 		/* for(i = state_stack.size - 1; i >= 0; i--) { */
@@ -155,8 +156,12 @@ int pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 				}
 				break;
 			}
-			case CALL: //TODO
-			case RET: //TODO
+			case CALL: 
+				// TODO
+				break;
+			case RET:
+				//TODO
+				break;
 			case PUSH:
 				if(state = pt_list_push_as(&state_stack, pt_vm_match_state)) { \
 					*state = (pt_vm_match_state){ .sp = sp, .qc = qc };
@@ -176,11 +181,11 @@ int pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 				break;
 
 			case BYTE:
-				rf = *sp == NEXT_BYTE();
+				rf = current == NEXT_BYTE();
 				sp += rf;
 				break;
 			case NOT_BYTE:
-				rf = *sp != NEXT_BYTE();
+				rf = current != NEXT_BYTE();
 				sp += rf;
 				break;
 			case STRING: {
@@ -201,13 +206,13 @@ int pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 			}
 			case CLASS: {
 				int (*f)(int) = pt_function_for_character_class(NEXT_BYTE());
-				rf = f(*sp) != 0;
+				rf = f(current) != 0;
 				sp += rf;
 				break;
 			}
 			case SET: {
 				rf = 0;
-				int base = *sp, c;
+				int base = current, c;
 				while(c = NEXT_BYTE()) {
 					if(c == base) {
 						rf = 1;
@@ -219,7 +224,7 @@ int pt_vm_match(pt_vm *vm, const char *str, void *userdata) {
 				break;
 			}
 			case RANGE: {
-				int b = *sp;
+				int b = current;
 				int rangemin = NEXT_BYTE();
 				int rangemax = NEXT_BYTE();
 				rf = b >= rangemin && b <= rangemax;

@@ -1,12 +1,19 @@
 include_directories("${PROJECT_SOURCE_DIR}/include")
+include_directories("${PROJECT_SOURCE_DIR}/vm")
 
 file(GLOB src *.c)
-add_executable(pega-texto-vm ${src})
+add_library(pega-texto-vm ${src})
 set_target_properties(pega-texto-vm PROPERTIES
 	VERSION "${PROJECT_VERSION}"
 	SOVERSION "${PROJECT_SOVERSION}")
 
-target_link_libraries(pega-texto-vm pega-texto)
+file(GLOB src "assembler/*.c")
+add_executable(pega-texto-assembler ${src})
+set_target_properties(pega-texto-assembler PROPERTIES
+	VERSION "${PROJECT_VERSION}"
+	SOVERSION "${PROJECT_SOVERSION}")
+
+target_link_libraries(pega-texto-assembler pega-texto-vm)
 
 # if(NOT WIN32 AND BUILD_SHARED_LIBS AND LINK_SONAME_FILE)
 	# if(APPLE)

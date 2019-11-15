@@ -29,7 +29,7 @@
 extern "C" {
 #endif
 
-#include "pega-texto/list.h"
+#include "list.h"
 
 #include <stdint.h>
 
@@ -57,10 +57,6 @@ enum pt_opcode {
 	RANGE,
 
 	PT_OPCODE_ENUM_COUNT,
-
-	PT_OP_MASK = 0b00011111, // bit mask of the opcode
-	PT_OP_NOT  = 0b00100000, // bit that negates the operation to be performed
-	PT_OP_AND  = 0b01000000, // bit that makes input to not be consumed on success
 };
 extern const char * const pt_opcode_description[];
 
