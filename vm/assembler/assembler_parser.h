@@ -21,11 +21,17 @@
 #ifndef __PEGA_TEXTO_ASSEMBLER_PARSER_H__
 #define __PEGA_TEXTO_ASSEMBLER_PARSER_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "bytecode.h"
 
-#include <stdint.h>
-
 extern pt_bytecode *pt_assembly_bytecode;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

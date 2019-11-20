@@ -20,9 +20,7 @@
 
 #include "assembler_parser.h"
 
-#include "list.h"
-
-const uint8_t code[] = {
+COMPILE_CONSTANT_BYTECODE(assembly_bytecode, 
 // Space = ('#' [^\n]*) / \s
 	BYTE, '#',
 	JUMP_RELATIVE_IF_FAIL, 11,
@@ -37,11 +35,8 @@ const uint8_t code[] = {
 	CLASS, 's',
 	// success:
 	RET,
-};
-
-pt_bytecode assembly_bytecode = {
-	.chunk = { .arr = (void *)code, .size = sizeof(code), .capacity = sizeof(code), }
-};
+	ACTION, 1,
+);
 
 pt_bytecode *pt_assembly_bytecode = &assembly_bytecode;
 

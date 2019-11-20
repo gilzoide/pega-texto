@@ -23,6 +23,7 @@
 #include "double_stack_allocator.h"
 
 #include <stdlib.h>
+#include <stdint.h>
 
 int dsa_init_with_size(double_stack_allocator *memory, unsigned int size) {
 	memory->buffer = malloc(size);
@@ -42,13 +43,13 @@ void dsa_release(double_stack_allocator *memory) {
 void *dsa_alloc_top(double_stack_allocator *memory, unsigned int size) {
 	if(memory->top < memory->bottom + size) return NULL;
 	memory->top -= size;
-	void *ptr = memory->buffer + memory->top;
+	void *ptr = (uint8_t *)memory->buffer + memory->top;
 	return ptr;
 }
 
 void *dsa_alloc_bottom(double_stack_allocator *memory, unsigned int size) {
 	if(memory->bottom + size > memory->top) return NULL;
-	void *ptr = memory->buffer + memory->bottom;
+	void *ptr = (uint8_t *)memory->buffer + memory->bottom;
 	memory->bottom += size;
 	return ptr;
 }
@@ -90,11 +91,11 @@ void dsa_free_bottom_marker(double_stack_allocator *memory, int marker) {
 
 void *dsa_peek_top(double_stack_allocator *memory, unsigned int size) {
 	if(size == 0 || memory->capacity - memory->top < size) return NULL;
-	return memory->buffer + memory->top;
+	return (uint8_t *)memory->buffer + memory->top;
 }
 
 void *dsa_peek_bottom(double_stack_allocator *memory, unsigned int size) {
 	if(size == 0 || memory->bottom < size) return NULL;
-	return memory->buffer + memory->bottom - size;
+	return (uint8_t *)memory->buffer + memory->bottom - size;
 }
 

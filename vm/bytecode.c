@@ -49,6 +49,7 @@ const char * const pt_opcode_description[] = {
 	"cls",
 	"set",
 	"rng",
+	"act",
 };
 #ifdef static_assert
 static_assert(sizeof(pt_opcode_description) == PT_OPCODE_ENUM_COUNT * sizeof(const char *),
@@ -111,7 +112,7 @@ void pt_dump_bytecode(const pt_bytecode *bytecode) {
 		instruction = b;
 		printf("%4ld | 0x%02x | %s", pc - bytecode_start, *pc, pt_opcode_description[instruction]);
 		switch(instruction) {
-			case FAIL_LESS_THEN:
+			case FAIL_LESS_THEN: case ACTION:
 				pc++;
 				printf(" %d", (int)*pc);
 				break;
@@ -125,9 +126,13 @@ void pt_dump_bytecode(const pt_bytecode *bytecode) {
 				printf(" %d", b);
 				pc++;
 				break;
-			case BYTE: case NOT_BYTE: case CLASS:
+			case BYTE: case NOT_BYTE:
 				pc++;
 				printf(" '%c'", *pc);
+				break;
+			case CLASS:
+				pc++;
+				printf(" \\%c", *pc);
 				break;
 			case RANGE:
 				pc++;

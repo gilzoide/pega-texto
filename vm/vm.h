@@ -30,6 +30,8 @@ extern "C" {
 #endif
 
 #include "double_stack_allocator.h"
+#include "vm-action.h"
+#include "pega-texto/data.h"
 
 // Forward declarations
 typedef struct pt_bytecode pt_bytecode;
@@ -49,7 +51,8 @@ void pt_vm_load_bytecode(pt_vm *vm, pt_bytecode *bytecode);
 pt_bytecode *pt_vm_unload_bytecode(pt_vm *vm);
 void pt_vm_unload_and_release_bytecode(pt_vm *vm);
 
-int pt_vm_match(pt_vm *vm, const char *str, void *userdata);
+int pt_vm_match(pt_vm *vm, const char *str, pt_vm_action action, void *userdata);
+
 
 #ifdef __cplusplus
 }

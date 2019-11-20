@@ -25,6 +25,10 @@
 #ifndef __PEGA_TEXTO_LIST_H__
 #define __PEGA_TEXTO_LIST_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Dynamic list with constant growth rate.
  */
@@ -71,6 +75,10 @@ int pt_list_empty(const pt_list *lst);
 
 #define pt_list_at(lst, i, type) \
 	(((type *) (lst)->arr) + i)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

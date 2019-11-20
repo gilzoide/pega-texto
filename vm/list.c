@@ -24,7 +24,7 @@
 #include <assert.h>
 
 #ifdef static_assert
-static_assert(PT_LIST_GROWTH_RATE > 1.0, "Cannot grow list with a grouth rate that is less than 1.0");
+static_assert(PT_LIST_GROWTH_RATE > 1.0, "Cannot grow list with a grouth rate that is less than or equal to 1.0");
 #endif
 
 int pt_list_initialize(pt_list *lst, unsigned int initial_capacity, unsigned int member_size) {

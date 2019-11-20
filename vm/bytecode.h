@@ -55,6 +55,7 @@ enum pt_opcode {
 	CLASS,
 	SET,
 	RANGE,
+	ACTION,
 
 	PT_OPCODE_ENUM_COUNT,
 };
@@ -120,6 +121,10 @@ uint8_t *pt_byte_at(pt_bytecode *bytecode, int i);
  * purposes.
  */
 void pt_dump_bytecode(const pt_bytecode *bytecode);
+
+#define COMPILE_CONSTANT_BYTECODE(var, ...) \
+	const uint8_t __##var[] = { __VA_ARGS__ }; \
+	pt_bytecode var = { .chunk = { .arr = (void *)__##var, .size = sizeof(__##var), .capacity = sizeof(__##var), } };
 
 #ifdef __cplusplus
 }

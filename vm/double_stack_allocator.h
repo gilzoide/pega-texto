@@ -23,6 +23,10 @@
 #ifndef __DOUBLE_STACK_ALLOCATOR_H__
 #define __DOUBLE_STACK_ALLOCATOR_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Custom memory manager: a double stack allocator.
  *
@@ -196,6 +200,10 @@ int dsa_available_memory(double_stack_allocator *memory);
  * @return Size in bytes of the memory block used in allocator.
  */
 int dsa_used_memory(double_stack_allocator *memory);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

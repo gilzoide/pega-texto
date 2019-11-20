@@ -25,8 +25,20 @@
 
 #include <stdio.h>
 
+pt_data _test_action(const char *str, int size, int id, int argc, pt_data *argv, void *userdata) {
+	printf("Action: %d '%.*s'\n", size, size, str);
+	return PT_NULL_DATA;
+}
+
+COMPILE_CONSTANT_BYTECODE(teste,
+	NOT_BYTE, 0,
+	NOT_BYTE, 0,
+	NOT_BYTE, 0,
+	NOT_BYTE, 0,
+	ACTION, 1,
+);
+
 int main(int argc, char **argv) {
-	// ("hello" / "world") '\0'
 	pt_bytecode *bytecode = pt_assembly_bytecode;
 	pt_dump_bytecode(bytecode);
 
@@ -34,7 +46,7 @@ int main(int argc, char **argv) {
 	pt_init_vm(&vm);
 	pt_vm_load_bytecode(&vm, bytecode);
 
-	int matched = pt_vm_match(&vm, "", NULL);
+	int matched = pt_vm_match(&vm, "# olars\nde novo", &_test_action, NULL);
 	printf("Matched %d\n", matched);
 
 	pt_release_vm(&vm);

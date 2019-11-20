@@ -35,6 +35,8 @@ Opcode    | Argument | Description
 0x13 set   | N - Character set | Match byte with any from the given null terminated string
 0x14 rng   | 2 - Minimum and maximum byte | Match within range
 
+0x15 act  | 1 - Action index | Push action to be executed if match succeeds
+
 
 PEG -> bytecode
 ===============

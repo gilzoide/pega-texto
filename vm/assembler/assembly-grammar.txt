@@ -13,8 +13,8 @@ Command = 'nop'
 		/ 'push'
 		/ 'peek'
 		/ 'pop'
-		/ 'b' Blank Byte
-		/ 'nb' Blank Byte
+		/ 'byte' Blank Byte
+		/ 'nbyte' Blank Byte
 		/ 'str' Blank String
 		/ 'cls' Blank '\' [wacdglpsux]
 		/ 'set' Blank String

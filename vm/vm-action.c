@@ -18,31 +18,34 @@
  * Any bugs should be reported to <gilzoide@gmail.com>
  */
 
-#include <pega-texto/action.h>
-#include "_action.h"
+#include "vm-action.h"
 
-pt_data pt_run_actions(pt_match_action_stack *a, const char *str, void *userdata) {
+#include "double_stack_allocator.h"
+
+#include <stdlib.h>
+
+pt_data pt_vm_run_actions(double_stack_allocator *memory, pt_vm_capture *captures, int size, const char *str, pt_vm_action action, void *userdata) {
 	// allocate the data stack
 	pt_data *data_stack;
-	if((data_stack = malloc(a->size * sizeof(pt_data))) == NULL) return PT_NULL_DATA;
+	int bottom_marker = dsa_get_bottom_marker(memory);
+	if((data_stack = dsa_alloc_bottom(memory, size * sizeof(pt_data))) == NULL) return PT_NULL_DATA;
 
 	// index to current Data on the stack
 	int data_index = 0;
 
 	// Fold It, 'til there are no Actions left.
 	// Note that this only works because of how the Actions are layed out in
-	// the Action Stack.
-	pt_match_action *action;
-	for(action = a->actions; action < a->actions + a->size; action++) {
+	// memory
+	pt_vm_capture *capture;
+	for(capture = captures; capture < captures + size; capture++) {
 		// "pop" arguments
-		data_index -= action->argc;
+		data_index -= capture->argc;
 		// run action with arguments (which are still stacked in `data_stack` in the right position)
-		data_stack[data_index] = action->f(str + action->start, action->end - action->start, action->argc, data_stack + data_index, userdata);
+		data_stack[data_index] = action(str + capture->start, capture->end - capture->start, capture->id, capture->argc, data_stack + data_index, userdata);
 		// "push" result
 		data_index++;
 	}
 	pt_data res = data_stack[0];
-	free(data_stack);
+	dsa_free_bottom_marker(memory, bottom_marker);
 	return res;
 }
-
