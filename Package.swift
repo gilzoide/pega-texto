@@ -21,8 +21,9 @@ let package = Package(
         .target(
             name: "pega-texto",
             dependencies: [],
-            path: "./src",
-            publicHeadersPath: "./include/**.h",
-            cSettings: [CSetting.headerSearchPath("../include")])
+            path: "./",
+            exclude: ["benchmark", "cmake", "doc", "examples", "test"],
+            publicHeadersPath: "./include",
+            cSettings: [CSetting.headerSearchPath("./include")])
     ]
 )
