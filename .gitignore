@@ -53,3 +53,7 @@ dkms.conf
 
 # Build folder
 build/
+
+# Swift Package Manager
+.build/
+.swiftpm/
