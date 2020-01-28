@@ -18,18 +18,22 @@
  * Any bugs should be reported to <gilzoide@gmail.com>
  */
 
-#include "compiler_cli_args.h"
 #include "compiler_log.h"
 
-int pt_compiler_parse_args(int argc, const char **argv, pt_compiler_args *compiler_args) {
-    if(argc < 2) {
-        pt_compiler_print_usage(argv);
-        return 0;
-    }
-    compiler_args->filename = argv[1];
-    return 1;
+#include <stdio.h>
+#include <stdarg.h>
+
+static enum pt_compiler_log_level global_log_level = LOG_ERROR;
+
+void pt_compiler_set_log_level(enum pt_compiler_log_level level) {
+    global_log_level = level;
 }
 
-void pt_compiler_print_usage(const char **argv) {
-    pt_compiler_log(LOG_ERROR, "Usage: %s FILE", argv[0]);
+void pt_compiler_log(enum pt_compiler_log_level level, const char *fmt, ...) {
+    if(level <= global_log_level) {
+        va_list args;
+        va_start(args, fmt);
+        vprintf(fmt, args);
+        va_end(args);
+    }
 }

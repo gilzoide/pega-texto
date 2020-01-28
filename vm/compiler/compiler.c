@@ -37,3 +37,7 @@ void pt_release_compiler(pt_compiler *compiler) {
 int pt_compiler_read_grammar(pt_compiler *compiler, const char *grammar_description) {
     return 1;
 }
+
+int pt_try_compile(pt_compiler *compiler, const char *grammar_description, pt_compiler_args *compiler_args) {
+    return 0;
+}

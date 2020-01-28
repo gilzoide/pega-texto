@@ -25,6 +25,7 @@
 #ifndef __PEGA_TEXTO_COMPILER_H__
 #define __PEGA_TEXTO_COMPILER_H__
 
+#include "compiler_cli_args.h"
 #include <pega-texto.h>
 
 typedef struct pt_compiler {
@@ -35,6 +36,6 @@ typedef struct pt_compiler {
 int pt_init_compiler(pt_compiler *compiler);
 void pt_release_compiler(pt_compiler *compiler);
 
-int pt_compiler_read_grammar(pt_compiler *compiler, const char *grammar_description);
+int pt_try_compile(pt_compiler *compiler, const char *grammar_description, pt_compiler_args *compiler_args);
 
 #endif

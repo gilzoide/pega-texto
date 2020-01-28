@@ -18,18 +18,21 @@
  * Any bugs should be reported to <gilzoide@gmail.com>
  */
 
-#include "compiler_cli_args.h"
-#include "compiler_log.h"
+/** @file compiler_log.h
+ * Compiler logger.
+ */
 
-int pt_compiler_parse_args(int argc, const char **argv, pt_compiler_args *compiler_args) {
-    if(argc < 2) {
-        pt_compiler_print_usage(argv);
-        return 0;
-    }
-    compiler_args->filename = argv[1];
-    return 1;
-}
+#ifndef __PEGA_TEXTO_COMPILER_LOG_H__
+#define __PEGA_TEXTO_COMPILER_LOG_H__
 
-void pt_compiler_print_usage(const char **argv) {
-    pt_compiler_log(LOG_ERROR, "Usage: %s FILE", argv[0]);
-}
+enum pt_compiler_log_level {
+    LOG_NONE,
+    LOG_ERROR,
+    LOG_WARNING,
+    LOG_DEBUG,
+};
+
+void pt_compiler_set_log_level(enum pt_compiler_log_level level);
+void pt_compiler_log(enum pt_compiler_log_level level, const char *fmt, ...);
+
+#endif
