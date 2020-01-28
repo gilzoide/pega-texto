@@ -18,19 +18,15 @@
  * Any bugs should be reported to <gilzoide@gmail.com>
  */
 
-#include "compiler_cli_args.h"
+/** @file compiler_grammar.h
+ * Parser for pega-texto textual Grammar representation.
+ */
 
-#include <stdio.h>
+#ifndef __PEGA_TEXTO_COMPILER_GRAMMAR_H__
+#define __PEGA_TEXTO_COMPILER_GRAMMAR_H__
 
-int pt_compiler_parse_args(int argc, const char **argv, pt_compiler_args *compiler_args) {
-    if(argc != 2) {
-        pt_compiler_print_usage(argv);
-        return 0;
-    }
-    compiler_args->filename = argv[1];
-    return 1;
-}
+typedef struct pt_grammar pt_grammar;
 
-void pt_compiler_print_usage(const char **argv) {
-    printf("Usage: %s FILE", argv[0]);
-}
+int pt_init_compiler_grammar(pt_grammar *grammar);
+
+#endif

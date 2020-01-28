@@ -19,3 +19,21 @@
  */
 
 #include "compiler.h"
+#include "compiler_grammar.h"
+
+int pt_init_compiler(pt_compiler *compiler) {
+    return compiler 
+           && pt_init_compiler_grammar(&compiler->compiler_grammar)
+           && (compiler->target_grammar = (pt_grammar){}, 1);
+}
+
+void pt_release_compiler(pt_compiler *compiler) {
+    if(compiler) {
+        pt_release_grammar(&compiler->compiler_grammar);
+        pt_release_grammar(&compiler->target_grammar);
+    }
+}
+
+int pt_compiler_read_grammar(pt_compiler *compiler, const char *grammar_description) {
+    return 1;
+}

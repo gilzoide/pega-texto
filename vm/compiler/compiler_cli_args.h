@@ -30,6 +30,6 @@ typedef struct pt_compiler_args {
 } pt_compiler_args;
 
 int pt_compiler_parse_args(int argc, const char **argv, pt_compiler_args *compiler_args);
-void pt_compiler_print_usage(char **argv);
+void pt_compiler_print_usage(const char **argv);
 
 #endif

@@ -25,6 +25,16 @@
 #ifndef __PEGA_TEXTO_COMPILER_H__
 #define __PEGA_TEXTO_COMPILER_H__
 
+#include <pega-texto.h>
 
+typedef struct pt_compiler {
+    pt_grammar compiler_grammar;
+    pt_grammar target_grammar;
+} pt_compiler;
+
+int pt_init_compiler(pt_compiler *compiler);
+void pt_release_compiler(pt_compiler *compiler);
+
+int pt_compiler_read_grammar(pt_compiler *compiler, const char *grammar_description);
 
 #endif
