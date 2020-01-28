@@ -57,3 +57,6 @@ build/
 # Swift Package Manager
 .build/
 .swiftpm/
+
+# VSCode stuff
+.vscode

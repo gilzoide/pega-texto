@@ -7,6 +7,7 @@ set_target_properties(pega-texto-vm PROPERTIES
 	VERSION "${PROJECT_VERSION}"
 	SOVERSION "${PROJECT_SOVERSION}")
 
+#####  Assembler  #####
 file(GLOB src "assembler/*.c")
 add_executable(pega-texto-assembler ${src})
 set_target_properties(pega-texto-assembler PROPERTIES
@@ -14,6 +15,15 @@ set_target_properties(pega-texto-assembler PROPERTIES
 	SOVERSION "${PROJECT_SOVERSION}")
 
 target_link_libraries(pega-texto-assembler pega-texto-vm)
+
+#####  Compiler  #####
+file(GLOB src "compiler/*.c")
+add_executable(pega-texto-compiler ${src})
+set_target_properties(pega-texto-compiler PROPERTIES
+	VERSION "${PROJECT_VERSION}"
+	SOVERSION "${PROJECT_SOVERSION}")
+
+target_link_libraries(pega-texto-compiler pega-texto-vm pega-texto)
 
 # if(NOT WIN32 AND BUILD_SHARED_LIBS AND LINK_SONAME_FILE)
 	# if(APPLE)

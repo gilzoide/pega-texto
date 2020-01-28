@@ -176,6 +176,7 @@ int pt_vm_match(pt_vm *vm, const char *str, pt_vm_action action, void *userdata)
 				state = dsa_peek_top(allocator, sizeof(pt_vm_match_state));
 				sp = state->sp;
 				qc = state->qc;
+				dsa_free_bottom_marker(allocator, state->capture_marker);
 				break;
 			case POP:
 				dsa_free_top_marker(allocator, dsa_get_top_marker(allocator) + sizeof(pt_vm_match_state));

@@ -50,7 +50,7 @@ e1 / e2:
 fail1:
   peek
   T(e2, fail2)
-  jum success
+  jmp success
 fail2:
   peek
 success:
@@ -79,7 +79,7 @@ continue:
 fail:
   peek
   pop
-  mcz
+  qcz
 ```
 
 e?:
