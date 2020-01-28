@@ -20,6 +20,7 @@
 
 #include "compiler.h"
 #include "compiler_grammar.h"
+#include "compiler_log.h"
 
 int pt_init_compiler(pt_compiler *compiler) {
     return compiler 
@@ -35,9 +36,25 @@ void pt_release_compiler(pt_compiler *compiler) {
 }
 
 int pt_compiler_read_grammar(pt_compiler *compiler, const char *grammar_description) {
-    return 1;
+    pt_grammar *target_grammar = &compiler->target_grammar;
+    pt_match_options opts = (pt_match_options){ .userdata = target_grammar };
+    pt_match_result result = pt_match_grammar(&compiler->compiler_grammar, grammar_description, &opts);
+    if(result.matched >= 0) {
+        pt_validate_result validation_result = pt_validate_grammar(target_grammar, PT_VALIDATE_DEFAULT);
+        if(validation_result.status != PT_VALIDATE_SUCCESS) {
+            pt_compiler_log(LOG_ERROR, "[pt_grammar_validate] Error on rule \"%s\"",
+                            target_grammar->names[validation_result.rule]);
+            pt_compiler_log(LOG_ERROR, ": %s\n", pt_validate_codes_description[validation_result.status]);
+            return 0;
+        }
+        else return 1;
+    }
+    else return 0;
 }
 
 int pt_try_compile(pt_compiler *compiler, const char *grammar_description, pt_compiler_args *compiler_args) {
+    if(!pt_compiler_read_grammar(compiler, grammar_description)) {
+        return -1;
+    }
     return 0;
 }
