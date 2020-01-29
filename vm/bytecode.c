@@ -56,8 +56,8 @@ static_assert(sizeof(pt_opcode_description) == PT_OPCODE_ENUM_COUNT * sizeof(con
               "Missing opcode descriptions");
 #endif
 
-void pt_init_bytecode(pt_bytecode *bytecode) {
-	pt_list_initialize_as(&bytecode->chunk, PT_CHUNK_LIST_INITIAL_CAPACITY, uint8_t);
+int pt_init_bytecode(pt_bytecode *bytecode) {
+	return pt_list_initialize_as(&bytecode->chunk, PT_CHUNK_LIST_INITIAL_CAPACITY, uint8_t);
 }
 
 void pt_release_bytecode(pt_bytecode *bytecode) {

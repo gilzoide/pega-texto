@@ -27,10 +27,12 @@
 
 #include "compiler_cli_args.h"
 #include <pega-texto.h>
+#include "bytecode.h"
 
 typedef struct pt_compiler {
     pt_grammar compiler_grammar;
     pt_grammar target_grammar;
+    pt_bytecode bytecode;
 } pt_compiler;
 
 int pt_init_compiler(pt_compiler *compiler);

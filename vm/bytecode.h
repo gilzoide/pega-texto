@@ -72,7 +72,7 @@ typedef struct pt_bytecode {
 /**
  * Initialize a Bytecode struct with the expected values.
  */
-void pt_init_bytecode(pt_bytecode *bytecode);
+int pt_init_bytecode(pt_bytecode *bytecode);
 
 /**
  * Release the memory associated with Bytecode and reinitialize it with zeros.

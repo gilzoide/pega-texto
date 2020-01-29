@@ -25,12 +25,14 @@
 int pt_init_compiler(pt_compiler *compiler) {
     return compiler 
            && pt_init_compiler_grammar(&compiler->compiler_grammar)
+           && pt_init_bytecode(&compiler->bytecode)
            && (compiler->target_grammar = (pt_grammar){}, 1);
 }
 
 void pt_release_compiler(pt_compiler *compiler) {
     if(compiler) {
         pt_release_grammar(&compiler->compiler_grammar);
+        pt_release_bytecode(&compiler->bytecode);
         pt_release_grammar(&compiler->target_grammar);
     }
 }
