@@ -32,6 +32,9 @@ enum pt_compiler_log_level {
     LOG_DEBUG,
 };
 
+#define pt_log_level_at_least(level, minlevel) \
+    (level <= minlevel)
+
 void pt_compiler_set_log_level(enum pt_compiler_log_level level);
 void pt_compiler_log(enum pt_compiler_log_level level, const char *fmt, ...);
 

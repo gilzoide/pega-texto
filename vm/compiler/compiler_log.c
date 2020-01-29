@@ -30,10 +30,10 @@ void pt_compiler_set_log_level(enum pt_compiler_log_level level) {
 }
 
 void pt_compiler_log(enum pt_compiler_log_level level, const char *fmt, ...) {
-    if(level <= global_log_level) {
+    if(pt_log_level_at_least(level, global_log_level)) {
         va_list args;
         va_start(args, fmt);
-        vprintf(fmt, args);
+        vfprintf(pt_log_level_at_least(level, LOG_ERROR) ? stderr : stdout, fmt, args);
         va_end(args);
     }
 }
