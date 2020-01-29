@@ -21,15 +21,18 @@
 #include "compiler_cli_args.h"
 #include "compiler_log.h"
 
+#include <stdlib.h>
+
 int pt_compiler_parse_args(int argc, const char **argv, pt_compiler_args *compiler_args) {
     if(argc < 2) {
         pt_compiler_print_usage(argv);
         return 0;
     }
-    compiler_args->filename = argv[1];
+    compiler_args->input_filename = argv[1];
+    compiler_args->output_filename = argc > 2 ? argv[2] : NULL;
     return 1;
 }
 
 void pt_compiler_print_usage(const char **argv) {
-    pt_compiler_log(LOG_ERROR, "Usage: %s FILE", argv[0]);
+    pt_compiler_log(LOG_ERROR, "Usage: %s FILE [OUTPUT_FILE]", argv[0]);
 }

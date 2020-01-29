@@ -26,7 +26,8 @@
 #define __PEGA_TEXTO_COMPILER_CLI_ARGS_H__
 
 typedef struct pt_compiler_args {
-    const char *filename;
+    const char *input_filename;
+    const char *output_filename;
 } pt_compiler_args;
 
 int pt_compiler_parse_args(int argc, const char **argv, pt_compiler_args *compiler_args);

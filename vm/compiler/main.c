@@ -51,9 +51,9 @@ int main(int argc, const char **argv) {
         return -1;
     }
 
-    char *contents = readfile(compiler_args.filename);
+    char *contents = readfile(compiler_args.input_filename);
     if(contents == NULL) {
-        pt_compiler_log(LOG_ERROR, "Error reading file '%s': %s", compiler_args.filename, strerror(errno));
+        pt_compiler_log(LOG_ERROR, "Error reading file '%s': %s", compiler_args.input_filename, strerror(errno));
         return errno;
     }
     
