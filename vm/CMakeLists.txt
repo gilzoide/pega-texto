@@ -16,6 +16,15 @@ set_target_properties(pega-texto-assembler PROPERTIES
 
 target_link_libraries(pega-texto-assembler pega-texto-vm)
 
+#####  Disassembler  #####
+file(GLOB src "disassembler/*.c")
+add_executable(pega-texto-disassembler ${src})
+set_target_properties(pega-texto-disassembler PROPERTIES
+	VERSION "${PROJECT_VERSION}"
+	SOVERSION "${PROJECT_SOVERSION}")
+
+target_link_libraries(pega-texto-disassembler pega-texto-vm)
+
 #####  Compiler  #####
 file(GLOB src "compiler/*.c")
 add_executable(pega-texto-compiler ${src})
