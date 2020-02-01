@@ -56,6 +56,10 @@ static_assert(sizeof(pt_opcode_description) == PT_OPCODE_ENUM_COUNT * sizeof(con
               "Missing opcode descriptions");
 #endif
 
+const pt_bytecode pt_constant_bytecode(int size, uint8_t *arr) {
+    return (pt_bytecode){ .chunk = { .arr = arr, .size = size, .capacity = size } };
+}
+
 int pt_init_bytecode(pt_bytecode *bytecode) {
 	return pt_list_initialize_as(&bytecode->chunk, PT_CHUNK_LIST_INITIAL_CAPACITY, uint8_t);
 }
@@ -68,38 +72,45 @@ void pt_clear_bytecode(pt_bytecode *bytecode) {
 	pt_list_clear(&bytecode->chunk);
 }
 
-int pt_push_byte(pt_bytecode *bytecode, uint8_t b) {
+uint8_t *pt_push_byte(pt_bytecode *bytecode, uint8_t b) {
 	uint8_t *byte_ptr = pt_list_push_as(&bytecode->chunk, uint8_t);
-	return byte_ptr && (*byte_ptr = b, 1);
+	return byte_ptr && (*byte_ptr = b, byte_ptr);
 }
 
-int pt_push_bytes(pt_bytecode *bytecode, int num_bytes, ...) {
+uint8_t *pt_push_bytes(pt_bytecode *bytecode, int num_bytes, ...) {
 	uint8_t *byte_ptr = pt_list_push_n_as(&bytecode->chunk, num_bytes, uint8_t);
 	if(byte_ptr) {
 		va_list args;
 		va_start(args, num_bytes);
 		int i;
 		for(i = 0; i < num_bytes; i++) {
-			*byte_ptr = (uint8_t)va_arg(args, int);
-			byte_ptr++;
+			byte_ptr[i] = (uint8_t)va_arg(args, int);
 		}
-		return 1;
+		return byte_ptr;
 	}
-	else return 0;
+	else return NULL;
 }
 
-int pt_push_byte_array(pt_bytecode *bytecode, int num_bytes, const uint8_t *bs) {
+uint8_t *pt_push_byte_array(pt_bytecode *bytecode, int num_bytes, const uint8_t *bs) {
 	uint8_t *byte_ptr = pt_list_push_n_as(&bytecode->chunk, num_bytes, uint8_t);
-	return byte_ptr && (memcpy(byte_ptr, bs, num_bytes * sizeof(uint8_t)), num_bytes);
+	return byte_ptr && (memcpy(byte_ptr, bs, num_bytes * sizeof(uint8_t)), byte_ptr);
 }
 
-int pt_reserve_bytes(pt_bytecode *bytecode, int num_bytes) {
-	return pt_list_push_n_as(&bytecode->chunk, num_bytes, uint8_t) != NULL;
+uint8_t *pt_reserve_bytes(pt_bytecode *bytecode, int num_bytes) {
+	return pt_list_push_n_as(&bytecode->chunk, num_bytes, uint8_t);
 }
 
-uint8_t *pt_byte_at(pt_bytecode *bytecode, int i) {
+uint8_t *pt_byte_at(const pt_bytecode *bytecode, int i) {
 	/* if(i < 0) i = bytecode->chunk.size + i; */
 	return pt_list_at(&bytecode->chunk, i, uint8_t);
+}
+
+pt_bytecode_address pt_current_address(const pt_bytecode *bytecode) {
+	return bytecode->chunk.size;
+}
+
+size_t pt_bytecode_write_to_file(const pt_bytecode *bytecode, FILE *file) {
+    return fwrite(bytecode->chunk.arr, 1, bytecode->chunk.size, file);
 }
 
 void pt_dump_bytecode(const pt_bytecode *bytecode) {

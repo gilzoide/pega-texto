@@ -32,6 +32,7 @@ extern "C" {
 #include "list.h"
 
 #include <stdint.h>
+#include <stdio.h>
 
 enum pt_opcode { 
 	NOP,
@@ -69,6 +70,10 @@ typedef struct pt_bytecode {
 } pt_bytecode;
 #define PT_CHUNK_LIST_INITIAL_CAPACITY 2048
 
+typedef uint16_t pt_bytecode_address;
+
+const pt_bytecode pt_constant_bytecode(int size, uint8_t *arr);
+
 /**
  * Initialize a Bytecode struct with the expected values.
  */
@@ -94,27 +99,31 @@ void pt_clear_bytecode(pt_bytecode *bytecode);
  * @return 0 on memory allocation error.
  * @return 1 otherwise.
  */
-int pt_push_byte(pt_bytecode *bytecode, uint8_t b);
+uint8_t *pt_push_byte(pt_bytecode *bytecode, uint8_t b);
 /**
  * Push several bytes into bytecode chunk.
  *
  * @return 0 on memory allocation error.
  * @return 1 otherwise.
  */
-int pt_push_bytes(pt_bytecode *bytecode, int num_bytes, ...);
+uint8_t *pt_push_bytes(pt_bytecode *bytecode, int num_bytes, ...);
 /**
  * Push several bytes into bytecode chunk.
  *
  * @return 0 on memory allocation error.
  * @return 1 otherwise.
  */
-int pt_push_byte_array(pt_bytecode *bytecode, int num_bytes, const uint8_t *bs);
+uint8_t *pt_push_byte_array(pt_bytecode *bytecode, int num_bytes, const uint8_t *bs);
 /**
  * Push bytes into bytecode chunk without initialization.
  */
-int pt_reserve_bytes(pt_bytecode *bytecode, int num_bytes);
+uint8_t *pt_reserve_bytes(pt_bytecode *bytecode, int num_bytes);
 
-uint8_t *pt_byte_at(pt_bytecode *bytecode, int i);
+uint8_t *pt_byte_at(const pt_bytecode *bytecode, int i);
+
+pt_bytecode_address pt_current_address(const pt_bytecode *bytecode);
+
+size_t pt_bytecode_write_to_file(const pt_bytecode *bytecode, FILE *file);
 
 /**
  * Utility to dump a bytecode textual representation into stdout, for debugging

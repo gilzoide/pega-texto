@@ -34,6 +34,15 @@ set_target_properties(pega-texto-compiler PROPERTIES
 
 target_link_libraries(pega-texto-compiler pega-texto-vm pega-texto)
 
+#####  Matcher  #####
+file(GLOB src "matcher/*.c")
+add_executable(pega-texto-matcher ${src})
+set_target_properties(pega-texto-matcher PROPERTIES
+	VERSION "${PROJECT_VERSION}"
+	SOVERSION "${PROJECT_SOVERSION}")
+
+target_link_libraries(pega-texto-matcher pega-texto-vm)
+
 # if(NOT WIN32 AND BUILD_SHARED_LIBS AND LINK_SONAME_FILE)
 	# if(APPLE)
 		# set(lib-ext dylib)
