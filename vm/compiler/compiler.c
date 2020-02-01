@@ -93,17 +93,26 @@ int pt_compile_optional(pt_bytecode *bytecode,  pt_expr *expr) {
     pt_push_byte(bytecode, JUMP);
     pt_bytecode_address *success_patch_address = (pt_bytecode_address *)pt_reserve_bytes(bytecode, sizeof(pt_bytecode_address));
     if(failure_patch_address) {
-        *failure_patch_address = pt_current_address(bytecode);
+        pt_patch_address(failure_patch_address, pt_current_address(bytecode));
     }
     pt_push_byte(bytecode, PEEK);
     if(success_patch_address) {
-        *success_patch_address = pt_current_address(bytecode);
+        pt_patch_address(success_patch_address, pt_current_address(bytecode));
     }
     pt_push_bytes(bytecode, 2, POP, SUCCEED);
     return 1;
 }
 
 int pt_compile_zero_or_more(pt_bytecode *bytecode,  pt_expr *expr) {
+    pt_bytecode_address expression_address = pt_current_address(bytecode);
+    pt_bytecode_address *failure_patch_address = NULL;
+    pt_compile_expr(bytecode, expr, &failure_patch_address);
+    pt_push_byte(bytecode, JUMP);
+    pt_push_address(bytecode, expression_address);
+    if(failure_patch_address) {
+        pt_patch_address(failure_patch_address, pt_current_address(bytecode));
+    }
+    pt_push_byte(bytecode, SUCCEED);
     return 1;
 }
 
@@ -140,6 +149,10 @@ int pt_compile_expr(pt_bytecode *bytecode, pt_expr *expr, pt_bytecode_address **
             pt_compiler_log(LOG_WARNING, "Expression operation not implemented yet: %s",
                             pt_opcode_description[expr->op]);
             return 0;
+    }
+    if(failure_patch_address) {
+        pt_push_byte(bytecode, JUMP_IF_FAIL);
+        *failure_patch_address = (pt_bytecode_address *)pt_push_address(bytecode, -1);
     }
     return 1;
 }

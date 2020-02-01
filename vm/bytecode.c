@@ -74,7 +74,10 @@ void pt_clear_bytecode(pt_bytecode *bytecode) {
 
 uint8_t *pt_push_byte(pt_bytecode *bytecode, uint8_t b) {
 	uint8_t *byte_ptr = pt_list_push_as(&bytecode->chunk, uint8_t);
-	return byte_ptr && (*byte_ptr = b, byte_ptr);
+    if(byte_ptr) {
+        *byte_ptr = b;
+    }
+	return byte_ptr;
 }
 
 uint8_t *pt_push_bytes(pt_bytecode *bytecode, int num_bytes, ...) {
@@ -86,14 +89,24 @@ uint8_t *pt_push_bytes(pt_bytecode *bytecode, int num_bytes, ...) {
 		for(i = 0; i < num_bytes; i++) {
 			byte_ptr[i] = (uint8_t)va_arg(args, int);
 		}
-		return byte_ptr;
 	}
-	else return NULL;
+	return byte_ptr;
 }
 
 uint8_t *pt_push_byte_array(pt_bytecode *bytecode, int num_bytes, const uint8_t *bs) {
 	uint8_t *byte_ptr = pt_list_push_n_as(&bytecode->chunk, num_bytes, uint8_t);
-	return byte_ptr && (memcpy(byte_ptr, bs, num_bytes * sizeof(uint8_t)), byte_ptr);
+    if(byte_ptr) {
+        memcpy(byte_ptr, bs, num_bytes * sizeof(uint8_t));
+    }
+	return byte_ptr;
+}
+
+uint8_t *pt_push_address(pt_bytecode *bytecode, pt_bytecode_address address) {
+	uint8_t *byte_ptr = pt_list_push_n_as(&bytecode->chunk, sizeof(pt_bytecode_address), uint8_t);
+    if(byte_ptr) {
+        pt_patch_address((pt_bytecode_address *)byte_ptr, address);
+    }
+	return byte_ptr;
 }
 
 uint8_t *pt_reserve_bytes(pt_bytecode *bytecode, int num_bytes) {
@@ -107,6 +120,12 @@ uint8_t *pt_byte_at(const pt_bytecode *bytecode, int i) {
 
 pt_bytecode_address pt_current_address(const pt_bytecode *bytecode) {
 	return bytecode->chunk.size;
+}
+
+void pt_patch_address(pt_bytecode_address *pointer_in_bytecode, pt_bytecode_address address) {
+    uint8_t *byteptr = (uint8_t *)pointer_in_bytecode;
+    byteptr[0] = address & 0xff;
+    byteptr[1] = address << 8 & 0xff;
 }
 
 size_t pt_bytecode_write_to_file(const pt_bytecode *bytecode, FILE *file) {

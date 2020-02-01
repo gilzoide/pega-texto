@@ -26,12 +26,17 @@
 #include <stdio.h>
 #include <string.h>
 
+static pt_data _action(const char *str, int size, int id, int argc, pt_data *argv, void *userdata) {
+    printf("Action with '%*s' of size %d", size, str, size);
+    return PT_NULL_DATA;
+}
+
 static int try_match(const pt_bytecode *bytecode, const char *text) {
     pt_vm vm;
     if(!pt_init_vm(&vm)) return -1;
     pt_vm_load_bytecode(&vm, (pt_bytecode *)bytecode);
 
-    int ret = pt_vm_match(&vm, text, NULL, NULL);
+    int ret = pt_vm_match(&vm, text, _action, NULL);
     printf("Matched: %d\n", ret);
 
     pt_vm_unload_bytecode(&vm);
@@ -63,7 +68,7 @@ int main(int argc, const char **argv) {
     }
     int size;
     char *bytecode_txt = readfile(argv[1], &size);
-    char *input = readfile(argv[2], &size);
+    char *input = readfile(argv[2], NULL);
     if(bytecode_txt == NULL) {
         fprintf(stderr, "Error reading file '%s': %s", bytecode_txt, strerror(errno));
         return errno;

@@ -42,6 +42,12 @@ PEG -> bytecode
 ===============
 Being `T(e, L)` the transformation of expression `e` with failure label `L`
 
+e1 e2:
+```
+T(e1, L)
+T(e2, L)
+```
+
 e1 / e2:
 ```
   push

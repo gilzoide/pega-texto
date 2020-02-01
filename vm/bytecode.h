@@ -119,9 +119,12 @@ uint8_t *pt_push_byte_array(pt_bytecode *bytecode, int num_bytes, const uint8_t 
  */
 uint8_t *pt_reserve_bytes(pt_bytecode *bytecode, int num_bytes);
 
+uint8_t *pt_push_address(pt_bytecode *bytecode, pt_bytecode_address address);
+
 uint8_t *pt_byte_at(const pt_bytecode *bytecode, int i);
 
 pt_bytecode_address pt_current_address(const pt_bytecode *bytecode);
+void pt_patch_address(pt_bytecode_address *pointer_in_bytecode, pt_bytecode_address address);
 
 size_t pt_bytecode_write_to_file(const pt_bytecode *bytecode, FILE *file);
 
