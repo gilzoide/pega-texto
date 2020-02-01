@@ -49,7 +49,7 @@ const char *_pt_escape_character(char c, int midstring) {
     ((uint8_t *)&b)[1] = fgetc(file); count++; if(ferror(file)) return -2;
 
 int pt_dump_bytecode_from_file(FILE *file) {
-    int instruction, b, count = 0;
+    int instruction, b, count = -1;
     while(!(feof(file) || ferror(file))) {
         NEXT_BYTE();
         if(b == EOF) break;
@@ -94,8 +94,6 @@ int pt_dump_bytecode_from_file(FILE *file) {
 			default: break;
 		}
 		printf("\n");
-
-        count++;
     }
     return 0;
 }

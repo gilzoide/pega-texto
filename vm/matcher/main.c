@@ -29,7 +29,7 @@
 static int try_match(const pt_bytecode *bytecode, const char *text) {
     pt_vm vm;
     if(!pt_init_vm(&vm)) return -1;
-    pt_vm_load_bytecode(&vm, bytecode);
+    pt_vm_load_bytecode(&vm, (pt_bytecode *)bytecode);
 
     int ret = pt_vm_match(&vm, text, NULL, NULL);
     printf("Matched: %d\n", ret);
@@ -73,7 +73,7 @@ int main(int argc, const char **argv) {
         return errno;
     }
 
-    const pt_bytecode bytecode = pt_constant_bytecode(size, bytecode_txt);
+    const pt_bytecode bytecode = pt_constant_bytecode(size, (uint8_t *)bytecode_txt);
     int ret = try_match(&bytecode, input);
 
     free(bytecode_txt);

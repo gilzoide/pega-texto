@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-static enum pt_compiler_log_level global_log_level = LOG_ERROR;
+static enum pt_compiler_log_level global_log_level = LOG_DEBUG;
 
 void pt_compiler_set_log_level(enum pt_compiler_log_level level) {
     global_log_level = level;
@@ -33,7 +33,9 @@ void pt_compiler_log(enum pt_compiler_log_level level, const char *fmt, ...) {
     if(pt_log_level_at_least(level, global_log_level)) {
         va_list args;
         va_start(args, fmt);
-        vfprintf(pt_log_level_at_least(level, LOG_ERROR) ? stderr : stdout, fmt, args);
+        FILE *output = pt_log_level_at_least(level, LOG_ERROR) ? stderr : stdout;
+        vfprintf(output, fmt, args);
+        fputc('\n', output);
         va_end(args);
     }
 }

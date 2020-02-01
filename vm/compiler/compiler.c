@@ -22,6 +22,9 @@
 #include "compiler_grammar.h"
 #include "compiler_log.h"
 
+#include <errno.h>
+#include <stdio.h>
+
 int pt_init_compiler(pt_compiler *compiler) {
     return compiler 
            && pt_init_compiler_grammar(&compiler->compiler_grammar)
@@ -54,9 +57,117 @@ int pt_compiler_read_grammar(pt_compiler *compiler, const char *grammar_descript
     else return 0;
 }
 
+// Forward declaration
+int pt_compile_expr(pt_bytecode *bytecode, pt_expr *expr, pt_bytecode_address **failure_patch_address);
+
+int pt_compile_byte(pt_bytecode *bytecode, pt_expr *expr) {
+    return pt_push_bytes(bytecode, 2, BYTE, expr->N) != NULL;
+}
+
+int pt_compile_literal(pt_bytecode *bytecode, pt_expr *expr) {
+    return pt_push_byte(bytecode, STRING) 
+           && pt_push_byte_array(bytecode, expr->N + 1, (const uint8_t *)expr->data.characters);
+}
+
+int pt_compile_character_class(pt_bytecode *bytecode, pt_expr *expr) {
+    return pt_push_bytes(bytecode, 2, CLASS, expr->N) != NULL;
+}
+
+int pt_compile_set(pt_bytecode *bytecode, pt_expr *expr) {
+    return pt_push_byte(bytecode, SET) 
+           && pt_push_byte_array(bytecode, expr->N + 1, (const uint8_t *)expr->data.characters);
+}
+
+int pt_compile_range(pt_bytecode *bytecode, pt_expr *expr) {
+    return pt_push_bytes(bytecode, 3, RANGE, ((uint8_t *)&expr->N)[0], ((uint8_t *)&expr->N)[1]) != NULL;
+}
+
+int pt_compile_any(pt_bytecode *bytecode, pt_expr *expr) {
+    return pt_push_bytes(bytecode, 2, NOT_BYTE, 0) != NULL;
+}
+
+int pt_compile_optional(pt_bytecode *bytecode,  pt_expr *expr) {
+    pt_push_byte(bytecode, PUSH);
+    pt_bytecode_address *failure_patch_address = NULL;
+    pt_compile_expr(bytecode, expr, &failure_patch_address);
+    pt_push_byte(bytecode, JUMP);
+    pt_bytecode_address *success_patch_address = (pt_bytecode_address *)pt_reserve_bytes(bytecode, sizeof(pt_bytecode_address));
+    if(failure_patch_address) {
+        *failure_patch_address = pt_current_address(bytecode);
+    }
+    pt_push_byte(bytecode, PEEK);
+    if(success_patch_address) {
+        *success_patch_address = pt_current_address(bytecode);
+    }
+    pt_push_bytes(bytecode, 2, POP, SUCCEED);
+    return 1;
+}
+
+int pt_compile_zero_or_more(pt_bytecode *bytecode,  pt_expr *expr) {
+    return 1;
+}
+
+int pt_compile_quantifier(pt_bytecode *bytecode, pt_expr *expr) {
+    switch (expr->N) {
+    case -1:
+        pt_compile_optional(bytecode, expr->data.e);
+        break;
+
+    case 0:
+        pt_compile_zero_or_more(bytecode, expr->data.e);
+        break;
+    
+    default:
+        break;
+    }
+
+    return 0;
+}
+
+int pt_compile_expr(pt_bytecode *bytecode, pt_expr *expr, pt_bytecode_address **failure_patch_address) {
+    switch (expr->op) {
+        case PT_BYTE: pt_compile_byte(bytecode, expr); break;
+        case PT_LITERAL: pt_compile_literal(bytecode, expr); break;
+        case PT_CHARACTER_CLASS: pt_compile_character_class(bytecode, expr); break;
+        case PT_SET: pt_compile_set(bytecode, expr); break;
+        case PT_RANGE: pt_compile_range(bytecode, expr); break;
+        case PT_ANY: pt_compile_any(bytecode, expr); break;
+        case PT_QUANTIFIER: pt_compile_quantifier(bytecode, expr); break;
+        
+        
+        case PT_NON_TERMINAL:
+        default:
+            pt_compiler_log(LOG_WARNING, "Expression operation not implemented yet: %s",
+                            pt_opcode_description[expr->op]);
+            return 0;
+    }
+    return 1;
+}
+
+int pt_compile_grammar(pt_compiler *compiler, pt_grammar *grammar) {
+    int N = grammar->N;
+    pt_bytecode *bytecode = &compiler->bytecode;
+    int rule_address[N];
+    int i;
+    for(i = 0; i < N; i++) {
+        // pt_compiler_log(LOG_DEBUG, "Compiling %s", grammar->names[i]);
+        // rule_address[i] = bytecode->chunk.size;
+        pt_compile_expr(bytecode, grammar->es[i], NULL);
+        pt_push_byte(bytecode, RET);
+    }
+    return 1;
+}
+
 int pt_try_compile(pt_compiler *compiler, const char *grammar_description, pt_compiler_args *compiler_args) {
     if(!pt_compiler_read_grammar(compiler, grammar_description)) {
         return -1;
     }
+    pt_compile_grammar(compiler, &compiler->target_grammar);
+    const char *filename = compiler_args->output_filename;
+    FILE *outfile = filename ? fopen(filename, "wb") : stdout;
+    if(!outfile) return errno;
+
+    pt_bytecode_write_to_file(&compiler->bytecode, outfile);
+    fclose(outfile);
     return 0;
 }
