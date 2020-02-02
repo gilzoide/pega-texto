@@ -126,7 +126,13 @@ uint8_t *pt_byte_at(const pt_bytecode *bytecode, int i);
 pt_bytecode_address pt_current_address(const pt_bytecode *bytecode);
 void pt_patch_address(pt_bytecode_address *pointer_in_bytecode, pt_bytecode_address address);
 
-size_t pt_bytecode_write_to_file(const pt_bytecode *bytecode, FILE *file);
+#define PT_BYTECODE_VERSION 1
+#define PT_BYTECODE_MAGIC_BYTES "ptbc"
+#define PT_BYTECODE_MAGIC_BYTES_FMT "ptbc%d\n"
+#define PT_BYTECODE_END_AFTER_RET '.'
+int pt_bytecode_write_to_file(const pt_bytecode *bytecode, FILE *file);
+int pt_read_bytecode_version(FILE *file);
+int pt_bytecode_from_file(pt_bytecode *bytecode, FILE *file);
 
 /**
  * Utility to dump a bytecode textual representation into stdout, for debugging

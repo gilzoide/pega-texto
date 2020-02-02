@@ -128,8 +128,32 @@ void pt_patch_address(pt_bytecode_address *pointer_in_bytecode, pt_bytecode_addr
     byteptr[1] = address << 8 & 0xff;
 }
 
-size_t pt_bytecode_write_to_file(const pt_bytecode *bytecode, FILE *file) {
-    return fwrite(bytecode->chunk.arr, 1, bytecode->chunk.size, file);
+int pt_bytecode_write_to_file(const pt_bytecode *bytecode, FILE *file) {
+    return fprintf(file, PT_BYTECODE_MAGIC_BYTES_FMT, PT_BYTECODE_VERSION) >= 0
+           && fwrite(bytecode->chunk.arr, 1, bytecode->chunk.size, file) >= bytecode->chunk.size
+           && fputc(PT_BYTECODE_END_AFTER_RET, file) != EOF;
+}
+
+int pt_read_bytecode_version(FILE *file) {
+    int version;
+    return fscanf(file, PT_BYTECODE_MAGIC_BYTES_FMT, &version) < 1 ? EOF : version;
+}
+
+int pt_bytecode_from_file(pt_bytecode *bytecode, FILE *file) {
+    if(pt_read_bytecode_version(file) == EOF) return EOF;
+    pt_clear_bytecode(bytecode);
+    int c, last = 0;
+    while(!feof(file)) {
+        c = fgetc(file);
+        if(ferror(file)) {
+            pt_clear_bytecode(bytecode);
+            return EOF;
+        }
+        else if(c == EOF || last == RET && c == PT_BYTECODE_END_AFTER_RET) break;
+        pt_push_byte(bytecode, (uint8_t)c);
+        last = c;
+    }
+    return bytecode->chunk.size;
 }
 
 void pt_dump_bytecode(const pt_bytecode *bytecode) {

@@ -48,7 +48,20 @@ const char *_pt_escape_character(char c, int midstring) {
     ((uint8_t *)&b)[0] = fgetc(file); count++; if(ferror(file)) return -1; \
     ((uint8_t *)&b)[1] = fgetc(file); count++; if(ferror(file)) return -2;
 
+#define UNGET_BYTE() \
+    ungetc(b, file); count--;
+
 int pt_dump_bytecode_from_file(FILE *file) {
+    int version = pt_read_bytecode_version(file);
+    if(version == EOF) {
+        fprintf(stderr, "File doesn't follow pega-texto bytecode format\n");
+        return -1;
+    }
+    else if(version > PT_BYTECODE_VERSION) {
+        fprintf(stderr, "Bytecode version %d is greater than the supported version %d\n", version, PT_BYTECODE_VERSION);
+        return -2;
+    }
+    printf("ptbc version %d\n", version);
     int instruction, b, count = -1;
     while(!(feof(file) || ferror(file))) {
         NEXT_BYTE();
@@ -91,6 +104,10 @@ int pt_dump_bytecode_from_file(FILE *file) {
                 }
                 printf("\"");
 				break;
+            case RET:
+                NEXT_BYTE();
+                if(b != PT_BYTECODE_END_AFTER_RET) UNGET_BYTE();
+                break;
 			default: break;
 		}
 		printf("\n");
