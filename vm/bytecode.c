@@ -139,7 +139,7 @@ int pt_read_bytecode_version(FILE *file) {
     return fscanf(file, PT_BYTECODE_MAGIC_BYTES_FMT, &version) < 1 ? EOF : version;
 }
 
-int pt_bytecode_from_file(pt_bytecode *bytecode, FILE *file) {
+int pt_read_bytecode(pt_bytecode *bytecode, FILE *file) {
     if(pt_read_bytecode_version(file) == EOF) return EOF;
     pt_clear_bytecode(bytecode);
     int c, last = 0;

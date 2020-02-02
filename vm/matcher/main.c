@@ -32,19 +32,28 @@ static pt_data _action(const char *str, int size, int id, int argc, pt_data *arg
     return PT_NULL_DATA;
 }
 
-static int try_match(const pt_bytecode *bytecode, const char *text) {
+static int try_match(pt_bytecode *bytecode, const char *text) {
     pt_vm vm;
     if(!pt_init_vm(&vm)) return -1;
-    pt_vm_load_bytecode(&vm, (pt_bytecode *)bytecode);
+    pt_vm_load_bytecode(&vm, bytecode);
 
     int ret = pt_vm_match(&vm, text, _action, NULL);
     pt_log(PT_LOG_INFO, "Matched: %d\n", ret);
 
-    pt_vm_unload_bytecode(&vm);
+    pt_vm_unload_and_release_bytecode(&vm);
     return ret < 0;
 }
 
-static char *readfile(const char *filename, int *out_size) {
+static int readbytecode(const char *filename, pt_bytecode *bytecode) {
+    FILE *fp = fopen(filename, "r");
+    if(fp == NULL) return 0;
+    pt_init_bytecode(bytecode);
+    int ret = pt_read_bytecode(bytecode, fp);
+    fclose(fp);
+    return ret;
+}
+
+static char *readfile(const char *filename) {
     FILE *fp = fopen(filename, "r");
     if(fp == NULL) return NULL;
     fseek(fp, 0, SEEK_END);
@@ -58,7 +67,6 @@ static char *readfile(const char *filename, int *out_size) {
     fread(buffer, sizeof(char), size, fp);
     buffer[size] = '\0';
     fclose(fp);
-    if(out_size) *out_size = size;
     return buffer;
 }
 
@@ -68,22 +76,20 @@ int main(int argc, const char **argv) {
         pt_log(PT_LOG_ERROR, "Usage: pega-texto-matcher BYTECODE FILE");
         return -1;
     }
-    int size;
-    char *bytecode_txt = readfile(argv[1], &size);
-    char *input = readfile(argv[2], NULL);
-    if(bytecode_txt == NULL) {
-        pt_log(PT_LOG_ERROR, "Error reading file '%s': %s", bytecode_txt, strerror(errno));
+
+    pt_bytecode bytecode;
+    if(!readbytecode(argv[1], &bytecode)) {
+        pt_log(PT_LOG_ERROR, "Error reading file '%s': %s", argv[1], strerror(errno));
         return errno;
     }
-    else if(input == NULL) {
-        pt_log(PT_LOG_ERROR, "Error reading file '%s': %s", input, strerror(errno));
+    char *input = readfile(argv[2]);
+    if(input == NULL) {
+        pt_log(PT_LOG_ERROR, "Error reading file '%s': %s", argv[2], strerror(errno));
         return errno;
     }
 
-    const pt_bytecode bytecode = pt_constant_bytecode(size, (uint8_t *)bytecode_txt);
     int ret = try_match(&bytecode, input);
 
-    free(bytecode_txt);
     free(input);
     return ret;
 }
