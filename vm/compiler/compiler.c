@@ -141,6 +141,15 @@ int pt_compile_and(pt_bytecode *bytecode, pt_expr *expr) {
     return 1;
 }
 
+int pt_compile_not(pt_bytecode *bytecode, pt_expr *expr) {
+    pt_push_byte(bytecode, PUSH);
+    pt_compile_expr(bytecode, expr->data.e);
+    pt_push_byte(bytecode, TOGGLE_SUCCESS);
+    pt_push_byte(bytecode, PEEK);
+    pt_push_byte(bytecode, POP);
+    return 1;
+}
+
 int pt_compile_sequence(pt_bytecode *bytecode, pt_expr *expr) {
     int i, N = expr->N;
     uint8_t *patch_addresses[N];
@@ -165,6 +174,7 @@ int pt_compile_expr(pt_bytecode *bytecode, pt_expr *expr) {
         case PT_ANY: pt_compile_any(bytecode, expr); break;
         case PT_QUANTIFIER: pt_compile_quantifier(bytecode, expr); break;
         case PT_AND: pt_compile_and(bytecode, expr); break;
+        case PT_NOT: pt_compile_not(bytecode, expr); break;
         case PT_SEQUENCE: pt_compile_sequence(bytecode, expr); break;
         
         

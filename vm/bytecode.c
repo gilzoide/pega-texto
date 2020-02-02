@@ -32,6 +32,7 @@ const char * const pt_opcode_description[] = {
 	"succ",
 	"fail",
 	"flt",
+    "togl",
 	"qcz",
 	"qci",
 	"jr",

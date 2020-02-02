@@ -39,6 +39,7 @@ enum pt_opcode {
 	SUCCEED,
 	FAIL,
 	FAIL_LESS_THEN,
+    TOGGLE_SUCCESS,
 	QC_ZERO,
 	QC_INC,
 	JUMP_RELATIVE,

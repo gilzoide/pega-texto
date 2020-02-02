@@ -112,6 +112,9 @@ int pt_vm_match(pt_vm *vm, const char *str, pt_vm_action action, void *userdata)
 			case FAIL_LESS_THEN:
 				rf = qc >= NEXT_BYTE();
 				break;
+            case TOGGLE_SUCCESS:
+                rf = !rf;
+                break;
 			case QC_ZERO:
 				qc = 0;
 				break;

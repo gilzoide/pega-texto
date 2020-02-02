@@ -55,15 +55,9 @@ Being `T(e)` the transformation of expression `e`:
 ```
   push
   T(e)
-  jmpf fail
+  togl
   peek
   pop
-  fail
-  jmp L
-fail:
-  peek
-  pop
-  qcz
 ```
 
 e1 e2:
