@@ -38,6 +38,7 @@ const char * const pt_opcode_description[] = {
 	"jmp",
 	"jrf",
 	"jmpf",
+    "jmps",
 	"call",
 	"ret",
 	"push",
@@ -101,10 +102,12 @@ uint8_t *pt_push_byte_array(pt_bytecode *bytecode, int num_bytes, const uint8_t 
 	return byte_ptr;
 }
 
-uint8_t *pt_push_address(pt_bytecode *bytecode, pt_bytecode_address address) {
-	uint8_t *byte_ptr = pt_list_push_n_as(&bytecode->chunk, sizeof(pt_bytecode_address), uint8_t);
+uint8_t *pt_push_jump(pt_bytecode *bytecode, enum pt_opcode jump_op, pt_bytecode_address address) {
+	uint8_t *byte_ptr = pt_list_push_n_as(&bytecode->chunk, 1 + sizeof(pt_bytecode_address), uint8_t);
     if(byte_ptr) {
-        pt_patch_address((pt_bytecode_address *)byte_ptr, address);
+        byte_ptr[0] = jump_op;
+        byte_ptr[1] = address & 0xff;
+        byte_ptr[2] = address >> 8 & 0xff;
     }
 	return byte_ptr;
 }
@@ -122,10 +125,10 @@ pt_bytecode_address pt_current_address(const pt_bytecode *bytecode) {
 	return bytecode->chunk.size;
 }
 
-void pt_patch_address(pt_bytecode_address *pointer_in_bytecode, pt_bytecode_address address) {
-    uint8_t *byteptr = (uint8_t *)pointer_in_bytecode;
-    byteptr[0] = address & 0xff;
-    byteptr[1] = address << 8 & 0xff;
+void pt_patch_jump(uint8_t *pointer_in_bytecode, pt_bytecode_address address) {
+    // pointer_in_bytecode[0] is the jump instruction
+    pointer_in_bytecode[1] = address & 0xff;
+    pointer_in_bytecode[2] = address >> 8 & 0xff;
 }
 
 int pt_bytecode_write_to_file(const pt_bytecode *bytecode, FILE *file) {
@@ -174,7 +177,7 @@ void pt_dump_bytecode(const pt_bytecode *bytecode) {
 				pc++;
 				printf(" %d", *((int8_t *)pc));
 				break;
-			case JUMP: case JUMP_IF_FAIL: case CALL:
+			case JUMP: case JUMP_IF_FAIL: case JUMP_IF_SUCCESS: case CALL:
 				pc++;
 				b = (int16_t)*((int16_t *)pc);
 				printf(" %d", b);

@@ -20,6 +20,7 @@
 
 #include "vm.h"
 #include "bytecode.h"
+#include "logging.h"
 #include "pega-texto/match.h"
 #include "vm-action.h"
 
@@ -59,7 +60,7 @@ typedef struct pt_vm_match_state {
 #define NEXT_BYTE() \
 	*(++ip)
 #define NEXT_2_BYTES() \
-	*((uint16_t *)(++ip)); ip++
+	(ip += 2, (ip[-1] | (ip[0] << 8)))
 #define ADVANCE_UNTIL_NULL() \
 	while(NEXT_BYTE())
 #define PEEK_NEXT_BYTE() \
@@ -96,18 +97,8 @@ int pt_vm_match(pt_vm *vm, const char *str, pt_vm_action action, void *userdata)
 	while((current = *sp) && ip < chunk_end) {
 		instruction = *ip;
 		opcode = instruction;
-#if 0
-		int i;
-		/* printf("{ qc = %d }\n", qc); */
-		/* for(i = state_stack.size - 1; i >= 0; i--) { */
-			/* pt_vm_match_state *aux = pt_list_at(&state_stack, i, pt_vm_match_state); */
-			/* printf("{ qc = %d }\n", aux->qc); */
-		/* } */
-		printf("\nip = %ld, rf = %d, qc = %d - '%.*s'", ip - (uint8_t *)bytecode->chunk.arr, qc, rf, 40, sp);
-		/* int fodas; */
-		/* scanf("%d", &fodas); */
-		/* printf("\n\n"); */
-#endif
+
+        pt_log(PT_LOG_DEBUG, "ip = %ld, rf = %d, qc = %d - '%.*s'", ip - (uint8_t *)bytecode->chunk.arr, qc, rf, 40, sp);
 
 		switch(opcode) {
 			case NOP:
@@ -152,6 +143,14 @@ int pt_vm_match(pt_vm *vm, const char *str, pt_vm_action action, void *userdata)
 			case JUMP_IF_FAIL: {
 				int address = NEXT_2_BYTES();
 				if(!rf) {
+					ip = chunk_ptr + address;
+					continue;
+				}
+				break;
+			}
+            case JUMP_IF_SUCCESS: {
+				int address = NEXT_2_BYTES();
+				if(rf) {
 					ip = chunk_ptr + address;
 					continue;
 				}

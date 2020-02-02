@@ -45,6 +45,7 @@ enum pt_opcode {
 	JUMP,
 	JUMP_RELATIVE_IF_FAIL,
 	JUMP_IF_FAIL,
+    JUMP_IF_SUCCESS,
 	CALL,
 	RET,
 	PUSH,
@@ -119,12 +120,12 @@ uint8_t *pt_push_byte_array(pt_bytecode *bytecode, int num_bytes, const uint8_t 
  */
 uint8_t *pt_reserve_bytes(pt_bytecode *bytecode, int num_bytes);
 
-uint8_t *pt_push_address(pt_bytecode *bytecode, pt_bytecode_address address);
+uint8_t *pt_push_jump(pt_bytecode *bytecode, enum pt_opcode jump_op, pt_bytecode_address address);
 
 uint8_t *pt_byte_at(const pt_bytecode *bytecode, int i);
 
 pt_bytecode_address pt_current_address(const pt_bytecode *bytecode);
-void pt_patch_address(pt_bytecode_address *pointer_in_bytecode, pt_bytecode_address address);
+void pt_patch_jump(uint8_t *pointer_in_bytecode, pt_bytecode_address address);
 
 #define PT_BYTECODE_VERSION 1
 #define PT_BYTECODE_MAGIC_BYTES "ptbc"

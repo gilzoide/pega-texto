@@ -21,6 +21,7 @@ Opcode    | Argument | Description
 0x07 jmp  | 2 - Address | Set `ip` to address
 0x08 jrf  | 1 - Offset  | Add offset to `ip` if `rf` has failure status
 0x09 jmpf | 2 - Address | Set `ip` to address if `rf` has failure status
+0x09 jmps | 2 - Address | Set `ip` to address if `rf` has success status
 0x0a call | 2 - Address | Push state and set `ip` to address, for non-terminal calls
 0x0b ret  |          | Return from a non-terminal call
 
@@ -40,44 +41,21 @@ Opcode    | Argument | Description
 
 PEG -> bytecode
 ===============
-Being `T(e, L)` the transformation of expression `e` with failure label `L`
-
-e1 e2:
-```
-T(e1, L)
-T(e2, L)
-```
-
-e1 / e2:
-```
-  push
-  T(e1, fail1)
-  jmp success
-fail1:
-  peek
-  T(e2, fail2)
-  jmp success
-fail2:
-  peek
-success:
-  pop
-  jmpf L
-```
+Being `T(e)` the transformation of expression `e`:
 
 &e:
 ```
   push
-  T(e, continue)
-continue:
+  T(e)
   peek
   pop
-  jmpf L
 ```
 
 !e:
 ```
   push
-  T(e, fail)
+  T(e)
+  jmpf fail
   peek
   pop
   fail
@@ -88,11 +66,34 @@ fail:
   qcz
 ```
 
+e1 e2:
+```
+  T(e1)
+  jmpf end
+  T(e2)
+end:
+```
+
+e1 / e2:
+```
+  push
+  T(e1)
+  jmps success
+fail1:
+  peek
+  T(e2)
+  jmps success
+fail2:
+  peek
+success:
+  pop
+```
+
 e?:
 ```
   push
-  T(e, fail)
-  jmp success
+  T(e)
+  jmps success
 fail:
   peek
 success:
@@ -103,8 +104,8 @@ success:
 e*:
 ```
 expression:
-  T(e, fail)
-  jmp expression
+  T(e)
+  jmps expression
 fail:
   succ
 ```
@@ -114,7 +115,8 @@ e^N: (e+ -> e^1)
   push
   qcz
 expression:
-  T(e, fail)
+  T(e)
+  jmpf fail
   qci
   jmp expression
 fail:

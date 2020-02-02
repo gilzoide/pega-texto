@@ -78,7 +78,7 @@ int pt_dump_bytecode_from_file(FILE *file) {
 				NEXT_BYTE();
 				printf(" %d", b);
 				break;
-			case JUMP: case JUMP_IF_FAIL: case CALL:
+			case JUMP: case JUMP_IF_FAIL: case JUMP_IF_SUCCESS: case CALL:
 				NEXT_SHORT();
 				printf(" %d", b);
 				break;
