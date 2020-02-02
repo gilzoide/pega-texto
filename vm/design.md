@@ -111,6 +111,7 @@ fail:
 
 e^N: (e+ -> e^1)
 ```
+  push
   qcz
 expression:
   T(e, fail)
@@ -118,4 +119,5 @@ expression:
   jmp expression
 fail:
   flt N
+  pop
 ```

@@ -99,7 +99,8 @@ int pt_compile_optional(pt_bytecode *bytecode,  pt_expr *expr) {
     if(success_patch_address) {
         pt_patch_address(success_patch_address, pt_current_address(bytecode));
     }
-    pt_push_bytes(bytecode, 2, POP, SUCCEED);
+    pt_push_byte(bytecode, POP);
+    pt_push_byte(bytecode, SUCCEED);
     return 1;
 }
 
@@ -116,21 +117,42 @@ int pt_compile_zero_or_more(pt_bytecode *bytecode,  pt_expr *expr) {
     return 1;
 }
 
-int pt_compile_quantifier(pt_bytecode *bytecode, pt_expr *expr) {
-    switch (expr->N) {
-    case -1:
-        pt_compile_optional(bytecode, expr->data.e);
-        break;
-
-    case 0:
-        pt_compile_zero_or_more(bytecode, expr->data.e);
-        break;
-    
-    default:
-        break;
+int pt_compile_general_quantifier(pt_bytecode *bytecode,  pt_expr *expr) {
+    pt_push_byte(bytecode, PUSH);
+    pt_push_byte(bytecode, QC_ZERO);
+    pt_bytecode_address expression_address = pt_current_address(bytecode);
+    pt_bytecode_address *fail_patch_address = NULL;
+    pt_compile_expr(bytecode, expr->data.e, &fail_patch_address);
+    pt_push_byte(bytecode, QC_INC);
+    pt_push_byte(bytecode, JUMP);
+    pt_push_address(bytecode, expression_address);
+    if(fail_patch_address) {
+        pt_patch_address(fail_patch_address, pt_current_address(bytecode));
     }
+    pt_push_bytes(bytecode, 2, FAIL_LESS_THEN, expr->N);
+    pt_push_byte(bytecode, POP);
+    return 1;
+}
 
-    return 0;
+int pt_compile_quantifier(pt_bytecode *bytecode, pt_expr *expr) {
+    pt_expr *subexpr = expr->data.e;
+    switch (expr->N) {
+        case -1: return pt_compile_optional(bytecode, subexpr);
+        case 0:  return pt_compile_zero_or_more(bytecode, subexpr);
+        default: return pt_compile_general_quantifier(bytecode, expr);
+    }
+}
+
+int pt_compile_and(pt_bytecode *bytecode, pt_expr *expr) {
+    pt_push_byte(bytecode, PUSH);
+    pt_bytecode_address *continue_patch_address = NULL;
+    pt_compile_expr(bytecode, expr->data.e, &continue_patch_address);
+    if(continue_patch_address) {
+        pt_patch_address(continue_patch_address, pt_current_address(bytecode));
+    }
+    pt_push_byte(bytecode, PEEK);
+    pt_push_byte(bytecode, POP);
+    return 1;
 }
 
 int pt_compile_expr(pt_bytecode *bytecode, pt_expr *expr, pt_bytecode_address **failure_patch_address) {
@@ -142,6 +164,7 @@ int pt_compile_expr(pt_bytecode *bytecode, pt_expr *expr, pt_bytecode_address **
         case PT_RANGE: pt_compile_range(bytecode, expr); break;
         case PT_ANY: pt_compile_any(bytecode, expr); break;
         case PT_QUANTIFIER: pt_compile_quantifier(bytecode, expr); break;
+        case PT_AND: pt_compile_and(bytecode, expr); break;
         
         
         case PT_NON_TERMINAL:

@@ -103,7 +103,7 @@ int pt_vm_match(pt_vm *vm, const char *str, pt_vm_action action, void *userdata)
 			/* pt_vm_match_state *aux = pt_list_at(&state_stack, i, pt_vm_match_state); */
 			/* printf("{ qc = %d }\n", aux->qc); */
 		/* } */
-		printf("\nip = %ld, qc = %d - '%.*s'", ip - (uint8_t *)bytecode->chunk.arr, qc, 40, sp);
+		printf("\nip = %ld, rf = %d, qc = %d - '%.*s'", ip - (uint8_t *)bytecode->chunk.arr, qc, rf, 40, sp);
 		/* int fodas; */
 		/* scanf("%d", &fodas); */
 		/* printf("\n\n"); */
