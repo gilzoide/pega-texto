@@ -18,24 +18,30 @@
  * Any bugs should be reported to <gilzoide@gmail.com>
  */
 
-/** @file compiler_log.h
- * Compiler logger.
+/** @file logging.h
+ * Simple logging.
  */
 
-#ifndef __PEGA_TEXTO_COMPILER_LOG_H__
-#define __PEGA_TEXTO_COMPILER_LOG_H__
+#ifndef __PEGA_TEXTO_LOGGING_H__
+#define __PEGA_TEXTO_LOGGING_H__
 
-enum pt_compiler_log_level {
-    LOG_NONE,
-    LOG_ERROR,
-    LOG_WARNING,
-    LOG_DEBUG,
+enum pt_log_level {
+    PT_LOG_INVALID = -1,
+    PT_LOG_NONE,
+    PT_LOG_ERROR,
+    PT_LOG_WARNING,
+    PT_LOG_INFO,
+    PT_LOG_DEBUG,
 };
 
 #define pt_log_level_at_least(level, minlevel) \
     (level <= minlevel)
 
-void pt_compiler_set_log_level(enum pt_compiler_log_level level);
-void pt_compiler_log(enum pt_compiler_log_level level, const char *fmt, ...);
+#define PT_LOG_LEVEL_ENV "PT_LOG_LEVEL"
+
+void pt_set_log_level(enum pt_log_level level);
+void pt_set_log_level_from_env();
+enum pt_log_level pt_parse_log_level(const char *str);
+void pt_log(enum pt_log_level level, const char *fmt, ...);
 
 #endif

@@ -20,7 +20,8 @@
 
 #include "compiler_cli_args.h"
 #include "compiler.h"
-#include "compiler_log.h"
+
+#include "logging.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -46,6 +47,7 @@ static char *readfile(const char *filename) {
 }
 
 int main(int argc, const char **argv) {
+    pt_set_log_level_from_env();
     pt_compiler_args compiler_args = (pt_compiler_args){};
     if(!pt_compiler_parse_args(argc, argv, &compiler_args)) {
         return -1;
@@ -53,13 +55,13 @@ int main(int argc, const char **argv) {
 
     char *contents = readfile(compiler_args.input_filename);
     if(contents == NULL) {
-        pt_compiler_log(LOG_ERROR, "Error reading file '%s': %s", compiler_args.input_filename, strerror(errno));
+        pt_log(PT_LOG_ERROR, "Error reading file '%s': %s", compiler_args.input_filename, strerror(errno));
         return errno;
     }
     
     pt_compiler compiler;
     if(!pt_init_compiler(&compiler)) {
-        pt_compiler_log(LOG_ERROR, "Error initializing compiler");
+        pt_log(PT_LOG_ERROR, "Error initializing compiler");
         free(contents);
         return ENOMEM;
     }

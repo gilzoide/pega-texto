@@ -20,7 +20,8 @@
 
 #include "compiler.h"
 #include "compiler_grammar.h"
-#include "compiler_log.h"
+
+#include "logging.h"
 
 #include <errno.h>
 #include <stdio.h>
@@ -47,9 +48,9 @@ int pt_compiler_read_grammar(pt_compiler *compiler, const char *grammar_descript
     if(result.matched >= 0) {
         pt_validate_result validation_result = pt_validate_grammar(target_grammar, PT_VALIDATE_DEFAULT);
         if(validation_result.status != PT_VALIDATE_SUCCESS) {
-            pt_compiler_log(LOG_ERROR, "[pt_grammar_validate] Error on rule \"%s\"",
-                            target_grammar->names[validation_result.rule]);
-            pt_compiler_log(LOG_ERROR, ": %s\n", pt_validate_codes_description[validation_result.status]);
+            pt_log(PT_LOG_ERROR, "[pt_grammar_validate] Error on rule \"%s\"",
+                   target_grammar->names[validation_result.rule]);
+            pt_log(PT_LOG_ERROR, ": %s\n", pt_validate_codes_description[validation_result.status]);
             return 0;
         }
         else return 1;
@@ -169,7 +170,7 @@ int pt_compile_expr(pt_bytecode *bytecode, pt_expr *expr, pt_bytecode_address **
         
         case PT_NON_TERMINAL:
         default:
-            pt_compiler_log(LOG_WARNING, "Expression operation not implemented yet: %s",
+            pt_log(PT_LOG_WARNING, "Expression operation not implemented yet: %s",
                             pt_opcode_description[expr->op]);
             return 0;
     }
@@ -186,7 +187,7 @@ int pt_compile_grammar(pt_compiler *compiler, pt_grammar *grammar) {
     int rule_address[N];
     int i;
     for(i = 0; i < N; i++) {
-        // pt_compiler_log(LOG_DEBUG, "Compiling %s", grammar->names[i]);
+        // pt_log(LOG_DEBUG, "Compiling %s", grammar->names[i]);
         // rule_address[i] = bytecode->chunk.size;
         pt_compile_expr(bytecode, grammar->es[i], NULL);
         pt_push_byte(bytecode, RET);

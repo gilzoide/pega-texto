@@ -20,19 +20,22 @@
 
 #include "disassembler.h"
 
+#include "logging.h"
+
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
 
 int main(int argc, const char **argv) {
+    pt_set_log_level_from_env();
     if(argc < 2) {
-        fprintf(stderr, "Usage: pega-texto-disassembler (-- | FILE)");
+        pt_log(PT_LOG_ERROR, "Usage: pega-texto-disassembler (-- | FILE)");
         return -1;
     }
     const char *filename = argv[1];
     FILE *file = strcmp(filename, "--") == 0 ? stdin : fopen(filename, "r");
     if(file == NULL) {
-        fprintf(stderr, "Error reading file '%s': %s", filename, strerror(errno));
+        pt_log(PT_LOG_ERROR, "Error reading file '%s': %s", filename, strerror(errno));
         return errno;
     }
 

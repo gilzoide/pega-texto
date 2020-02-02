@@ -19,7 +19,7 @@
  */
 
 #include "compiler_cli_args.h"
-#include "compiler_log.h"
+#include "logging.h"
 
 #include <stdlib.h>
 
@@ -34,5 +34,5 @@ int pt_compiler_parse_args(int argc, const char **argv, pt_compiler_args *compil
 }
 
 void pt_compiler_print_usage(const char **argv) {
-    pt_compiler_log(LOG_ERROR, "Usage: %s FILE [OUTPUT_FILE]", argv[0]);
+    pt_log(PT_LOG_ERROR, "Usage: %s FILE [OUTPUT_FILE]", argv[0]);
 }

@@ -21,6 +21,7 @@
 #include "disassembler.h"
 
 #include "bytecode.h"
+#include "logging.h"
 
 const char *_pt_escape_character(char c, int midstring) {
     static char str[2] = { 0, 0 };
@@ -54,11 +55,11 @@ const char *_pt_escape_character(char c, int midstring) {
 int pt_dump_bytecode_from_file(FILE *file) {
     int version = pt_read_bytecode_version(file);
     if(version == EOF) {
-        fprintf(stderr, "File doesn't follow pega-texto bytecode format\n");
+        pt_log(PT_LOG_ERROR, "File doesn't follow pega-texto bytecode format\n");
         return -1;
     }
     else if(version > PT_BYTECODE_VERSION) {
-        fprintf(stderr, "Bytecode version %d is greater than the supported version %d\n", version, PT_BYTECODE_VERSION);
+        pt_log(PT_LOG_ERROR, "Bytecode version %d is greater than the supported version %d\n", version, PT_BYTECODE_VERSION);
         return -2;
     }
     printf("ptbc version %d\n", version);
