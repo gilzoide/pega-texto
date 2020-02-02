@@ -164,6 +164,22 @@ int pt_compile_sequence(pt_bytecode *bytecode, pt_expr *expr) {
     return 1;
 }
 
+int pt_compile_choice(pt_bytecode *bytecode, pt_expr *expr) {
+    pt_push_byte(bytecode, PUSH);
+    int i, N = expr->N;
+    uint8_t *patch_addresses[N];
+    for(i = 0; i < N; i++) {
+        pt_compile_expr(bytecode, expr->data.es[i]);
+        patch_addresses[i] = pt_push_jump(bytecode, JUMP_IF_SUCCESS, -1);
+        pt_push_byte(bytecode, PEEK);
+    }
+    pt_bytecode_address end_address = pt_current_address(bytecode);
+    for(i = 0; i < N; i++) {
+        pt_patch_jump(patch_addresses[i], end_address);
+    }
+    return 1;
+}
+
 int pt_compile_expr(pt_bytecode *bytecode, pt_expr *expr) {
     switch (expr->op) {
         case PT_BYTE: pt_compile_byte(bytecode, expr); break;
@@ -176,6 +192,7 @@ int pt_compile_expr(pt_bytecode *bytecode, pt_expr *expr) {
         case PT_AND: pt_compile_and(bytecode, expr); break;
         case PT_NOT: pt_compile_not(bytecode, expr); break;
         case PT_SEQUENCE: pt_compile_sequence(bytecode, expr); break;
+        case PT_CHOICE: pt_compile_choice(bytecode, expr); break;
         
         
         case PT_NON_TERMINAL:
