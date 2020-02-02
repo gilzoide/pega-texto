@@ -128,7 +128,7 @@ void pt_patch_address(pt_bytecode_address *pointer_in_bytecode, pt_bytecode_addr
 
 #define PT_BYTECODE_VERSION 1
 #define PT_BYTECODE_MAGIC_BYTES "ptbc"
-#define PT_BYTECODE_MAGIC_BYTES_FMT "ptbc%d\n"
+#define PT_BYTECODE_MAGIC_BYTES_FMT "ptbc%d:"
 #define PT_BYTECODE_END_AFTER_RET '.'
 int pt_bytecode_write_to_file(const pt_bytecode *bytecode, FILE *file);
 int pt_read_bytecode_version(FILE *file);

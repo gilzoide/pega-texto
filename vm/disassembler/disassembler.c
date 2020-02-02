@@ -62,7 +62,7 @@ int pt_dump_bytecode_from_file(FILE *file) {
         pt_log(PT_LOG_ERROR, "Bytecode version %d is greater than the supported version %d\n", version, PT_BYTECODE_VERSION);
         return -2;
     }
-    printf("ptbc version %d\n", version);
+    printf("Pega-texto bytecode version %d\n", version);
     int instruction, b, count = -1;
     while(!(feof(file) || ferror(file))) {
         NEXT_BYTE();
