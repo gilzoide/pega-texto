@@ -25,9 +25,11 @@
 
 #include <errno.h>
 #include <stdio.h>
+#include <string.h>
 
 int pt_init_compiler(pt_compiler *compiler) {
-    return compiler 
+    return compiler
+           && pt_table_init(&compiler->rule_table, (pt_table_entry_destructor)&free)
            && pt_init_compiler_grammar(&compiler->compiler_grammar)
            && pt_init_bytecode(&compiler->bytecode)
            && (compiler->target_grammar = (pt_grammar){}, 1);
@@ -38,6 +40,7 @@ void pt_release_compiler(pt_compiler *compiler) {
         pt_release_grammar(&compiler->compiler_grammar);
         pt_release_bytecode(&compiler->bytecode);
         pt_release_grammar(&compiler->target_grammar);
+        pt_table_destroy(&compiler->rule_table);
     }
 }
 
@@ -85,6 +88,12 @@ int pt_compile_range(pt_bytecode *bytecode, pt_expr *expr) {
 
 int pt_compile_any(pt_bytecode *bytecode, pt_expr *expr) {
     return pt_push_bytes(bytecode, 2, NOT_BYTE, 0) != NULL;
+}
+
+int pt_compile_non_terminal(pt_bytecode *bytecode, pt_expr *expr) {
+    uint8_t *call_patch_address = pt_push_jump(bytecode, CALL, -1);
+    /// TODO:
+    return call_patch_address != NULL;
 }
 
 int pt_compile_optional(pt_bytecode *bytecode,  pt_expr *expr) {
@@ -188,14 +197,13 @@ int pt_compile_expr(pt_bytecode *bytecode, pt_expr *expr) {
         case PT_SET: pt_compile_set(bytecode, expr); break;
         case PT_RANGE: pt_compile_range(bytecode, expr); break;
         case PT_ANY: pt_compile_any(bytecode, expr); break;
+        case PT_NON_TERMINAL: pt_compile_non_terminal(bytecode, expr); break;
         case PT_QUANTIFIER: pt_compile_quantifier(bytecode, expr); break;
         case PT_AND: pt_compile_and(bytecode, expr); break;
         case PT_NOT: pt_compile_not(bytecode, expr); break;
         case PT_SEQUENCE: pt_compile_sequence(bytecode, expr); break;
         case PT_CHOICE: pt_compile_choice(bytecode, expr); break;
         
-        
-        case PT_NON_TERMINAL:
         default:
             pt_log(PT_LOG_WARNING, "Expression operation not implemented yet: %s",
                             pt_opcode_description[expr->op]);
@@ -230,4 +238,17 @@ int pt_try_compile(pt_compiler *compiler, const char *grammar_description, pt_co
     pt_bytecode_write_to_file(&compiler->bytecode, outfile);
     fclose(outfile);
     return 0;
+}
+
+pt_rule_info *pt_get_rule_info(pt_compiler *compiler, const char *rule) {
+    pt_rule_info *info;
+    if(!pt_table_get(&compiler->rule_table, rule, (uintptr_t *)&info)) {
+        if(info = malloc(sizeof(pt_rule_info))) return NULL;
+        if(!pt_table_set(&compiler->rule_table, rule, (uintptr_t)info)) {
+            free(info);
+            return NULL;
+        }
+        memset(info, 0, sizeof(pt_rule_info));
+    }
+    return info;
 }

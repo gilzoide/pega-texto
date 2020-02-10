@@ -18,32 +18,15 @@
  * Any bugs should be reported to <gilzoide@gmail.com>
  */
 
-/** @file compiler.h
- * Compiler for compiling pega-texto textual Grammar representation.
+/** @file compiler_rule.h
+ * Per-rule information used on compilation.
  */
 
-#ifndef __PEGA_TEXTO_COMPILER_H__
-#define __PEGA_TEXTO_COMPILER_H__
+#ifndef __PEGA_TEXTO_COMPILER_RULE_H__
+#define __PEGA_TEXTO_COMPILER_RULE_H__
 
-#include "compiler_cli_args.h"
-#include "compiler_rule.h"
-#include "bytecode.h"
-#include "table.h"
-
-#include <pega-texto.h>
-
-typedef struct pt_compiler {
-    pt_grammar compiler_grammar;
-    pt_grammar target_grammar;
-    pt_bytecode bytecode;
-    pt_table rule_table;
-} pt_compiler;
-
-int pt_init_compiler(pt_compiler *compiler);
-void pt_release_compiler(pt_compiler *compiler);
-
-int pt_try_compile(pt_compiler *compiler, const char *grammar_description, pt_compiler_args *compiler_args);
-
-pt_rule_info *pt_get_rule_info(pt_compiler *compiler, const char *rule);
+typedef struct pt_rule_info {
+    int index;
+} pt_rule_info;
 
 #endif
