@@ -38,9 +38,10 @@ static int try_match(pt_bytecode *bytecode, const char *text) {
     pt_vm_load_bytecode(&vm, bytecode);
 
     int ret = pt_vm_match(&vm, text, _action, NULL);
-    pt_log(PT_LOG_INFO, "Matched: %d\n", ret);
+    pt_log(PT_LOG_INFO, "Matched: %d", ret);
 
     pt_vm_unload_and_release_bytecode(&vm);
+    pt_release_vm(&vm);
     return ret < 0;
 }
 

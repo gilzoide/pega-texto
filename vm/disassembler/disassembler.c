@@ -43,14 +43,20 @@ const char *_pt_escape_character(char c, int midstring) {
 }
 
 #define NEXT_BYTE() \
-    b = fgetc(file); count++; if(ferror(file)) return -1;
+    do { \
+        b = fgetc(file); count++; if(ferror(file)) return -1; \
+    } while(0)
 
 #define NEXT_SHORT() \
-    ((uint8_t *)&b)[0] = fgetc(file); count++; if(ferror(file)) return -1; \
-    ((uint8_t *)&b)[1] = fgetc(file); count++; if(ferror(file)) return -2;
+    do { \
+        ((uint8_t *)&b)[0] = fgetc(file); count++; if(ferror(file)) return -1; \
+        ((uint8_t *)&b)[1] = fgetc(file); count++; if(ferror(file)) return -2; \
+    } while(0)
 
 #define UNGET_BYTE() \
-    ungetc(b, file); count--;
+    do { \
+        ungetc(b, file); count--; \
+    } while(0)
 
 int pt_dump_bytecode_from_file(FILE *file) {
     int version = pt_read_bytecode_version(file);
