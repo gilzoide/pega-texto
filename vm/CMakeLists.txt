@@ -11,8 +11,6 @@ set_target_properties(pega-texto-vm PROPERTIES
 file(GLOB src "assembler/*.c")
 add_executable(pega-texto-assembler ${src})
 set_target_properties(pega-texto-assembler PROPERTIES
-	VERSION "${PROJECT_VERSION}"
-	SOVERSION "${PROJECT_SOVERSION}"
 	OUTPUT_NAME pt-assembler)
 
 target_link_libraries(pega-texto-assembler pega-texto-vm)
@@ -21,8 +19,6 @@ target_link_libraries(pega-texto-assembler pega-texto-vm)
 file(GLOB src "disassembler/*.c")
 add_executable(pega-texto-disassembler ${src})
 set_target_properties(pega-texto-disassembler PROPERTIES
-	VERSION "${PROJECT_VERSION}"
-	SOVERSION "${PROJECT_SOVERSION}"
 	OUTPUT_NAME pt-disassembler)
 
 target_link_libraries(pega-texto-disassembler pega-texto-vm)
@@ -31,8 +27,6 @@ target_link_libraries(pega-texto-disassembler pega-texto-vm)
 file(GLOB src "compiler/*.c")
 add_executable(pega-texto-compiler ${src})
 set_target_properties(pega-texto-compiler PROPERTIES
-	VERSION "${PROJECT_VERSION}"
-	SOVERSION "${PROJECT_SOVERSION}"
 	OUTPUT_NAME pt-compiler)
 
 target_link_libraries(pega-texto-compiler pega-texto-vm pega-texto)
@@ -41,8 +35,6 @@ target_link_libraries(pega-texto-compiler pega-texto-vm pega-texto)
 file(GLOB src "matcher/*.c")
 add_executable(pega-texto-matcher ${src})
 set_target_properties(pega-texto-matcher PROPERTIES
-	VERSION "${PROJECT_VERSION}"
-	SOVERSION "${PROJECT_SOVERSION}"
 	OUTPUT_NAME pt-matcher)
 
 target_link_libraries(pega-texto-matcher pega-texto-vm)
