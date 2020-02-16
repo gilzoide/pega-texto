@@ -26,7 +26,9 @@
 #define __PEGA_TEXTO_COMPILER_RULE_H__
 
 typedef struct pt_rule_info {
+    char *name;
     int index;
+    int usages;
 } pt_rule_info;
 
 #endif

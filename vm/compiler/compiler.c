@@ -46,7 +46,7 @@ void pt_release_compiler(pt_compiler *compiler) {
 
 int pt_compiler_read_grammar(pt_compiler *compiler, const char *grammar_description) {
     pt_grammar *target_grammar = &compiler->target_grammar;
-    pt_match_options opts = (pt_match_options){ .userdata = target_grammar };
+    pt_match_options opts = (pt_match_options){ .userdata = compiler };
     pt_match_result result = pt_match_grammar(&compiler->compiler_grammar, grammar_description, &opts);
     if(result.matched >= 0) {
         pt_validate_result validation_result = pt_validate_grammar(target_grammar, PT_VALIDATE_DEFAULT);
@@ -243,7 +243,7 @@ int pt_try_compile(pt_compiler *compiler, const char *grammar_description, pt_co
 pt_rule_info *pt_get_rule_info(pt_compiler *compiler, const char *rule_name, int length) {
     pt_rule_info *info;
     if(!pt_table_get(&compiler->rule_table, rule_name, length, (uintptr_t *)&info)) {
-        if(info = malloc(sizeof(pt_rule_info))) return NULL;
+        if((info = malloc(sizeof(pt_rule_info))) == NULL) return NULL;
         if(!pt_table_set(&compiler->rule_table, rule_name, length, (uintptr_t)info)) {
             free(info);
             return NULL;

@@ -19,6 +19,10 @@
  */
 
 #include "compiler_grammar.h"
+#include "compiler.h"
+#include "compiler_rule.h"
+
+#include "logging.h"
 
 #include <pega-texto.h>
 #include <pega-texto/macro-on.h>
@@ -29,9 +33,22 @@
 pt_data tonumber(const char *str, size_t length, int argc, pt_data *argv, void *data) {
 	return (pt_data){ .i = atoi(str) };
 }
-pt_data identifier(const char *str, size_t length, int argc, pt_data *argv, void *data) {
-	assert(argc == 0 && "Identifier");
-	return (pt_data){ .p = strndup(str, length) };
+pt_data rule_data(const char *str, size_t length, int argc, pt_data *argv, void *data) {
+	pt_compiler *compiler = data;
+	pt_rule_info *rule_info = pt_get_rule_info(compiler, str, length);
+	if(rule_info == NULL) pt_log(PT_LOG_ERROR, "Could not get rule info for rule %*s", length, str);
+	return (pt_data){ .p = rule_info };
+}
+pt_data rule_definition(const char *str, size_t length, int argc, pt_data *argv, void *data) {
+	assert(argc == 1 && "rule_definition");
+	pt_rule_info *rule_info = argv[0].p;
+	if(rule_info->name != NULL) {
+		pt_log(PT_LOG_ERROR, "Duplicate rule definition: %s", rule_info->name);
+	}
+	else {
+		rule_info->name = strndup(str, length);
+	}
+	return (pt_data){ .p = rule_info };
 }
 pt_data defined(const char *str, size_t length, int argc, pt_data *argv, void *data) {
 	assert(argc == 0 && "Defined");
@@ -129,12 +146,13 @@ pt_data build_grammar(const char *str, size_t length, int argc, pt_data *argv, v
 	pt_rule rules[N + 1];
 	for(i = 0; i < N; i++) {
 		current = i * 2;
-		rules[i].name = argv[current].p;
+		pt_rule_info *info = argv[current].p;
+		rules[i].name = info->name;
 		rules[i].e = argv[current + 1].p;
 	}
 	rules[i].name = NULL;
 	rules[i].e = NULL;
-    pt_grammar *grammar = (pt_grammar *)data;
+    pt_grammar *grammar = &((pt_compiler *)data)->target_grammar;
     pt_init_grammar(grammar, rules, 1);
 	return (pt_data){ .p = grammar };
 }
@@ -253,7 +271,7 @@ int pt_init_compiler_grammar(pt_grammar *grammar) {
 	 */
 	pt_rule rules[] = {
 		{ "Grammar", SEQ_(build_grammar, V("S"), Q(V("Definition"), 1), NOT(ANY)) },
-		{ "Definition", SEQ(V("Identifier"), V("Arrow"), V("Exp")) },
+		{ "Definition", SEQ(V_(rule_definition, "Identifier"), V("Arrow"), V("Exp")) },
 
 		{ "Exp", SEQ_(maybe_choice, V("Seq"), Q(SEQ(L("/"), V("S"), V("Seq")), 0)) },
 		{ "Seq", Q_(maybe_seq, V("Prefix"), 1) },
@@ -285,7 +303,7 @@ int pt_init_compiler_grammar(pt_grammar *grammar) {
 		{ "Defined", SEQ(L("\\"), S_(defined, "wWaAcCdDgGlLpPsSuUxX"), V("S")) },
 
 		{ "S", Q(OR(C(PT_SPACE), SEQ(L("#"), Q(BUT(L("\n")), 0))), 0) },
-		{ "Identifier", SEQ(SEQ_(identifier, OR(C(PT_ALPHA), L("_")), Q(OR(C(PT_ALNUM), S("_-")), 0)), V("S")) },
+		{ "Identifier", SEQ(SEQ_(rule_data, OR(C(PT_ALPHA), L("_")), Q(OR(C(PT_ALNUM), S("_-")), 0)), V("S")) },
 		{ "Arrow", SEQ(L("<-"), V("S")) },
 		{ "Number", SEQ_(tonumber, Q(S("+-"), -1), Q(C(PT_DIGIT), 1), V("S")) },
 		{ NULL, NULL },

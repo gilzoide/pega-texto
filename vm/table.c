@@ -73,13 +73,15 @@ static int adjust_capacity(pt_table *table, int capacity) {
     memset(new_entries, 0, size);
     
     int count = 0;
-    for(int i = 0; i < capacity; i++) {
-        pt_table_entry entry = old_entries[i];
-        if(entry.key == NULL) continue;
+    if(table->count > 0) {
+        for(int i = 0; i < capacity; i++) {
+            pt_table_entry entry = old_entries[i];
+            if(entry.key == NULL) continue;
 
-        pt_table_entry *dest = find_entry(new_entries, capacity, entry.key, entry.length);
-        *dest = entry;
-        count++;
+            pt_table_entry *dest = find_entry(new_entries, capacity, entry.key, entry.length);
+            *dest = entry;
+            count++;
+        }
     }
     free(old_entries);
 
@@ -136,7 +138,7 @@ int pt_table_set(pt_table *table, const char *key, int length, uintptr_t value) 
     entry->key = key;
     entry->length = length;
     entry->value = value;
-    return isNewKey;
+    return 1;
 }
 
 int pt_table_delete(pt_table *table, const char *key, int length) {

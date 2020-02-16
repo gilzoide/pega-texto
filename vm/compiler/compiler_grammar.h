@@ -27,6 +27,7 @@
 
 typedef struct pt_grammar pt_grammar;
 
+/// @note When matching this grammar, pass pt_compiler as userdata
 int pt_init_compiler_grammar(pt_grammar *grammar);
 
 #endif
