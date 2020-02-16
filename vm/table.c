@@ -23,26 +23,26 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define HASH_SEED 2166136261u
+#define HASH_MULTIPLIER 16777619
 #define TABLE_MAX_LOAD 0.75
 #define TOMBSTONE_VALUE (uintptr_t)-1
 #define GROW_CAPACITY(capacity) \
     ((capacity) < 8 ? 8 : (capacity) * 2)
 
-static uint32_t hash_string(const char *str) {
-    uint32_t hash = 2166136261u;
+static uint32_t hash_string(const char *str, int length) {
+    uint32_t hash = HASH_SEED;
 
-    const char *it;
-    char c;
-    for(it = str; (c = *it); it++) {
-        hash ^= c;
-        hash *= 16777619;
+    for(int i = 0; i < length; i++) {
+        hash ^= str[i];
+        hash *= HASH_MULTIPLIER;
     }
 
     return hash;
 }
 
-static pt_table_entry *find_entry(pt_table_entry *entries, int capacity, const char *key) {
-    uint32_t hash = hash_string(key);
+static pt_table_entry *find_entry(pt_table_entry *entries, int capacity, const char *key, int length) {
+    uint32_t hash = hash_string(key, length);
     uint32_t index = hash % capacity;    
     pt_table_entry *tombstone = NULL;         
     while(1) {
@@ -56,7 +56,7 @@ static pt_table_entry *find_entry(pt_table_entry *entries, int capacity, const c
                 if(tombstone == NULL) tombstone = entry;
             }
         }
-        else if(strcmp(entry->key, key) == 0) {
+        else if(entry->length == length && strncmp(entry->key, key, length) == 0) {
             return entry;
         }
 
@@ -77,7 +77,7 @@ static int adjust_capacity(pt_table *table, int capacity) {
         pt_table_entry entry = old_entries[i];
         if(entry.key == NULL) continue;
 
-        pt_table_entry *dest = find_entry(new_entries, capacity, entry.key);
+        pt_table_entry *dest = find_entry(new_entries, capacity, entry.key, entry.length);
         *dest = entry;
         count++;
     }
@@ -89,60 +89,65 @@ static int adjust_capacity(pt_table *table, int capacity) {
     return 1;
 }
 
-int pt_table_init(pt_table *table, pt_table_entry_destructor entry_destructor) {
+int pt_table_init(pt_table *table, pt_table_value_destructor value_destructor) {
     table->entries = NULL;
     table->capacity = 0;
     table->count = 0;
-    table->entry_destructor = entry_destructor;
+    table->value_destructor = value_destructor;
     return 1;
 }
 
 void pt_table_destroy(pt_table *table) {
-    pt_table_entry_destructor destructor = table->entry_destructor;
+    pt_table_value_destructor destructor = table->value_destructor;
     if(destructor) {
-        uintptr_t it;
-        pt_table_iterate(table, it) {
-            destructor(it);
+        for(pt_table_entry *it = table->entries; it < table->entries + table->capacity; it++) {
+            if(it->key != NULL) {
+                destructor(it->value);
+            }
         }
     }
     free(table->entries);
-    pt_table_init(table, table->entry_destructor);
+    pt_table_init(table, table->value_destructor);
 }
 
-int pt_table_get(pt_table *table, const char *key, uintptr_t *value) {      
+int pt_table_get(pt_table *table, const char *key, int length, uintptr_t *value) {      
     if (table->count == 0) return 0;
 
-    pt_table_entry *entry = find_entry(table->entries, table->capacity, key);
+    pt_table_entry *entry = find_entry(table->entries, table->capacity, key, length);
     if (entry->key == NULL) return 0;
 
     *value = entry->value;
     return 1;
 }
 
-int pt_table_set(pt_table *table, const char *key, uintptr_t value) {
+int pt_table_set(pt_table *table, const char *key, int length, uintptr_t value) {
     if (table->count + 1 > table->capacity * TABLE_MAX_LOAD) {
         int capacity = GROW_CAPACITY(table->capacity);
         if(!adjust_capacity(table, capacity)) return 0;
     }
     
-    pt_table_entry *entry = find_entry(table->entries, table->capacity, key);
+    pt_table_entry *entry = find_entry(table->entries, table->capacity, key, length);
 
     int isNewKey = entry->key == NULL;
-    if (isNewKey && entry->value != TOMBSTONE_VALUE) table->count++;
+    if (isNewKey && entry->value != TOMBSTONE_VALUE) {
+        table->count++;
+    }
 
     entry->key = key;
+    entry->length = length;
     entry->value = value;
     return isNewKey;
 }
 
-int pt_table_delete(pt_table *table, const char *key) {
+int pt_table_delete(pt_table *table, const char *key, int length) {
     if(table->count == 0) return 0;
 
-    pt_table_entry *entry = find_entry(table->entries, table->capacity, key);
+    pt_table_entry *entry = find_entry(table->entries, table->capacity, key, length);
     if(entry->key == NULL) return 0;
 
-    if(table->entry_destructor) table->entry_destructor(entry->value);
+    if(table->value_destructor) table->value_destructor(entry->value);
     entry->key = NULL;
+    entry->length = 0;
     entry->value = TOMBSTONE_VALUE;
     return 1;
 }

@@ -27,26 +27,24 @@
 
 typedef struct pt_table_entry {
     const char *key;
+    int length;
     uintptr_t value;
 } pt_table_entry;
 
-typedef void(*pt_table_entry_destructor)(uintptr_t);
+typedef void(*pt_table_value_destructor)(uintptr_t);
 
 typedef struct pt_table {
     pt_table_entry *entries;
     int capacity;
     int count;
-    pt_table_entry_destructor entry_destructor;
+    pt_table_value_destructor value_destructor;
 } pt_table;
 
-int pt_table_init(pt_table *table, pt_table_entry_destructor entry_destructor);
+int pt_table_init(pt_table *table, pt_table_value_destructor value_destructor);
 void pt_table_destroy(pt_table *table);
 
-int pt_table_get(pt_table *table, const char *key, uintptr_t *value);
-int pt_table_set(pt_table *table, const char *key, uintptr_t value);
-int pt_table_delete(pt_table *table, const char *key);
-
-#define pt_table_iterate(table, it_var) \
-    for(pt_table_entry *__it = table->entries; __it < table->entries + table->capacity; __it++) if(__it->key != NULL && (it_var = __it->value, 1))
+int pt_table_get(pt_table *table, const char *key, int length, uintptr_t *value);
+int pt_table_set(pt_table *table, const char *key, int length, uintptr_t value);
+int pt_table_delete(pt_table *table, const char *key, int length);
 
 #endif

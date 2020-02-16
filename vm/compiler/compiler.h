@@ -44,6 +44,6 @@ void pt_release_compiler(pt_compiler *compiler);
 
 int pt_try_compile(pt_compiler *compiler, const char *grammar_description, pt_compiler_args *compiler_args);
 
-pt_rule_info *pt_get_rule_info(pt_compiler *compiler, const char *rule);
+pt_rule_info *pt_get_rule_info(pt_compiler *compiler, const char *rule_name, int length);
 
 #endif

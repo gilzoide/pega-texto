@@ -29,7 +29,7 @@
 
 int pt_init_compiler(pt_compiler *compiler) {
     return compiler
-           && pt_table_init(&compiler->rule_table, (pt_table_entry_destructor)&free)
+           && pt_table_init(&compiler->rule_table, (pt_table_value_destructor)&free)
            && pt_init_compiler_grammar(&compiler->compiler_grammar)
            && pt_init_bytecode(&compiler->bytecode)
            && (compiler->target_grammar = (pt_grammar){}, 1);
@@ -240,11 +240,11 @@ int pt_try_compile(pt_compiler *compiler, const char *grammar_description, pt_co
     return 0;
 }
 
-pt_rule_info *pt_get_rule_info(pt_compiler *compiler, const char *rule) {
+pt_rule_info *pt_get_rule_info(pt_compiler *compiler, const char *rule_name, int length) {
     pt_rule_info *info;
-    if(!pt_table_get(&compiler->rule_table, rule, (uintptr_t *)&info)) {
+    if(!pt_table_get(&compiler->rule_table, rule_name, length, (uintptr_t *)&info)) {
         if(info = malloc(sizeof(pt_rule_info))) return NULL;
-        if(!pt_table_set(&compiler->rule_table, rule, (uintptr_t)info)) {
+        if(!pt_table_set(&compiler->rule_table, rule_name, length, (uintptr_t)info)) {
             free(info);
             return NULL;
         }
