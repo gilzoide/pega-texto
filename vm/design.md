@@ -62,10 +62,15 @@ Being `T(e)` the transformation of expression `e`:
 
 e1 e2:
 ```
+  push
   T(e1)
-  jmpf end
+  jmpf fail
   T(e2)
+  jmps end
+fail:
+  peek
 end:
+  pop
 ```
 
 e1 / e2:
@@ -102,6 +107,18 @@ expression:
   jmps expression
 fail:
   succ
+```
+
+e+:
+```
+  T(e)
+  jmpf end
+expression:
+  T(e)
+  jmps expression
+fail:
+  succ
+end:
 ```
 
 e^N: (e+ -> e^1)
