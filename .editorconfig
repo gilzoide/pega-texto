@@ -3,3 +3,8 @@ root = true
 [*]
 end_of_line = lf
 insert_final_newline = true
+indent_style = spaces
+indent_size = 4
+
+[*.{build,md}]
+indent_size = 2
