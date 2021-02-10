@@ -183,38 +183,41 @@ typedef pt_expr pt_rule[];
 /// Grammar typedef, a 2D array of expressions, or array of Rules.
 typedef pt_expr* pt_grammar[];
 
-#define PT_END  ((pt_expr){ PT_OP_END })
-#define PT_BYTE(b)  ((pt_expr){ PT_OP_BYTE, b })
-#define PT_LITERAL(str, size)  ((pt_expr){ PT_OP_LITERAL, size, str })
-#define PT_LITERAL_S(str)  ((pt_expr){ PT_OP_LITERAL, sizeof(str) - 1, str })
-#define PT_LITERAL_0(str)  ((pt_expr){ PT_OP_LITERAL, strlen(str), str })
-#define PT_CASE(str, size)  ((pt_expr){ PT_OP_CASE_INSENSITIVE, size, str })
-#define PT_CASE_S(str)  ((pt_expr){ PT_OP_CASE_INSENSITIVE, sizeof(str) - 1, str })
-#define PT_CASE_0(str)  ((pt_expr){ PT_OP_CASE_INSENSITIVE, strlen(str), str })
-#define PT_ALNUM  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_ALNUM })
-#define PT_ALPHA  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_ALPHA })
-#define PT_CNTRL  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_CNTRL })
-#define PT_DIGIT  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_DIGIT })
-#define PT_GRAPH  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_GRAPH })
-#define PT_LOWER  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_LOWER })
-#define PT_PUNCT  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_PUNCT })
-#define PT_SPACE  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_SPACE })
-#define PT_UPPER  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_UPPER })
-#define PT_XDIGIT  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_XDIGIT })
-#define PT_SET(str, size)  ((pt_expr){ PT_OP_SET, size, str })
-#define PT_SET_S(str)  ((pt_expr){ PT_OP_SET, sizeof(str) - 1, str })
-#define PT_SET_0(str)  ((pt_expr){ PT_OP_SET, strlen(str), str })
-#define PT_RANGE(from, to)  ((pt_expr){ PT_OP_RANGE, from + (to << 8) })
-#define PT_ANY  ((pt_expr){ PT_OP_ANY })
-#define PT_RULE(index)  ((pt_expr){ PT_OP_NON_TERMINAL, index })
-#define PT_AT_LEAST(n)  ((pt_expr){ PT_OP_AT_LEAST, n })
-#define PT_AT_MOST(n)  ((pt_expr){ PT_OP_AT_MOST, n })
-#define PT_AND  ((pt_expr){ PT_OP_AND })
-#define PT_NOT  ((pt_expr){ PT_OP_NOT })
-#define PT_SEQUENCE  ((pt_expr){ PT_OP_SEQUENCE })
-#define PT_CHOICE  ((pt_expr){ PT_OP_CHOICE })
-#define PT_CUSTOM_MATCHER(f)  ((pt_expr){ PT_OP_CUSTOM_MATCHER, 0, f)
-#define PT_ERROR(index)  ((pt_expr){ PT_OP_ERROR })
+#define PT_RANGE_PACK(from, to) (from | (to << 8))
+#define PT_RANGE_UNPACK(r, into_from, into_to) { into_from = r & 0xff; into_to = (r >> 8); }
+
+#define PT_END(...)  ((pt_expr){ PT_OP_END, 0, NULL, __VA_ARGS__ })
+#define PT_BYTE(b, ...)  ((pt_expr){ PT_OP_BYTE, b, NULL, __VA_ARGS__ })
+#define PT_LITERAL(str, size, ...)  ((pt_expr){ PT_OP_LITERAL, size, str, __VA_ARGS__ })
+#define PT_LITERAL_S(str, ...)  ((pt_expr){ PT_OP_LITERAL, sizeof(str) - 1, str, __VA_ARGS__ })
+#define PT_LITERAL_0(str, ...)  ((pt_expr){ PT_OP_LITERAL, strlen(str), str, __VA_ARGS__ })
+#define PT_CASE(str, size, ...)  ((pt_expr){ PT_OP_CASE_INSENSITIVE, size, str, __VA_ARGS__ })
+#define PT_CASE_S(str, ...)  ((pt_expr){ PT_OP_CASE_INSENSITIVE, sizeof(str) - 1, str, __VA_ARGS__ })
+#define PT_CASE_0(str, ...)  ((pt_expr){ PT_OP_CASE_INSENSITIVE, strlen(str), str, __VA_ARGS__ })
+#define PT_ALNUM(...)  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_ALNUM, NULL, __VA_ARGS__ })
+#define PT_ALPHA(...)  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_ALPHA, NULL, __VA_ARGS__ })
+#define PT_CNTRL(...)  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_CNTRL, NULL, __VA_ARGS__ })
+#define PT_DIGIT(...)  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_DIGIT, NULL, __VA_ARGS__ })
+#define PT_GRAPH(...)  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_GRAPH, NULL, __VA_ARGS__ })
+#define PT_LOWER(...)  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_LOWER, NULL, __VA_ARGS__ })
+#define PT_PUNCT(...)  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_PUNCT, NULL, __VA_ARGS__ })
+#define PT_SPACE(...)  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_SPACE, NULL, __VA_ARGS__ })
+#define PT_UPPER(...)  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_UPPER, NULL, __VA_ARGS__ })
+#define PT_XDIGIT(...)  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_XDIGIT, NULL, __VA_ARGS__ })
+#define PT_SET(str, size, ...)  ((pt_expr){ PT_OP_SET, size, str, __VA_ARGS__ })
+#define PT_SET_S(str, ...)  ((pt_expr){ PT_OP_SET, sizeof(str) - 1, str, __VA_ARGS__ })
+#define PT_SET_0(str, ...)  ((pt_expr){ PT_OP_SET, strlen(str), str, __VA_ARGS__ })
+#define PT_RANGE(from, to, ...)  ((pt_expr){ PT_OP_RANGE, PT_RANGE_PACK(from, to), NULL, __VA_ARGS__ })
+#define PT_ANY(...)  ((pt_expr){ PT_OP_ANY, 0, NULL, __VA_ARGS__ })
+#define PT_RULE(index, ...)  ((pt_expr){ PT_OP_NON_TERMINAL, index, NULL, __VA_ARGS__ })
+#define PT_AT_LEAST(n, ...)  ((pt_expr){ PT_OP_AT_LEAST, n, NULL, __VA_ARGS__ })
+#define PT_AT_MOST(n, ...)  ((pt_expr){ PT_OP_AT_MOST, n, NULL, __VA_ARGS__ })
+#define PT_AND(...)  ((pt_expr){ PT_OP_AND, 0, NULL, __VA_ARGS__ })
+#define PT_NOT(...)  ((pt_expr){ PT_OP_NOT, 0, NULL, __VA_ARGS__ })
+#define PT_SEQUENCE(...)  ((pt_expr){ PT_OP_SEQUENCE, 0, NULL, __VA_ARGS__ })
+#define PT_CHOICE(...)  ((pt_expr){ PT_OP_CHOICE, 0, NULL, __VA_ARGS__ })
+#define PT_CUSTOM_MATCHER(f, ...)  ((pt_expr){ PT_OP_CUSTOM_MATCHER, 0, f, __VA_ARGS__ })
+#define PT_ERROR(index, ...)  ((pt_expr){ PT_OP_ERROR, 0, NULL, __VA_ARGS__ })
 
 /**
  * Match result: a {number of matched chars/match error code, action
@@ -675,7 +678,7 @@ PTDEF pt_match_result pt_match(const pt_grammar es, const char *str, const pt_ma
 	pt_match_state *state = pt_push_state(&S, es[0], 0, 0);
 	pt_expr *e;
 	const char *ptr;
-	uint8_t *byteptr;
+	uint8_t range_from, range_to;
 
 	// match loop
 	while(state) {
@@ -719,8 +722,8 @@ PTDEF pt_match_result pt_match(const pt_grammar es, const char *str, const pt_ma
 				break;
 
 			case PT_OP_RANGE:
-				byteptr = (uint8_t *)&e->N;
-				if(*ptr >= byteptr[0] && *ptr <= byteptr[1]) {
+                PT_RANGE_UNPACK(e->N, range_from, range_to);
+				if(*ptr >= range_from && *ptr <= range_to) {
 					matched = 1;
 				}
 				break;
