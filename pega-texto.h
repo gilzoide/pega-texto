@@ -148,10 +148,6 @@ typedef int(*pt_custom_matcher_function)(PT_STRING_TYPE, void*);
  * Return:
  *   Anything you want.
  *   This result will be used as argument for other actions below in the stack.
- *
- * @sa @ref InfixCalculator.c
- * @sa @ref Lisp.c
- * @sa @ref Re.c
  */
 typedef pt_data(*pt_expression_action)(
     PT_STRING_TYPE str,
@@ -171,10 +167,10 @@ typedef pt_data(*pt_expression_action)(
  * - User custom data from match options
  */
 typedef void(*pt_error_action)(
-    PT_STRING_TYPE,
-    size_t,
-    int,
-    void*
+    PT_STRING_TYPE str,
+    size_t where,
+    int code,
+    void* userdata
 );
 
 /// Parsing Expressions.
@@ -185,10 +181,11 @@ typedef struct pt_expr {
     int16_t N;
     /// Literal and Character Set strings, Custom Matcher functions.
     union {
-        void* data;
+        void *data;
         PT_STRING_TYPE str;
         pt_custom_matcher_function matcher;
         pt_expression_action action;
+        uintptr_t quantifier;
     };
 } pt_expr;
 
@@ -200,45 +197,61 @@ typedef pt_expr* pt_grammar[];
 #define PT_RANGE_PACK(from, to) (from | (to << 8))
 #define PT_RANGE_UNPACK(r, into_from, into_to) { into_from = r & 0xff; into_to = (r >> 8); }
 
-#define PT_END()  ((pt_expr){ PT_OP_END, 0, NULL })
-#define PT_END_SEQUENCE PT_END
-#define PT_END_CHOICE PT_END
-#define PT_BYTE(b)  ((pt_expr){ PT_OP_BYTE, b, NULL })
+// Ref: https://groups.google.com/g/comp.std.c/c/d-6Mj5Lko_s
+#define PT_NARG(...) \
+         PT_NARG_(__VA_ARGS__, PT_RSEQ_N())
+#define PT_NARG_(...) \
+         PT_ARG_N(__VA_ARGS__)
+#define PT_ARG_N( \
+          _1, _2, _3, _4, _5, _6, _7, _8, _9,_10, \
+         _11,_12,_13,_14,_15,_16,_17,_18,_19,_20, \
+         _21,_22,_23,_24,_25,_26,_27,_28,_29,_30, \
+         _31,_32,_33,_34,_35,_36,_37,_38,_39,_40, \
+         _41,_42,_43,_44,_45,_46,_47,_48,_49,_50, \
+         _51,_52,_53,_54,_55,_56,_57,_58,_59,_60, \
+         _61,_62,_63,N,...) N
+#define PT_RSEQ_N() \
+         63,62,61,60,                   \
+         59,58,57,56,55,54,53,52,51,50, \
+         49,48,47,46,45,44,43,42,41,40, \
+         39,38,37,36,35,34,33,32,31,30, \
+         29,28,27,26,25,24,23,22,21,20, \
+         19,18,17,16,15,14,13,12,11,10, \
+         9,8,7,6,5,4,3,2,1,0
+
+#define PT_END()  ((pt_expr){ PT_OP_END })
+#define PT_BYTE(b)  ((pt_expr){ PT_OP_BYTE, b })
 #define PT_LITERAL(str, size)  ((pt_expr){ PT_OP_LITERAL, size, str })
 #define PT_LITERAL_S(str)  ((pt_expr){ PT_OP_LITERAL, sizeof(str) - 1, str })
 #define PT_LITERAL_0(str)  ((pt_expr){ PT_OP_LITERAL, strlen(str), str })
 #define PT_CASE(str, size)  ((pt_expr){ PT_OP_CASE_INSENSITIVE, size, str })
 #define PT_CASE_S(str)  ((pt_expr){ PT_OP_CASE_INSENSITIVE, sizeof(str) - 1, str })
 #define PT_CASE_0(str)  ((pt_expr){ PT_OP_CASE_INSENSITIVE, strlen(str), str })
-#define PT_ALNUM()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_ALNUM, NULL })
-#define PT_ALPHA()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_ALPHA, NULL })
-#define PT_CNTRL()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_CNTRL, NULL })
-#define PT_DIGIT()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_DIGIT, NULL })
-#define PT_GRAPH()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_GRAPH, NULL })
-#define PT_LOWER()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_LOWER, NULL })
-#define PT_PUNCT()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_PUNCT, NULL })
-#define PT_SPACE()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_SPACE, NULL })
-#define PT_UPPER()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_UPPER, NULL })
-#define PT_XDIGIT()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_XDIGIT, NULL })
+#define PT_ALNUM()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_ALNUM })
+#define PT_ALPHA()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_ALPHA })
+#define PT_CNTRL()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_CNTRL })
+#define PT_DIGIT()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_DIGIT })
+#define PT_GRAPH()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_GRAPH })
+#define PT_LOWER()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_LOWER })
+#define PT_PUNCT()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_PUNCT })
+#define PT_SPACE()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_SPACE })
+#define PT_UPPER()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_UPPER })
+#define PT_XDIGIT()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_XDIGIT })
 #define PT_SET(str, size)  ((pt_expr){ PT_OP_SET, size, str })
 #define PT_SET_S(str)  ((pt_expr){ PT_OP_SET, sizeof(str) - 1, str })
 #define PT_SET_0(str)  ((pt_expr){ PT_OP_SET, strlen(str), str })
-#define PT_RANGE(from, to)  ((pt_expr){ PT_OP_RANGE, PT_RANGE_PACK(from, to), NULL })
-#define PT_ANY()  ((pt_expr){ PT_OP_ANY, 0, NULL })
-#define PT_RULE(index)  ((pt_expr){ PT_OP_NON_TERMINAL, index, NULL })
-#define PT_AT_LEAST(n)  ((pt_expr){ PT_OP_AT_LEAST, n, NULL })
-#define PT_AT_MOST(n)  ((pt_expr){ PT_OP_AT_MOST, n, NULL })
-#define PT_AND_()  ((pt_expr){ PT_OP_AND, 0, NULL })
-#define PT_AND(expr)  PT_AND_(), expr
-#define PT_NOT_()  ((pt_expr){ PT_OP_NOT, 0, NULL })
-#define PT_NOT(expr)  PT_NOT_(), expr
-#define PT_SEQUENCE_()  ((pt_expr){ PT_OP_SEQUENCE, 0, NULL })
-#define PT_SEQUENCE(...)  PT_SEQUENCE_(), __VA_ARGS__, PT_END()
-#define PT_CHOICE_()  ((pt_expr){ PT_OP_CHOICE, 0, NULL })
-#define PT_CHOICE(...)  (pt_expr){ PT_OP_CHOICE, 0, NULL }, __VA_ARGS__, (pt_expr){ PT_OP_END }
-#define PT_CUSTOM_MATCHER(f)  ((pt_expr){ PT_OP_CUSTOM_MATCHER, 0, f })
-#define PT_ERROR(index)  ((pt_expr){ PT_OP_ERROR, 0, NULL })
-#define PT_ACTION(action)  ((pt_expr){ PT_OP_ACTION, 0, action })
+#define PT_RANGE(from, to)  ((pt_expr){ PT_OP_RANGE, PT_RANGE_PACK(from, to) })
+#define PT_ANY()  ((pt_expr){ PT_OP_ANY, 0 })
+#define PT_RULE(index)  ((pt_expr){ PT_OP_NON_TERMINAL, index })
+#define PT_AT_LEAST(n, ...)  ((pt_expr){ PT_OP_AT_LEAST, PT_NARG(__VA_ARGS__), (void *) n }), __VA_ARGS__
+#define PT_AT_MOST(n, ...)  ((pt_expr){ PT_OP_AT_MOST, PT_NARG(__VA_ARGS__), (void *) n }), __VA_ARGS__
+#define PT_AND(...)  ((pt_expr){ PT_OP_AND, PT_NARG(__VA_ARGS__) }), __VA_ARGS__
+#define PT_NOT(...)  ((pt_expr){ PT_OP_NOT, PT_NARG(__VA_ARGS__) }), __VA_ARGS__
+#define PT_SEQUENCE(...)  ((pt_expr){ PT_OP_SEQUENCE, PT_NARG(__VA_ARGS__) }), __VA_ARGS__
+#define PT_CHOICE(...)  ((pt_expr){ PT_OP_CHOICE, PT_NARG(__VA_ARGS__) }), __VA_ARGS__
+#define PT_CUSTOM_MATCHER(f)  ((pt_expr){ PT_OP_CUSTOM_MATCHER, 0, (void *) f })
+#define PT_ERROR(index)  ((pt_expr){ PT_OP_ERROR, 0 })
+#define PT_ACTION(action, ...)  ((pt_expr){ PT_OP_ACTION, PT_NARG(__VA_ARGS__), (void *) action }), __VA_ARGS__
 
 /**
  * Match result: a {number of matched chars/match error code, action
@@ -381,10 +394,10 @@ typedef enum pt__match_flags {
     PT__MATCH_NONE = 0,
     PT__MATCH_AND = 1 << 1,
     PT__MATCH_NOT = 1 << 2,
-    PT__MATCH_SEQUENCE = 1 << 3,
-    PT__MATCH_CHOICE = 1 << 4,
-    PT__MATCH_QUANTIFIER = 1 << 5,
-    PT__MATCH_HAVE_ACTION = 1 << 6,
+    PT__MATCH_CHOICE = 1 << 3,
+    PT__MATCH_AT_LEAST = 1 << 4,
+    PT__MATCH_AT_MOST = 1 << 5,
+    PT__MATCH_ACTION = 1 << 6,
 } pt__match_flags;
 
 /**
@@ -393,11 +406,10 @@ typedef enum pt__match_flags {
 typedef struct pt__match_state {
     const pt_expr *e;  ///< Current expression being matched.
     size_t pos;  ///< Current position in the stream.
-    int r1;  ///< General purpose register 1.
-    unsigned int r2;  ///< General purpose register 2.
+    int matched;
+    int N;  ///< General purpose register 1.
     unsigned int ac;  ///< Action counter.
-    unsigned int qa;  ///< Number of queried Actions.
-    pt__match_flags flags;
+    int flags;
 } pt__match_state;
 
 /**
@@ -493,9 +505,9 @@ static pt__match_state *pt__push_state(pt__match_context *context, const pt_expr
     state = context->state_stack.states + (context->state_stack.size)++;
     state->e = e;
     state->pos = pos;
-    state->r1 = state->r2 = 0;
+    state->matched = 0;
+    state->N = 0;
     state->ac = context->action_stack.size;
-    state->qa = 0;
 
     return state;
 }
@@ -509,6 +521,17 @@ static pt__match_state *pt__push_state(pt__match_context *context, const pt_expr
 static pt__match_state *pt__get_current_state(const pt__match_state_stack *s) {
     int i = s->size - 1;
     return i >= 0 ? s->states + i : NULL;
+}
+
+static pt__match_state *pt__pop_state(pt__match_state_stack *state_stack, size_t count) {
+    if(count < state_stack->size) {
+        state_stack->size -= count;
+        return &state_stack->states[state_stack->size - 1];
+    }
+    else {
+        state_stack->size = 0;
+        return NULL;
+    }
 }
 
 /**
@@ -594,8 +617,8 @@ static pt__match_action *pt__get_current_action(const pt__match_action_stack *a)
  */
 static pt_data pt__run_actions(pt__match_context *context, PT_STRING_TYPE str) {
     // allocate the data stack
-    pt_data *data_stack;
-    if((data_stack = malloc(context->action_stack.size * sizeof(pt_data))) == NULL) return PT_NULL_DATA;
+    pt_data *data_stack = (pt_data *) malloc(context->action_stack.size * sizeof(pt_data));
+    if(data_stack == NULL) return PT_NULL_DATA;
 
     // index to current Data on the stack
     int data_index = 0;
@@ -627,6 +650,7 @@ static pt_data pt__run_actions(pt__match_context *context, PT_STRING_TYPE str) {
 static pt__match_state *pt__match_succeed(pt__match_context *context,
         int *matched, PT_STRING_TYPE str, size_t new_pos) {
     pt__match_state *state = context->state_stack.states + context->state_stack.size - 1;
+    //const pt_expr* e = state->e;
     int i;
 //#ifdef PT_SUCCESS_CALLBACK
     //PT_SUCCESS_CALLBACK(context, str, state->pos, new_pos);
@@ -635,10 +659,9 @@ static pt__match_state *pt__match_succeed(pt__match_context *context,
         state = context->state_stack.states + i;
         switch(state->e->op) {
             case PT_OP_SEQUENCE:
-                state->r1 = (state + 1)->e - state->e;
             case PT_OP_AT_LEAST:
             case PT_OP_AT_MOST:
-                state->r2 = new_pos - state->pos; // mark current match accumulator
+                state->matched = new_pos - state->pos; // mark current match accumulator
                 state->ac = context->action_stack.size; // keep queried actions
                 goto backtrack;
 
@@ -648,7 +671,7 @@ static pt__match_state *pt__match_succeed(pt__match_context *context,
                 break;
 
             case PT_OP_NOT:
-                state->r1 = -1; // NOT success = fail
+                state->matched = PT_NO_MATCH; // NOT success = fail
                 context->action_stack.size = state->ac; // discard queried actions
                 goto backtrack;
 
@@ -678,12 +701,12 @@ static pt__match_state *pt__match_fail(pt__match_context *context, PT_STRING_TYP
         switch(state->e->op) {
             case PT_OP_AT_LEAST:
             case PT_OP_AT_MOST:
-                state->r1 = -(state->r1); // mark end of quantifier matching
+                state->matched = -(state->matched); // mark end of quantifier matching
             case PT_OP_CHOICE:
                 goto backtrack;
 
             case PT_OP_NOT:
-                state->r1 = 1; // NOT fail = success
+                state->matched = 1; // NOT fail = success
                 goto backtrack;
 
             case PT_OP_ERROR:
@@ -751,6 +774,9 @@ PTDEF pt_match_result pt_match(const pt_grammar es, PT_STRING_TYPE str, const pt
         matched = PT_NO_MATCH;
 
         switch(e->op) {
+            case PT_OP_END:
+                break;
+
             // Primary
             case PT_OP_BYTE:
                 if(*ptr == e->N) {
@@ -759,25 +785,25 @@ PTDEF pt_match_result pt_match(const pt_grammar es, PT_STRING_TYPE str, const pt
                 break;
 
             case PT_OP_LITERAL:
-                if(strncmp(ptr, e->data, e->N) == 0) {
+                if(strncmp(ptr, e->str, e->N) == 0) {
                     matched = e->N;
                 }
                 break;
 
             case PT_OP_CASE_INSENSITIVE:
-                if(strncasecmp(ptr, e->data, e->N) == 0) {
+                if(strncasecmp(ptr, e->str, e->N) == 0) {
                     matched = e->N;
                 }
                 break;
 
             case PT_OP_CHARACTER_CLASS:
-                if(pt__function_for_character_class(e->N)(*ptr)) {
+                if(pt__function_for_character_class((enum pt_character_class) e->N)(*ptr)) {
                     matched = 1;
                 }
                 break;
 
             case PT_OP_SET:
-                if(*ptr && strchr(e->data, *ptr)) {
+                if(*ptr && strchr(e->str, *ptr)) {
                     matched = 1;
                 }
                 break;
@@ -795,72 +821,6 @@ PTDEF pt_match_result pt_match(const pt_grammar es, PT_STRING_TYPE str, const pt
                 }
                 break;
 
-            // Unary
-            case PT_OP_NON_TERMINAL:
-                state = pt__push_state(&context, es[e->N], state->pos);
-                continue;
-
-            case PT_OP_AT_LEAST:
-                if(state->r1 >= 0) {
-                    goto iterate_quantifier;
-                }
-                else if(-(state->r1) > e->N) {
-                    matched = state->r2;
-                }
-                break;
-            case PT_OP_AT_MOST:
-                if(state->r1 >= 0) {
-                    if(state->r1 < -(e->N)) {
-                        goto iterate_quantifier;
-                    }
-                    else {
-                        matched = state->r2;
-                    }
-                }
-                else if(state->r1 >= e->N - 1) {
-                    matched = state->r2;
-                }
-                break;
-iterate_quantifier:
-                state->r1++;
-                state = pt__push_state(&context, e + 1, state->pos + state->r2);
-                continue;
-
-            case PT_OP_NOT:
-                state->flags |= PT__MATCH_NOT;
-                state->e++;
-                continue;
-
-            case PT_OP_AND:
-                state->flags |= PT__MATCH_AND;
-                state->e++;
-                continue;
-
-            // N-ary
-            case PT_OP_SEQUENCE:
-                e = e + state->r1 + 1;
-                if(e->op != PT_OP_END) {
-                    state = pt__push_state(&context, e, state->pos + state->r2);
-                    continue;
-                }
-                else {
-                    matched = state->r2;
-                }
-                break;
-
-            case PT_OP_CHOICE:
-                e = e + state->r1 + 1;
-                if(e->op != PT_OP_END) {
-                    state = pt__push_state(&context, e, state->pos);
-                    continue;
-                }
-                break;
-
-            case PT_OP_END:
-                matched = 0;
-                break;
-
-            // Others
             case PT_OP_CUSTOM_MATCHER:
                 matched = e->matcher(ptr, context.opts->userdata);
                 if(matched <= 0) {
@@ -868,6 +828,66 @@ iterate_quantifier:
                 }
                 break;
 
+
+            // Unary
+            case PT_OP_NON_TERMINAL:
+                state = pt__push_state(&context, es[e->N], state->pos);
+                continue;
+
+            case PT_OP_AT_LEAST:
+                state = pt__push_state(&context, e + 1, state->pos);
+                state->flags |= PT__MATCH_AT_LEAST;
+                continue;
+
+            case PT_OP_AT_MOST:
+                state = pt__push_state(&context, e + 1, state->pos);
+                state->flags |= PT__MATCH_AT_MOST;
+                continue;
+
+            case PT_OP_NOT:
+                if(state->N > 0) {
+                    matched = 0;
+                    break;
+                }
+                else if(state->N < 0) {
+                    break;
+                }
+                // fallthrough
+            case PT_OP_AND:
+                state = pt__push_state(&context, e + 1, state->pos);
+                continue;
+
+            // N-ary
+            case PT_OP_ACTION:
+                if(e->action) {
+                    if(state->ac - 1 < context.action_stack.size) {
+                        action = &context.action_stack.actions[state->ac - 1];
+                        action->argc++;
+                    }
+                    pt__push_action(&context, e->action, state->pos);
+                    state->flags |= PT__MATCH_ACTION;
+                }
+                // fallthrough
+            case PT_OP_SEQUENCE:
+                if(state->N < e->N) {
+                    state = pt__push_state(&context, e + 1 + state->N, state->pos);
+                    state->N++;
+                    continue;
+                }
+                else {
+                    matched = state->matched;
+                }
+                break;
+
+            case PT_OP_CHOICE:
+                if(state->N < e->N) {
+                    state = pt__push_state(&context, e + 1 + state->N, state->pos);
+                    state->N++;
+                    continue;
+                }
+                break;
+
+            // Others
             case PT_OP_ERROR:
                 // mark that a syntactic error ocurred, so even syncing we remember this
                 if(matched_error == 0) {
@@ -879,18 +899,6 @@ iterate_quantifier:
                 }
                 matched = PT_MATCHED_ERROR;
                 break;
-
-            case PT_OP_ACTION:
-                if(e->action) {
-                    if(state->ac - 1 >= 0) {
-                        action = &context.action_stack.actions[state->ac - 1];
-                        action->argc++;
-                    }
-                    pt__push_action(&context, e->action, state->pos);
-                    state->flags |= PT__MATCH_HAVE_ACTION;
-                }
-                state->e++;
-                continue;
 
             // Unknown operation: always fail
             default: break;
