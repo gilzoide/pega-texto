@@ -282,7 +282,7 @@ typedef pt_expr* pt_grammar[];
     #define AND PT_AND
     #define NOT PT_NOT
     #define SEQ PT_SEQUENCE
-    #define OR PT_CHOICE
+    #define EITHER PT_CHOICE
     #define F PT_CUSTOM_MATCHER
     #define E PT_ERROR
     #define ACT PT_ACTION
@@ -547,6 +547,15 @@ static pt__match_state *pt__get_current_state(const pt__match_context *context) 
     return i >= 0 ? context->state_stack.states + i : NULL;
 }
 
+static void pt__peek_state(pt__match_context *context, PT_STRING_TYPE *sp, unsigned int *qc) {
+    pt__match_state *state = pt__get_current_state(context);
+    if(state) {
+        *sp = state->sp;
+        *qc = state->qc;
+        context->action_stack.size = state->ac;
+    }
+}
+
 static pt__match_state *pt__pop_state(pt__match_context *context) {
     if(context->state_stack.size > 1) {
         context->state_stack.size--;
@@ -622,28 +631,6 @@ static pt__match_action *pt__push_action(pt__match_context *context, pt_expressi
     action->argc = argc;
 
     return action;
-}
-
-/**
- * Get the current State on top of the State Stack
- *
- * @param s The state stack.
- * @return Current State, if there is any, `NULL` otherwise.
- */
-static pt__match_action *pt__get_action_at(const pt__match_context *context, unsigned int ac) {
-    unsigned int i = ac - 1;
-    return i >= 0 && i < context->action_stack.size
-        ? &context->action_stack.actions[i]
-        : NULL;
-}
-
-static void pt__peek_state(pt__match_context *context, PT_STRING_TYPE *sp, unsigned int *qc) {
-    pt__match_state *state = pt__get_current_state(context);
-    if(state) {
-        *sp = state->sp;
-        *qc = state->qc;
-        context->action_stack.size = state->ac;
-    }
 }
 
 /**
@@ -783,8 +770,12 @@ PTDEF pt_match_result pt_match(const pt_grammar es, PT_STRING_TYPE str, const pt
             case PT_OP_AND:
             case PT_OP_NOT:
             case PT_OP_SEQUENCE:
-            case PT_OP_CHOICE:
             case PT_OP_ACTION:
+                state = pt__push_state(&context, e, sp, qc);
+                break;
+
+            case PT_OP_CHOICE:
+                success = 0;
                 state = pt__push_state(&context, e, sp, qc);
                 break;
 
@@ -797,16 +788,9 @@ PTDEF pt_match_result pt_match(const pt_grammar es, PT_STRING_TYPE str, const pt
                 break;
 
             case PT_OP_SEQUENCE_END:
-                if(!success) {
-                    pt__peek_state(&context, &sp, &qc);
-                }
-                state = pt__pop_state(&context);
-                break;
-
             case PT_OP_CHOICE_END:
                 if(!success) {
-                    sp = state->sp;
-                    state->e = e;
+                    pt__peek_state(&context, &sp, &qc);
                 }
                 state = pt__pop_state(&context);
                 break;
