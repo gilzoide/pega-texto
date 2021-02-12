@@ -100,36 +100,38 @@ typedef enum pt_macth_error_code {
     PT_NULL_INPUT = -4,
 } pt_macth_error_code;
 
-/**
- * Collection of possible types for Expression Actions to return.
- *
- * @note This is not a Tagged Union, so you (developer) are responsible for
- * knowing which type each datum is. This can and should be avoided when
- * structuring the Grammar.
- */
-typedef union pt_data {
-    void* p;
-    char c;
-    unsigned char uc;
-    short s;
-    unsigned short us;
-    int i;
-    unsigned int ui;
-    long l;
-    unsigned long ul;
-    long long ll;
-    unsigned long long ull;
-    float f;
-    double d;
-} pt_data;
+#ifndef PT_DATA
+    /// Collection of possible types for Expression Actions to return.
+    /// 
+    /// @note This is not a Tagged Union, so you (developer) are responsible for
+    /// knowing which type each datum is. This can and should be avoided when
+    /// structuring the Grammar.
+    ///
+    /// Define `PT_DATA` before including "pega-texto.h" to provide your own data type
+    typedef union PT_DATA {
+        void *p;
+        char c;
+        unsigned char uc;
+        short s;
+        unsigned short us;
+        int i;
+        unsigned int ui;
+        long l;
+        unsigned long ul;
+        long long ll;
+        unsigned long long ull;
+        ssize_t ssz;
+        size_t sz;
+        float f;
+        double d;
+    } PT_DATA;
 
-/**
- * Facility to return a null #pt_data
- */
-#define PT_NULL_DATA ((pt_data){ NULL })
+    /// Facility to return a null #PT_DATA
+    #define PT_NULL_DATA ((PT_DATA){ NULL })
+#endif
 
 /// A function that receives a string and userdata and match it (positive) or not, advancing the matched number.
-typedef int(*pt_custom_matcher_function)(PT_STRING_TYPE, void*);
+typedef int (*pt_custom_matcher_function)(PT_STRING_TYPE, void*);
 
 /**
  * Action to be called on an Expression, after the whole match succeeds.
@@ -143,8 +145,8 @@ typedef int(*pt_custom_matcher_function)(PT_STRING_TYPE, void*);
  * Parameters:
  * - Pointer to the start of the match/capture
  * - Number of bytes contained in the match/capture
- * - Number of #pt_data arguments 
- * - #pt_data arguments, processed on inner Actions. Currently, this array is
+ * - Number of #PT_DATA arguments 
+ * - #PT_DATA arguments, processed on inner Actions. Currently, this array is
  *   reused, so you should not rely on it after Action has returned
  * - User custom data from match options
  *
@@ -152,11 +154,11 @@ typedef int(*pt_custom_matcher_function)(PT_STRING_TYPE, void*);
  *   Anything you want.
  *   This result will be used as argument for other actions below in the stack.
  */
-typedef pt_data(*pt_expression_action)(
+typedef PT_DATA (*pt_expression_action)(
     PT_STRING_TYPE str,
     size_t size,
     int argc,
-    pt_data* argv,
+    PT_DATA* argv,
     void* userdata
 );
 
@@ -169,7 +171,7 @@ typedef pt_data(*pt_expression_action)(
  * - Error code
  * - User custom data from match options
  */
-typedef void(*pt_error_action)(
+typedef PT_DATA (*pt_error_action)(
     PT_STRING_TYPE str,
     size_t where,
     int code,
@@ -316,7 +318,7 @@ typedef struct pt_match_result {
      * an outer one that folds them (which will always be the last top-level
      * one).
      */
-    pt_data data;
+    PT_DATA data;
 } pt_match_result;
 
 /**
@@ -602,7 +604,7 @@ static void pt__destroy_action_stack(pt__match_action_stack *a) {
  * @param argc  Number of arguments (inner action results) used by this action.
  * @return The newly pushed State.
  */
-static pt__match_action *pt__push_action(pt__match_context *context, pt_expression_action f, size_t start) {
+static pt__match_action *pt__push_action(pt__match_context *context, pt_expression_action f, size_t start, size_t end, int argc) {
     pt__match_action *action;
     // Double capacity, if reached
     if(context->action_stack.size == context->action_stack.capacity) {
@@ -619,8 +621,8 @@ static pt__match_action *pt__push_action(pt__match_context *context, pt_expressi
     action = context->action_stack.actions + (context->action_stack.size)++;
     action->f = f;
     action->start = start;
-    action->end = 0;
-    action->argc = 0;
+    action->end = end;
+    action->argc = argc;
 
     return action;
 }
@@ -631,16 +633,19 @@ static pt__match_action *pt__push_action(pt__match_context *context, pt_expressi
  * @param s The state stack.
  * @return Current State, if there is any, `NULL` otherwise.
  */
-static pt__match_action *pt__get_current_action(const pt__match_action_stack *a) {
-    int i = a->size - 1;
-    return i >= 0 ? a->actions + i : NULL;
+static pt__match_action *pt__get_action_at(const pt__match_context *context, unsigned int ac) {
+    unsigned int i = ac - 1;
+    return i >= 0 && i < context->action_stack.size
+        ? &context->action_stack.actions[i]
+        : NULL;
 }
 
-static void pt__peek_state(const pt__match_context *context, PT_STRING_TYPE *sp, unsigned int *qc) {
+static void pt__peek_state(pt__match_context *context, PT_STRING_TYPE *sp, unsigned int *qc) {
     pt__match_state *state = pt__get_current_state(context);
     if(state) {
         *sp = state->sp;
         *qc = state->qc;
+        context->action_stack.size = state->ac;
     }
 }
 
@@ -648,10 +653,13 @@ static void pt__peek_state(const pt__match_context *context, PT_STRING_TYPE *sp,
  * Run all actions in the Action Stack in the right way, folding them into
  * one value.
  */
-static pt_data pt__run_actions(pt__match_context *context, PT_STRING_TYPE str) {
+static void pt__run_actions(pt__match_context *context, PT_STRING_TYPE str, pt_match_result *result) {
     // allocate the data stack
-    pt_data *data_stack = (pt_data *) malloc(context->action_stack.size * sizeof(pt_data));
-    if(data_stack == NULL) return PT_NULL_DATA;
+    PT_DATA *data_stack = (PT_DATA *) malloc(context->action_stack.size * sizeof(PT_DATA));
+    if(data_stack == NULL) {
+        result->matched = PT_NO_STACK_MEM;
+        return;
+    }
 
     // index to current Data on the stack
     int data_index = 0;
@@ -674,39 +682,38 @@ static pt_data pt__run_actions(pt__match_context *context, PT_STRING_TYPE str) {
         // "push" result
         data_index++;
     }
-    pt_data res = data_stack[0];
+    result->data = data_stack[0];
     free(data_stack);
-    return res;
 }
 
 PTDEF pt_match_result pt_match(const pt_grammar es, PT_STRING_TYPE str, const pt_match_options *const opts) {
-    int matched = PT_NO_MATCH;
+    pt_match_result result = { PT_NO_MATCH };
     if(str == NULL) {
-        matched = PT_NULL_INPUT;
+        result.matched = PT_NULL_INPUT;
         goto err_null_input;
     }
     pt__match_context context = {
         opts == NULL ? &pt_default_match_options : opts,
     };
-    int matched_error = 0;
-    pt_data result_data = {};
     if(!pt__initialize_state_stack(&context)) {
-        matched = PT_NO_STACK_MEM;
+        result.matched = PT_NO_STACK_MEM;
         goto err_state_stack;
     }
     if(!pt__initialize_action_stack(&context)) {
-        matched = PT_NO_STACK_MEM;
+        result.matched = PT_NO_STACK_MEM;
         goto err_action_stack;
     }
 
     // iteration variables
     PT_STRING_TYPE sp = str;
     int success = 1;  // match success flag
-    unsigned int qc = 0;
+    unsigned int qc = 0;  // quantifier counter
     pt__match_state *state = pt__push_state(&context, es[0], str, qc);
     const pt_expr *e = state->e;
     pt__match_action *action;
     uint8_t range_from, range_to;
+    int matched_error = 0;
+    int custom_matcher_result;
 
     // match loop
     while(state) {
@@ -760,9 +767,9 @@ PTDEF pt_match_result pt_match(const pt_grammar es, PT_STRING_TYPE str, const pt
                 break;
 
             case PT_OP_CUSTOM_MATCHER:
-                matched = e->matcher(sp, context.opts->userdata);
-                success = matched > 0;
-                sp += success * matched;
+                custom_matcher_result = e->matcher(sp, context.opts->userdata);
+                success = custom_matcher_result > 0;
+                sp += success * custom_matcher_result;
                 break;
 
 
@@ -832,23 +839,28 @@ PTDEF pt_match_result pt_match(const pt_grammar es, PT_STRING_TYPE str, const pt
                 break;
 
             case PT_OP_ACTION:
+                state = pt__push_state(&context, e, sp, qc);
                 break;
 
             case PT_OP_ACTION_END:
+                if(!success) {
+                    pt__peek_state(&context, &sp, &qc);
+                }
+                else {
+                    pt__push_action(&context, state->e->action, state->sp - str, sp - str, context.action_stack.size - state->ac);
+                }
+                state = pt__pop_state(&context);
+                //state->ac = context.action_stack.size;
                 break;
 
             // Others
             case PT_OP_ERROR:
-                // mark that a syntactic error ocurred, so even syncing we remember this
-                if(matched_error == 0) {
-                    matched_error = 1;
-                    result_data.i = e->N;
-                }
+                // TODO: sync expressions
+                result.matched = PT_MATCHED_ERROR;
                 if(context.opts->on_error) {
-                    context.opts->on_error(str, sp - str, e->N, context.opts->userdata);
+                    result.data = context.opts->on_error(str, sp - str, e->N, context.opts->userdata);
                 }
-                matched = PT_MATCHED_ERROR;
-                break;
+                return result;
 
             // Unknown operation: always fail
             default: break;
@@ -864,23 +876,16 @@ PTDEF pt_match_result pt_match(const pt_grammar es, PT_STRING_TYPE str, const pt
                 else e = state->e + state->e->N + 1;
             }
         }
-
-        //state = matched == PT_NO_MATCH ? pt__match_fail(&context, str)
-              //: matched == PT_MATCHED_ERROR ? pt__match_error(&context)
-              //: pt__match_succeed(&context, &matched, str, state->pos + matched);
     }
 
-    if(matched_error) {
-        matched = PT_MATCHED_ERROR;
-    }
-    else if(success) {
-        matched = sp - str;
+    if(success) {
+        result.matched = sp - str;
         if(context.action_stack.size > 0) {
-            result_data = pt__run_actions(&context, str);
+            pt__run_actions(&context, str, &result);
         }
     }
     else {
-        matched = PT_NO_MATCH;
+        result.matched = PT_NO_MATCH;
     }
 //#ifdef PT_END_CALLBACK
     //PT_END_CALLBACK(&context, str, (pt_match_result){ matched, result_data });
@@ -891,7 +896,7 @@ err_action_stack:
     pt__destroy_state_stack(&context.state_stack);
 err_state_stack:
 err_null_input:
-    return (pt_match_result){ matched, result_data };
+    return result;
 }
 
 #endif  // PEGA_TEXTO_IMPLEMENTATION
