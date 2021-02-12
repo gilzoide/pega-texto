@@ -26,9 +26,7 @@ typedef PT_ELEMENT_TYPE *PT_STRING_TYPE;
 extern "C" {
 #endif
 
-/**
- * Operations for constructing Parsing Expressions.
- */
+/// Operations for constructing Parsing Expressions.
 enum pt_operation {
     PT_OP_END = 0,
     // Primary
@@ -46,20 +44,21 @@ enum pt_operation {
     // Unary
     PT_OP_NON_TERMINAL,     // <non-terminal> // Recurse to non-terminal expression
     PT_OP_AT_LEAST,         // e^N // Match N or more occurrences of next Expression
-    PT_OP_AT_LEAST_END,
-    PT_OP_AT_MOST,         // e^-N // Match N or less occurrences of next Expression. Always succeeds
-    PT_OP_AT_MOST_END,
-    PT_OP_AND,              // &e
-    PT_OP_AND_END,
+    PT_OP_AT_MOST,          // e^-N // Match N or less occurrences of next Expression. Always succeeds
     PT_OP_NOT,              // !e
-    PT_OP_NOT_END,
+    PT_OP_AND,              // &e
     // N-ary
-    PT_OP_SEQUENCE,        // e1 e2
+    PT_OP_SEQUENCE,         // e1 e2
+    PT_OP_CHOICE,           // e1 / e2
+    PT_OP_ERROR,            // ERROR // Represents a syntactic error
+    PT_OP_ACTION,           // Push an action to the stack
+
+    PT_OP_AT_LEAST_END,
+    PT_OP_AT_MOST_END,
+    PT_OP_NOT_END,
+    PT_OP_AND_END,
     PT_OP_SEQUENCE_END,
-    PT_OP_CHOICE,          // e1 / e2
     PT_OP_CHOICE_END,
-    PT_OP_ERROR,           // ERROR // Represents a syntactic error
-    PT_OP_ACTION,          // Push an action to the stack
     PT_OP_ACTION_END,
 
     PT_OP_OPERATION_ENUM_COUNT,
@@ -68,11 +67,9 @@ enum pt_operation {
 /// String version of the possible operations.
 PTDEF const char* const pt_operation_names[];
 
-/**
- * Character classes supported by pega-texto.
- *
- * Each of them correspond to the `is*` functions defined in `ctype.h` header.
- */
+/// Character classes supported by pega-texto.
+/// 
+/// Each of them correspond to the `is*` functions defined in `ctype.h` header.
 enum pt_character_class {
     PT_CLASS_ALNUM  = 'w',
     PT_CLASS_ALPHA  = 'a',
@@ -101,13 +98,13 @@ typedef enum pt_macth_error_code {
 } pt_macth_error_code;
 
 #ifndef PT_DATA
-    /// Collection of possible types for Expression Actions to return.
+    /// Default data types for Expression Actions to return.
+    ///
+    /// Define `PT_DATA` before including "pega-texto.h" to provide your own data type
     /// 
     /// @note This is not a Tagged Union, so you (developer) are responsible for
     /// knowing which type each datum is. This can and should be avoided when
     /// structuring the Grammar.
-    ///
-    /// Define `PT_DATA` before including "pega-texto.h" to provide your own data type
     typedef union PT_DATA {
         void *p;
         char c;
@@ -125,9 +122,6 @@ typedef enum pt_macth_error_code {
         float f;
         double d;
     } PT_DATA;
-
-    /// Facility to return a null #PT_DATA
-    #define PT_NULL_DATA ((PT_DATA){ NULL })
 #endif
 
 /// A function that receives a string and userdata and match it (positive) or not, advancing the matched number.
@@ -261,6 +255,8 @@ typedef pt_expr* pt_grammar[];
 #define PT_ERROR(index)  ((pt_expr){ PT_OP_ERROR, 0 })
 #define PT_ACTION(action, ...)  ((pt_expr){ PT_OP_ACTION, PT_NARG(__VA_ARGS__), (void *) action }), __VA_ARGS__, ((pt_expr){ PT_OP_ACTION_END })
 
+#define PT_BUT(...) PT_NOT(__VA_ARGS__), PT_ANY()
+
 #ifdef PT_DEFINE_SHORTCUTS
     #define B PT_BYTE
     #define L PT_LITERAL_S
@@ -280,8 +276,8 @@ typedef pt_expr* pt_grammar[];
     #define R PT_RANGE
     #define ANY PT_ANY
     #define V PT_CALL
-    #define AL PT_AT_LEAST
-    #define AM PT_AT_MOST
+    #define AT_LEAST PT_AT_LEAST
+    #define AT_MOST PT_AT_MOST
     #define OPT PT_OPTIONAL
     #define AND PT_AND
     #define NOT PT_NOT
@@ -290,6 +286,7 @@ typedef pt_expr* pt_grammar[];
     #define F PT_CUSTOM_MATCHER
     #define E PT_ERROR
     #define ACT PT_ACTION
+    #define BUT PT_BUT
 #endif
 
 #define PT_RULE(...)  { __VA_ARGS__, PT_END() }
@@ -762,7 +759,7 @@ PTDEF pt_match_result pt_match(const pt_grammar es, PT_STRING_TYPE str, const pt
                 break;
 
             case PT_OP_ANY:
-                success = *sp;
+                success = (*sp) != 0;
                 sp += success;
                 break;
 
@@ -787,16 +784,14 @@ PTDEF pt_match_result pt_match(const pt_grammar es, PT_STRING_TYPE str, const pt
             case PT_OP_NOT:
             case PT_OP_SEQUENCE:
             case PT_OP_CHOICE:
+            case PT_OP_ACTION:
                 state = pt__push_state(&context, e, sp, qc);
-                break;
-
-            case PT_OP_AND_END:
-                pt__peek_state(&context, &sp, &qc);
-                state = pt__pop_state(&context);
                 break;
 
             case PT_OP_NOT_END:
                 success = !success;
+                // fallthrough
+            case PT_OP_AND_END:
                 pt__peek_state(&context, &sp, &qc);
                 state = pt__pop_state(&context);
                 break;
@@ -836,10 +831,6 @@ PTDEF pt_match_result pt_match(const pt_grammar es, PT_STRING_TYPE str, const pt
                     state = pt__pop_state(&context);
                     success = 1;
                 }
-                break;
-
-            case PT_OP_ACTION:
-                state = pt__push_state(&context, e, sp, qc);
                 break;
 
             case PT_OP_ACTION_END:
