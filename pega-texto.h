@@ -244,8 +244,8 @@ typedef pt_expr* pt_grammar[];
 #define PT_RANGE(from, to)  ((pt_expr){ PT_OP_RANGE, PT_RANGE_PACK(from, to) })
 #define PT_ANY()  ((pt_expr){ PT_OP_ANY, 0 })
 #define PT_CALL(index)  ((pt_expr){ PT_OP_NON_TERMINAL, 0, (void *) index })
-#define PT_AT_LEAST(n, ...)  ((pt_expr){ PT_OP_AT_LEAST, PT_NARG(__VA_ARGS__), (void *) n }), __VA_ARGS__, ((pt_expr){ PT_OP_AT_LEAST_END })
-#define PT_AT_MOST(n, ...)  ((pt_expr){ PT_OP_AT_MOST, PT_NARG(__VA_ARGS__), (void *) n }), __VA_ARGS__, ((pt_expr){ PT_OP_AT_MOST_END })
+#define PT_AT_LEAST(n, ...)  ((pt_expr){ PT_OP_AT_LEAST, 0, (void *) n }), PT_SEQUENCE(__VA_ARGS__), ((pt_expr){ PT_OP_AT_LEAST_END })
+#define PT_AT_MOST(n, ...)  ((pt_expr){ PT_OP_AT_MOST, 0, (void *) n }), PT_SEQUENCE(__VA_ARGS__), ((pt_expr){ PT_OP_AT_MOST_END })
 #define PT_OPTIONAL(...)  PT_AT_MOST(1, __VA_ARGS__)
 #define PT_AND(...)  ((pt_expr){ PT_OP_AND, PT_NARG(__VA_ARGS__) }), __VA_ARGS__, ((pt_expr){ PT_OP_AND_END })
 #define PT_NOT(...)  ((pt_expr){ PT_OP_NOT, PT_NARG(__VA_ARGS__) }), __VA_ARGS__, ((pt_expr){ PT_OP_NOT_END })
@@ -513,7 +513,7 @@ static void pt__destroy_state_stack(pt__match_state_stack *s) {
  * @param ac  The new Action counter.
  * @return The newly pushed State.
  */
-static pt__match_state *pt__push_state(pt__match_context *context, const pt_expr *const e, PT_STRING_TYPE sp, unsigned int qc) {
+static pt__match_state *pt__push_state(pt__match_context *context, const pt_expr *const e, PT_STRING_TYPE sp) {
     pt__match_state *state;
     // Double capacity, if reached
     if(context->state_stack.size == context->state_stack.capacity) {
@@ -530,7 +530,7 @@ static pt__match_state *pt__push_state(pt__match_context *context, const pt_expr
     state = context->state_stack.states + (context->state_stack.size)++;
     state->e = e;
     state->sp = sp;
-    state->qc = qc;
+    state->qc = 0;
     state->ac = context->action_stack.size;
 
     return state;
@@ -547,11 +547,10 @@ static pt__match_state *pt__get_current_state(const pt__match_context *context) 
     return i >= 0 ? context->state_stack.states + i : NULL;
 }
 
-static void pt__peek_state(pt__match_context *context, PT_STRING_TYPE *sp, unsigned int *qc) {
+static void pt__peek_state(pt__match_context *context, PT_STRING_TYPE *sp) {
     pt__match_state *state = pt__get_current_state(context);
     if(state) {
         *sp = state->sp;
-        *qc = state->qc;
         context->action_stack.size = state->ac;
     }
 }
@@ -691,8 +690,7 @@ PTDEF pt_match_result pt_match(const pt_grammar es, PT_STRING_TYPE str, const pt
     // iteration variables
     PT_STRING_TYPE sp = str;
     int success = 1;  // match success flag
-    unsigned int qc = 0;  // quantifier counter
-    pt__match_state *state = pt__push_state(&context, es[0], str, qc);
+    pt__match_state *state = pt__push_state(&context, es[0], str);
     const pt_expr *e = state->e;
     pt__match_action *action;
     uint8_t range_from, range_to;
@@ -709,9 +707,9 @@ PTDEF pt_match_result pt_match(const pt_grammar es, PT_STRING_TYPE str, const pt
             case PT_OP_END:
                 state = pt__pop_state(&context);
                 if(state) {
-                    e = state->e;
+                    e = state->e + 1;
                 }
-                break;
+                continue;
 
             // Primary
             case PT_OP_BYTE:
@@ -759,78 +757,59 @@ PTDEF pt_match_result pt_match(const pt_grammar es, PT_STRING_TYPE str, const pt
 
             // Unary
             case PT_OP_NON_TERMINAL:
-                state = pt__push_state(&context, e, sp, qc);
+                state = pt__push_state(&context, e, sp);
                 e = es[e->index];
                 continue;
 
             case PT_OP_AT_LEAST:
-                // AT_LEAST need 2 sp states: one in the case whole quantifier fails,
-                // and one for when embedded sequence fail
-                state = pt__push_state(&context, e, sp, qc);
-                // fallthrough
             case PT_OP_AT_MOST:
-                qc = 0;
-                // fallthrough
             case PT_OP_AND:
             case PT_OP_NOT:
             case PT_OP_SEQUENCE:
-            case PT_OP_ACTION:
-                state = pt__push_state(&context, e, sp, qc);
-                break;
-
             case PT_OP_CHOICE:
-                success = 0;
-                state = pt__push_state(&context, e, sp, qc);
-                break;
+            case PT_OP_ACTION:
+                state = pt__push_state(&context, e, sp);
+                e++;
+                continue;
 
             case PT_OP_NOT_END:
                 success = !success;
                 // fallthrough
             case PT_OP_AND_END:
-                pt__peek_state(&context, &sp, &qc);
+                pt__peek_state(&context, &sp);
                 state = pt__pop_state(&context);
                 break;
 
             case PT_OP_SEQUENCE_END:
             case PT_OP_CHOICE_END:
                 if(!success) {
-                    pt__peek_state(&context, &sp, &qc);
+                    pt__peek_state(&context, &sp);
                 }
                 state = pt__pop_state(&context);
                 break;
 
             case PT_OP_AT_LEAST_END:
                 if(success) {
-                    qc++;
-                    // accumulate sp in embedded sequence
-                    state->sp = sp;
-                    e = state->e;
+                    state->qc++;
+                    e = state->e + 1;
+                    continue;
                 }
                 else {
-                    success = qc >= state->e->quantifier;
-                    // peek + pop accumulated sp
-                    pt__peek_state(&context, &sp, &qc);
-                    state = pt__pop_state(&context);
-                    // peek? + pop quantifier
+                    success = state->qc >= state->e->quantifier;
                     if(!success) {
-                        pt__peek_state(&context, &sp, &qc);
+                        pt__peek_state(&context, &sp);
                     }
                     state = pt__pop_state(&context);
                 }
                 break;
 
             case PT_OP_AT_MOST_END:
-                if(success && qc < state->e->quantifier - 1) {
-                    qc++;
-                    // accumulate sp
-                    state->sp = sp;
-                    e = state->e;
+                if(success && state->qc < state->e->quantifier - 1) {
+                    state->qc++;
+                    e = state->e + 1;
+                    continue;
                 }
                 else {
-                    // peek to last accumulated sp on failure
-                    if(!success) {
-                        pt__peek_state(&context, &sp, &qc);
-                    }
                     state = pt__pop_state(&context);
                     success = 1;
                 }
@@ -838,7 +817,7 @@ PTDEF pt_match_result pt_match(const pt_grammar es, PT_STRING_TYPE str, const pt
 
             case PT_OP_ACTION_END:
                 if(!success) {
-                    pt__peek_state(&context, &sp, &qc);
+                    pt__peek_state(&context, &sp);
                 }
                 else {
                     pt__push_action(&context, state->e->action, state->sp - str, sp - str, context.action_stack.size - state->ac);
@@ -861,13 +840,11 @@ PTDEF pt_match_result pt_match(const pt_grammar es, PT_STRING_TYPE str, const pt
         }
 
         if(state) {
-            if(state->e->op == PT_OP_CHOICE) {
-                if(success) e = state->e + state->e->N + 1;
-                else e++;
+            if((success && state->e->op == PT_OP_CHOICE) || (!success && state->e->op == PT_OP_SEQUENCE)) {
+                e = state->e + state->e->N + 1;
             }
             else {
-                if(success || state->e->N == 0) e++;
-                else e = state->e + state->e->N + 1;
+                e++;
             }
         }
     }
