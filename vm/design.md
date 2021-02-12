@@ -127,11 +127,15 @@ e^N: (e+ -> e^1)
   qcz
 expression:
   T(e)
-  jmpf fail
+  jmpf first_fail
   qci
   jmp expression
-fail:
+first_fail:
   flt N
+  jmps end
+fail:
+  peek
+end:
   pop
 ```
 

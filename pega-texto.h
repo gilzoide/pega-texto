@@ -764,6 +764,10 @@ PTDEF pt_match_result pt_match(const pt_grammar es, PT_STRING_TYPE str, const pt
                 continue;
 
             case PT_OP_AT_LEAST:
+                // AT_LEAST need 2 sp states: one in the case whole quantifier fails,
+                // and one for when embedded sequence fail
+                state = pt__push_state(&context, e, sp, qc);
+                // fallthrough
             case PT_OP_AT_MOST:
                 qc = 0;
                 // fallthrough
@@ -798,10 +802,19 @@ PTDEF pt_match_result pt_match(const pt_grammar es, PT_STRING_TYPE str, const pt
             case PT_OP_AT_LEAST_END:
                 if(success) {
                     qc++;
+                    // accumulate sp in embedded sequence
+                    state->sp = sp;
                     e = state->e;
                 }
                 else {
                     success = qc >= state->e->quantifier;
+                    // peek + pop accumulated sp
+                    pt__peek_state(&context, &sp, &qc);
+                    state = pt__pop_state(&context);
+                    // peek? + pop quantifier
+                    if(!success) {
+                        pt__peek_state(&context, &sp, &qc);
+                    }
                     state = pt__pop_state(&context);
                 }
                 break;
@@ -809,9 +822,15 @@ PTDEF pt_match_result pt_match(const pt_grammar es, PT_STRING_TYPE str, const pt
             case PT_OP_AT_MOST_END:
                 if(success && qc < state->e->quantifier - 1) {
                     qc++;
+                    // accumulate sp
+                    state->sp = sp;
                     e = state->e;
                 }
                 else {
+                    // peek to last accumulated sp on failure
+                    if(!success) {
+                        pt__peek_state(&context, &sp, &qc);
+                    }
                     state = pt__pop_state(&context);
                     success = 1;
                 }
