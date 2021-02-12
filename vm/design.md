@@ -134,3 +134,18 @@ fail:
   flt N
   pop
 ```
+
+e^-N: (e? -> e^-1)
+```
+  push
+  qcz
+expression:
+  T(e)
+  jmpf fail
+  qci
+  flt N
+  jmpf expression
+fail:
+  pop
+  succ
+```

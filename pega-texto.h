@@ -47,8 +47,8 @@ enum pt_operation {
     PT_OP_NON_TERMINAL,     // <non-terminal> // Recurse to non-terminal expression
     PT_OP_AT_LEAST,         // e^N // Match N or more occurrences of next Expression
     PT_OP_AT_LEAST_END,
-    PT_OP_OPTIONAL,          // e? // Match one or none occurrences
-    PT_OP_OPTIONAL_END,
+    PT_OP_AT_MOST,         // e^-N // Match N or less occurrences of next Expression. Always succeeds
+    PT_OP_AT_MOST_END,
     PT_OP_AND,              // &e
     PT_OP_AND_END,
     PT_OP_NOT,              // !e
@@ -188,6 +188,7 @@ typedef struct pt_expr {
         PT_STRING_TYPE str;
         pt_custom_matcher_function matcher;
         pt_expression_action action;
+        uintptr_t index;
         uintptr_t quantifier;
     };
 } pt_expr;
@@ -230,24 +231,26 @@ typedef pt_expr* pt_grammar[];
 #define PT_CASE(str, size)  ((pt_expr){ PT_OP_CASE_INSENSITIVE, size, str })
 #define PT_CASE_S(str)  ((pt_expr){ PT_OP_CASE_INSENSITIVE, sizeof(str) - 1, str })
 #define PT_CASE_0(str)  ((pt_expr){ PT_OP_CASE_INSENSITIVE, strlen(str), str })
-#define PT_ALNUM()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_ALNUM })
-#define PT_ALPHA()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_ALPHA })
-#define PT_CNTRL()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_CNTRL })
-#define PT_DIGIT()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_DIGIT })
-#define PT_GRAPH()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_GRAPH })
-#define PT_LOWER()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_LOWER })
-#define PT_PUNCT()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_PUNCT })
-#define PT_SPACE()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_SPACE })
-#define PT_UPPER()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_UPPER })
-#define PT_XDIGIT()  ((pt_expr){ PT_OP_CHARACTER_CLASS, PT_CLASS_XDIGIT })
+#define PT_CLASS(c)  ((pt_expr){ PT_OP_CHARACTER_CLASS, c })
+#define PT_ALNUM()  PT_CLASS(PT_CLASS_ALNUM)
+#define PT_ALPHA()  PT_CLASS(PT_CLASS_ALPHA)
+#define PT_CNTRL()  PT_CLASS(PT_CLASS_CNTRL)
+#define PT_DIGIT()  PT_CLASS(PT_CLASS_DIGIT)
+#define PT_GRAPH()  PT_CLASS(PT_CLASS_GRAPH)
+#define PT_LOWER()  PT_CLASS(PT_CLASS_LOWER)
+#define PT_PUNCT()  PT_CLASS(PT_CLASS_PUNCT)
+#define PT_SPACE()  PT_CLASS(PT_CLASS_SPACE)
+#define PT_UPPER()  PT_CLASS(PT_CLASS_UPPER)
+#define PT_XDIGIT()  PT_CLASS(PT_CLASS_XDIGIT)
 #define PT_SET(str, size)  ((pt_expr){ PT_OP_SET, size, str })
 #define PT_SET_S(str)  ((pt_expr){ PT_OP_SET, sizeof(str) - 1, str })
 #define PT_SET_0(str)  ((pt_expr){ PT_OP_SET, strlen(str), str })
 #define PT_RANGE(from, to)  ((pt_expr){ PT_OP_RANGE, PT_RANGE_PACK(from, to) })
 #define PT_ANY()  ((pt_expr){ PT_OP_ANY, 0 })
-#define PT_RULE(index)  ((pt_expr){ PT_OP_NON_TERMINAL, index })
+#define PT_CALL(index)  ((pt_expr){ PT_OP_NON_TERMINAL, 0, (void *) index })
 #define PT_AT_LEAST(n, ...)  ((pt_expr){ PT_OP_AT_LEAST, PT_NARG(__VA_ARGS__), (void *) n }), __VA_ARGS__, ((pt_expr){ PT_OP_AT_LEAST_END })
-#define PT_OPTIONAL(...)  ((pt_expr){ PT_OP_OPTIONAL, PT_NARG(__VA_ARGS__) }), __VA_ARGS__, ((pt_expr){ PT_OP_OPTIONAL_END })
+#define PT_AT_MOST(n, ...)  ((pt_expr){ PT_OP_AT_MOST, PT_NARG(__VA_ARGS__), (void *) n }), __VA_ARGS__, ((pt_expr){ PT_OP_AT_MOST_END })
+#define PT_OPTIONAL(...)  PT_AT_MOST(1, __VA_ARGS__)
 #define PT_AND(...)  ((pt_expr){ PT_OP_AND, PT_NARG(__VA_ARGS__) }), __VA_ARGS__, ((pt_expr){ PT_OP_AND_END })
 #define PT_NOT(...)  ((pt_expr){ PT_OP_NOT, PT_NARG(__VA_ARGS__) }), __VA_ARGS__, ((pt_expr){ PT_OP_NOT_END })
 #define PT_SEQUENCE(...)  ((pt_expr){ PT_OP_SEQUENCE, PT_NARG(__VA_ARGS__) }), __VA_ARGS__, ((pt_expr){ PT_OP_SEQUENCE_END })
@@ -255,6 +258,39 @@ typedef pt_expr* pt_grammar[];
 #define PT_CUSTOM_MATCHER(f)  ((pt_expr){ PT_OP_CUSTOM_MATCHER, 0, (void *) f })
 #define PT_ERROR(index)  ((pt_expr){ PT_OP_ERROR, 0 })
 #define PT_ACTION(action, ...)  ((pt_expr){ PT_OP_ACTION, PT_NARG(__VA_ARGS__), (void *) action }), __VA_ARGS__, ((pt_expr){ PT_OP_ACTION_END })
+
+#ifdef PT_DEFINE_SHORTCUTS
+    #define B PT_BYTE
+    #define L PT_LITERAL_S
+    #define I PT_CASE_S
+    #define C PT_CLASS
+    #define ALNUM PT_ALNUM
+    #define ALPHA PT_ALPHA
+    #define CNTRL PT_CNTRL
+    #define DIGIT PT_DIGIT
+    #define GRAPH PT_GRAPH
+    #define LOWER PT_LOWER
+    #define PUNCT PT_PUNCT
+    #define SPACE PT_SPACE
+    #define UPPER PT_UPPER
+    #define XDIGIT PT_XDIGIT
+    #define S PT_SET_S
+    #define R PT_RANGE
+    #define ANY PT_ANY
+    #define V PT_CALL
+    #define AL PT_AT_LEAST
+    #define AM PT_AT_MOST
+    #define OPT PT_OPTIONAL
+    #define AND PT_AND
+    #define NOT PT_NOT
+    #define SEQ PT_SEQUENCE
+    #define OR PT_CHOICE
+    #define F PT_CUSTOM_MATCHER
+    #define E PT_ERROR
+    #define ACT PT_ACTION
+#endif
+
+#define PT_RULE(...)  { __VA_ARGS__, PT_END() }
 
 /**
  * Match result: a {number of matched chars/match error code, action
@@ -478,7 +514,7 @@ static void pt__destroy_state_stack(pt__match_state_stack *s) {
  * @param ac  The new Action counter.
  * @return The newly pushed State.
  */
-static pt__match_state *pt__push_state(pt__match_context *context, const pt_expr *const e, PT_STRING_TYPE sp) {
+static pt__match_state *pt__push_state(pt__match_context *context, const pt_expr *const e, PT_STRING_TYPE sp, unsigned int qc) {
     pt__match_state *state;
     // Double capacity, if reached
     if(context->state_stack.size == context->state_stack.capacity) {
@@ -495,6 +531,7 @@ static pt__match_state *pt__push_state(pt__match_context *context, const pt_expr
     state = context->state_stack.states + (context->state_stack.size)++;
     state->e = e;
     state->sp = sp;
+    state->qc = qc;
     state->ac = context->action_stack.size;
 
     return state;
@@ -506,9 +543,9 @@ static pt__match_state *pt__push_state(pt__match_context *context, const pt_expr
  * @param s The state stack.
  * @return Current State, if there is any, `NULL` otherwise.
  */
-static pt__match_state *pt__get_current_state(const pt__match_state_stack *s) {
-    int i = s->size - 1;
-    return i >= 0 ? s->states + i : NULL;
+static pt__match_state *pt__get_current_state(const pt__match_context *context) {
+    int i = context->state_stack.size - 1;
+    return i >= 0 ? context->state_stack.states + i : NULL;
 }
 
 static pt__match_state *pt__pop_state(pt__match_context *context) {
@@ -599,6 +636,14 @@ static pt__match_action *pt__get_current_action(const pt__match_action_stack *a)
     return i >= 0 ? a->actions + i : NULL;
 }
 
+static void pt__peek_state(const pt__match_context *context, PT_STRING_TYPE *sp, unsigned int *qc) {
+    pt__match_state *state = pt__get_current_state(context);
+    if(state) {
+        *sp = state->sp;
+        *qc = state->qc;
+    }
+}
+
 /**
  * Run all actions in the Action Stack in the right way, folding them into
  * one value.
@@ -657,7 +702,8 @@ PTDEF pt_match_result pt_match(const pt_grammar es, PT_STRING_TYPE str, const pt
     // iteration variables
     PT_STRING_TYPE sp = str;
     int success = 1;  // match success flag
-    pt__match_state *state = pt__push_state(&context, es[0], str);
+    unsigned int qc = 0;
+    pt__match_state *state = pt__push_state(&context, es[0], str, qc);
     const pt_expr *e = state->e;
     pt__match_action *action;
     uint8_t range_from, range_to;
@@ -671,6 +717,9 @@ PTDEF pt_match_result pt_match(const pt_grammar es, PT_STRING_TYPE str, const pt
         switch(e->op) {
             case PT_OP_END:
                 state = pt__pop_state(&context);
+                if(state) {
+                    e = state->e;
+                }
                 break;
 
             // Primary
@@ -719,60 +768,67 @@ PTDEF pt_match_result pt_match(const pt_grammar es, PT_STRING_TYPE str, const pt
 
             // Unary
             case PT_OP_NON_TERMINAL:
-                state = pt__push_state(&context, e, sp);
-                e = es[e->N];
+                state = pt__push_state(&context, e, sp, qc);
+                e = es[e->index];
                 continue;
 
             case PT_OP_AT_LEAST:
-                state->qc = 0;
-                state = pt__push_state(&context, e, sp);
-                break;
-
+            case PT_OP_AT_MOST:
+                qc = 0;
                 // fallthrough
             case PT_OP_AND:
             case PT_OP_NOT:
             case PT_OP_SEQUENCE:
             case PT_OP_CHOICE:
-            case PT_OP_OPTIONAL:
-                state = pt__push_state(&context, e, sp);
+                state = pt__push_state(&context, e, sp, qc);
                 break;
 
             case PT_OP_AND_END:
+                pt__peek_state(&context, &sp, &qc);
                 state = pt__pop_state(&context);
-                sp = state->sp;
                 break;
 
             case PT_OP_NOT_END:
                 success = !success;
+                pt__peek_state(&context, &sp, &qc);
                 state = pt__pop_state(&context);
-                sp = state->sp;
                 break;
 
             case PT_OP_SEQUENCE_END:
+                if(!success) {
+                    pt__peek_state(&context, &sp, &qc);
+                }
+                state = pt__pop_state(&context);
+                break;
+
             case PT_OP_CHOICE_END:
                 if(!success) {
                     sp = state->sp;
+                    state->e = e;
                 }
                 state = pt__pop_state(&context);
                 break;
 
             case PT_OP_AT_LEAST_END:
                 if(success) {
-                    state->qc++;
+                    qc++;
                     e = state->e;
                 }
                 else {
-                    success = state->qc >= state->e->quantifier;
+                    success = qc >= state->e->quantifier;
                     state = pt__pop_state(&context);
                 }
                 break;
 
-            case PT_OP_OPTIONAL_END:
-                if(!success) {
-                    sp = state->sp;
+            case PT_OP_AT_MOST_END:
+                if(success && qc < state->e->quantifier - 1) {
+                    qc++;
+                    e = state->e;
                 }
-                state = pt__pop_state(&context);
-                success = 1;
+                else {
+                    state = pt__pop_state(&context);
+                    success = 1;
+                }
                 break;
 
             case PT_OP_ACTION:
@@ -804,7 +860,7 @@ PTDEF pt_match_result pt_match(const pt_grammar es, PT_STRING_TYPE str, const pt
                 else e++;
             }
             else {
-                if(success) e++;
+                if(success || state->e->N == 0) e++;
                 else e = state->e + state->e->N + 1;
             }
         }
