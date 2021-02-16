@@ -238,7 +238,6 @@ typedef pt_expr* pt_grammar[];
 #define PT_CALL(index)  ((pt_expr){ PT_OP_NON_TERMINAL, 0, (void *) index })
 #define PT_AT_LEAST(n, ...)  ((pt_expr){ PT_OP_AT_LEAST, PT_NARG(__VA_ARGS__), (void *) n }), __VA_ARGS__
 #define PT_AT_MOST(n, ...)  ((pt_expr){ PT_OP_AT_MOST, PT_NARG(__VA_ARGS__), (void *) n }), __VA_ARGS__
-#define PT_OPTIONAL(...)  PT_AT_MOST(1, __VA_ARGS__)
 #define PT_AND(...)  ((pt_expr){ PT_OP_AND, PT_NARG(__VA_ARGS__) }), __VA_ARGS__
 #define PT_NOT(...)  ((pt_expr){ PT_OP_NOT, PT_NARG(__VA_ARGS__) }), __VA_ARGS__
 #define PT_SEQUENCE(...)  ((pt_expr){ PT_OP_SEQUENCE, PT_NARG(__VA_ARGS__) }), __VA_ARGS__
@@ -247,12 +246,20 @@ typedef pt_expr* pt_grammar[];
 #define PT_ERROR(index)  ((pt_expr){ PT_OP_ERROR, 0 })
 #define PT_ACTION(action, ...)  ((pt_expr){ PT_OP_ACTION, PT_NARG(__VA_ARGS__), (void *) action }), __VA_ARGS__
 
+// Aliases
+#define PT_ONE_OR_MORE(...)  PT_AT_LEAST(1, __VA_ARGS__)
+#define PT_ZERO_OR_MORE(...)  PT_AT_LEAST(0, __VA_ARGS__)
+#define PT_OPTIONAL(...)  PT_AT_MOST(1, __VA_ARGS__)
 #define PT_ANY_BUT(...) PT_NOT(__VA_ARGS__), PT_ANY()
 
 #ifdef PT_DEFINE_SHORTCUTS
+    #define BYTE PT_BYTE
     #define B PT_BYTE
+    #define LITERAL PT_LITERAL_S
     #define L PT_LITERAL_S
+    #define CASE_INSENSITIVE PT_CASE_S
     #define I PT_CASE_S
+    #define CLASS PT_CLASS
     #define C PT_CLASS
     #define ALNUM PT_ALNUM
     #define ALPHA PT_ALPHA
@@ -264,18 +271,26 @@ typedef pt_expr* pt_grammar[];
     #define SPACE PT_SPACE
     #define UPPER PT_UPPER
     #define XDIGIT PT_XDIGIT
+    #define SET PT_SET_S
     #define S PT_SET_S
+    #define RANGE PT_RANGE
     #define R PT_RANGE
     #define ANY PT_ANY
+    #define CALL PT_CALL
     #define V PT_CALL
     #define AT_LEAST PT_AT_LEAST
     #define AT_MOST PT_AT_MOST
+    #define ONE_OR_MORE PT_ONE_OR_MORE
+    #define ZERO_OR_MORE PT_ZERO_OR_MORE
+    #define OPTIONAL PT_OPTIONAL
     #define OPT PT_OPTIONAL
     #define AND PT_AND
     #define NOT PT_NOT
     #define SEQ PT_SEQUENCE
     #define EITHER PT_CHOICE
+    #define CUSTOM_MATCHER PT_CUSTOM_MATCHER
     #define F PT_CUSTOM_MATCHER
+    #define ERROR PT_ERROR
     #define E PT_ERROR
     #define ACT PT_ACTION
     #define ANY_BUT PT_ANY_BUT
