@@ -57,7 +57,7 @@ extern "C" {
 enum pt_operation {
     PT_OP_END = 0,
     // Primary
-    PT_OP_BYTE,             // 'b'
+    PT_OP_ELEMENT,          // 'b'
     PT_OP_LITERAL,          // "string"
     PT_OP_CASE_INSENSITIVE, // I"string"
     PT_OP_CHARACTER_CLASS,  // int(char) // If return 0, match fails
@@ -102,13 +102,11 @@ enum pt_character_class {
     PT_CLASS_XDIGIT = 'x',
 };
 
-/**
- * Possible error codes returned by the `pt_match*` functions.
- */
+/// Possible error codes returned by `pt_match`.
 typedef enum pt_macth_error_code {
     /// Subject string didn't match the given PEG.
     PT_NO_MATCH = -1,
-    /// Error while allocating memory for the State/Action Stack.
+    /// Error while allocating memory for the Action stack.
     PT_NO_STACK_MEM = -2,
     /// Matched an Error Expression.
     PT_MATCHED_ERROR = -3,
@@ -194,18 +192,24 @@ typedef struct pt_expr {
         const pt_element_string str;
         const pt_custom_matcher_function matcher;
         const pt_expression_action action;
+        uintptr_t element;
         uintptr_t index;
+        uintptr_t range;
         uintptr_t quantifier;
     };
 } pt_expr;
 
-/// Rule typedef, array of expressions (Expression[]).
+/// Rule typedef, an array of expressions.
 typedef pt_expr pt_rule[];
 /// Grammar typedef, a 2D array of expressions, or array of Rules.
 typedef pt_expr* pt_grammar[];
 
-#define PT_RANGE_PACK(from, to) (from | (to << 8))
-#define PT_RANGE_UNPACK(r, into_from, into_to) { into_from = r & 0xff; into_to = (r >> 8); }
+#define PT_RANGE_PACK(from, to) \
+    (((uintptr_t) (from)) | (((uintptr_t) (to)) << (8 * sizeof(uintptr_t) / 2)))
+#define PT_RANGE_UNPACK_FROM(r) \
+    ((PT_ELEMENT_TYPE) ((r) & ((UINTPTR_MAX) >> (8 * sizeof(uintptr_t) / 2))))
+#define PT_RANGE_UNPACK_TO(r) \
+    ((PT_ELEMENT_TYPE) ((r) >> (8 * sizeof(uintptr_t) / 2)))
 
 // Ref: https://groups.google.com/g/comp.std.c/c/d-6Mj5Lko_s
 #define PT_NARG(...) \
@@ -230,7 +234,7 @@ typedef pt_expr* pt_grammar[];
          9,8,7,6,5,4,3,2,1,0
 
 #define PT_END()  ((pt_expr){ PT_OP_END })
-#define PT_BYTE(b)  ((pt_expr){ PT_OP_BYTE, b })
+#define PT_ELEMENT(e)  ((pt_expr){ PT_OP_ELEMENT, 0, (void *) e })
 #define PT_LITERAL(str, size)  ((pt_expr){ PT_OP_LITERAL, size, str })
 #define PT_LITERAL_S(str)  ((pt_expr){ PT_OP_LITERAL, sizeof(str) - 1, str })
 #define PT_LITERAL_0(str)  ((pt_expr){ PT_OP_LITERAL, strlen(str), str })
@@ -251,7 +255,7 @@ typedef pt_expr* pt_grammar[];
 #define PT_SET(str, size)  ((pt_expr){ PT_OP_SET, size, str })
 #define PT_SET_S(str)  ((pt_expr){ PT_OP_SET, sizeof(str) - 1, str })
 #define PT_SET_0(str)  ((pt_expr){ PT_OP_SET, strlen(str), str })
-#define PT_RANGE(from, to)  ((pt_expr){ PT_OP_RANGE, PT_RANGE_PACK(from, to) })
+#define PT_RANGE(from, to)  ((pt_expr){ PT_OP_RANGE, 0, (void *) PT_RANGE_PACK(from, to) })
 #define PT_ANY()  ((pt_expr){ PT_OP_ANY, 0 })
 #define PT_CALL(index)  ((pt_expr){ PT_OP_NON_TERMINAL, 0, (void *) index })
 #define PT_AT_LEAST(n, ...)  ((pt_expr){ PT_OP_AT_LEAST, PT_NARG(__VA_ARGS__), (void *) n }), __VA_ARGS__
@@ -271,8 +275,8 @@ typedef pt_expr* pt_grammar[];
 #define PT_ANY_BUT(...) PT_NOT(__VA_ARGS__), PT_ANY()
 
 #ifdef PT_DEFINE_SHORTCUTS
-    #define BYTE PT_BYTE
-    #define B PT_BYTE
+    #define ELEMENT PT_ELEMENT
+    #define B PT_ELEMENT
     #define LITERAL PT_LITERAL_S
     #define L PT_LITERAL_S
     #define CASE_INSENSITIVE PT_CASE_S
@@ -383,7 +387,7 @@ PT_DECL pt_match_result pt_match(const pt_grammar grammar, pt_element_string str
 
 const char * const pt_operation_names[] = {
     "PT_OP_END",
-    "PT_OP_BYTE",
+    "PT_OP_ELEMENT",
     "PT_OP_LITERAL",
     "PT_OP_CASE_INSENSITIVE",
     "PT_OP_CHARACTER_CLASS",
@@ -598,8 +602,8 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
             result.success = 1;
             break;
 
-        case PT_OP_BYTE:
-            result.success = (*sp) == e->N;
+        case PT_OP_ELEMENT:
+            result.success = (*sp) == (PT_ELEMENT_TYPE) e->element;
             result.sp_advance = 1;
             break;
 
@@ -624,9 +628,8 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
             break;
 
         case PT_OP_RANGE: {
-            uint8_t range_from, range_to;
-            PT_RANGE_UNPACK(e->N, range_from, range_to);
-            result.success = *sp >= range_from && *sp <= range_to;
+            PT_ELEMENT_TYPE element = *sp;
+            result.success = element >= PT_RANGE_UNPACK_FROM(e->range) && element <= PT_RANGE_UNPACK_TO(e->range);
             result.sp_advance = 1;
             break;
         }
