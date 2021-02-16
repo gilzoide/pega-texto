@@ -2,8 +2,8 @@ pega-texto
 ==========
 [![Build Status](https://travis-ci.org/gilzoide/pega-texto.svg?branch=master)](https://travis-ci.org/gilzoide/pega-texto)
 
-A runtime engine for [Parsing Expression Grammars (PEG)](http://bford.info/packrat/)
-in pure C, heavily inspired by [LPeg](http://www.inf.puc-rio.br/~roberto/lpeg/).
+A [Parsing Expression Grammars (PEG)](http://bford.info/packrat/)
+runtime engine in pure C, heavily inspired by [LPeg](http://www.inf.puc-rio.br/~roberto/lpeg/).
 
 In __pega-texto__, PEGs are just Expression arrays, and can be easily combined
 or rearranged dynamically. You can also provide a single expression (which, for
@@ -63,6 +63,14 @@ Also check out the [tutorial](tutorial.md).
 
 Change log
 ----------
++ 4.0.0 - Refactor project as a single header implementation,
+  split Quantifier Expressions into At Least and At Most expressions,
+  make `PT_DATA` type configurable, add Action Expressions to
+  simplify implementation and make code more readable, reimplement
+  match algorithm with a recursive approach, make Expressions be
+  layed out contiguously in memory and remove heap based creation
+  and destruction of them, make grammar literal definable at
+  compile-time.
 + 3.0.0 - Change actions to receive the capture with pointer and size, instead
   of pointer to input string, start and end of capture; add Byte expression,
   change Character Class Expressions to use only functions defined in `ctype.h`,

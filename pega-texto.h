@@ -1,30 +1,43 @@
-/**
+/** @file
  * pega-texto.h -- Parsing Expression Grammar (PEG) runtime engine
  *
  * Project URL: https://github.com/gilzoide/pega-texto
  *
  * Do this:
+ * ```c
  *    #define PEGA_TEXTO_IMPLEMENTATION
+ * ```
  * before you include this file in *one* C or C++ file to create the implementation.
  *
  * i.e.:
- *   #include ...
- *   #include ...
- *   #define PEGA_TEXTO_IMPLEMENTATION
- *   #include "pega-texto.h"
+ * ```c
+ *    #include ...
+ *    #include ...
+ *    #define PEGA_TEXTO_IMPLEMENTATION
+ *    #include "pega-texto.h"
+ * ```
  *
  * Optionally provide the following defines with your own implementations:
  *
- * PT_MALLOC(size, userdata)      - Your own malloc function (default: `malloc(size)`)
- * PT_REALLOC(p, size, userdata)  - Your own realloc function (default: `realloc(p, size)`)
- * PT_FREE(p, userdata)           - Your own free function (default: `free(p)`)
- * PT_ASSERT(cond, msg, userdata) - Your own assert function (default: `assert(cond && msg)`)
- * PT_STATIC                      - If defined and PT_DECL is not defined, functions will be declared `static` instead of `extern`
- * PT_DECL                        - Function declaration prefix (default: `extern` or `static` depending on PT_STATIC)
- * PT_DEFINE_SHORTCUTS            - Define some shorcut macros for building grammars.
- *                                  They are not prefixed by `PT_`, so beware with define clashes!
- * PT_ELEMENT_TYPE                - Type that describes each element in input string (default: `const char`)
- * PT_DATA                        - Data type to be returned by Actions (default: simple union with several primitive types)
+ * - PT_MALLOC(size, userdata):
+ *   Your own malloc function (default: `malloc(size)`)
+ * - PT_REALLOC(p, size, userdata):
+ *   Your own realloc function (default: `realloc(p, size)`)
+ * - PT_FREE(p, userdata):
+ *   Your own free function (default: `free(p)`)
+ * - PT_ASSERT(cond, msg, userdata):
+ *   Your own assert function (default: `assert(cond && msg)`)
+ * - PT_STATIC:
+ *   If defined and PT_DECL is not defined, functions will be declared `static` instead of `extern`
+ * - PT_DECL:
+ *   Function declaration prefix (default: `extern` or `static` depending on PT_STATIC)
+ * - PT_DEFINE_SHORTCUTS:
+ *   Define some shorcut macros for building grammars.
+ *   They are not prefixed by `PT_`, so beware with define clashes!
+ * - PT_ELEMENT_TYPE:
+ *   Type that describes each element in input string (default: `const char`)
+ * - PT_DATA:
+ *   Data type to be returned by Actions (default: simple union with several primitive types)
  */
 #ifndef PEGA_TEXTO_H
 #define PEGA_TEXTO_H
@@ -273,6 +286,7 @@ typedef pt_expr* pt_grammar[];
 #define PT_ZERO_OR_MORE(...)  PT_AT_LEAST(0, __VA_ARGS__)
 #define PT_OPTIONAL(...)  PT_AT_MOST(1, __VA_ARGS__)
 #define PT_ANY_BUT(...) PT_NOT(__VA_ARGS__), PT_ANY()
+#define PT_RULE(...)  { __VA_ARGS__, PT_END() }
 
 #ifdef PT_DEFINE_SHORTCUTS
     #define ELEMENT PT_ELEMENT
@@ -318,8 +332,6 @@ typedef pt_expr* pt_grammar[];
     #define ANY_BUT PT_ANY_BUT
 #endif
 
-#define PT_RULE(...)  { __VA_ARGS__, PT_END() }
-
 /// Match result: a {number of matched chars/match error code, action
 /// result} pair.
 typedef struct pt_match_result {
@@ -357,6 +369,8 @@ PT_DECL const pt_match_options pt_default_match_options;
 ///              @ref pt_default_match_options.
 /// @return Number of matched characters/error code, result of Action folding.
 PT_DECL pt_match_result pt_match(const pt_grammar grammar, pt_element_string str, const pt_match_options *const opts);
+
+// TODO: grammar validation
 
 #ifdef __cplusplus
 }
