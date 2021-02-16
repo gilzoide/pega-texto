@@ -416,7 +416,7 @@ const pt_match_options pt_default_match_options = {};
 
 /// Default initial stack capacity.
 #ifndef PT_DEFAULT_INITIAL_STACK_CAPACITY
-    #define PT_DEFAULT_INITIAL_STACK_CAPACITY 8
+    #define PT_DEFAULT_INITIAL_STACK_CAPACITY 64
 #endif
 
 /**
@@ -630,11 +630,19 @@ static pt__match_action *pt__push_action(pt__match_context *context, pt_expressi
  * one value.
  */
 static void pt__run_actions(pt__match_context *context, pt_match_result *result) {
-    // allocate the data stack
-    PT_DATA *data_stack = (PT_DATA *) PT_MALLOC(context->action_stack.size * sizeof(PT_DATA), context->opts->userdata);
-    if(data_stack == NULL) {
-        result->matched = PT_NO_STACK_MEM;
-        return;
+    PT_DATA *data_stack;
+    if(sizeof(PT_DATA) > sizeof(pt__match_action)) {
+        // Allocate the data stack
+        data_stack = (PT_DATA *) PT_MALLOC(context->action_stack.size * sizeof(PT_DATA), context->opts->userdata);
+        if(data_stack == NULL) {
+            result->matched = PT_NO_STACK_MEM;
+            return;
+        }
+    }
+    else {
+        // PT_DATA may safely overwrite popped actions memory, as the later will be read just before pushing results
+        // This avoids a malloc/free pair
+        data_stack = (PT_DATA *) context->action_stack.actions;
     }
 
     // index to current Data on the stack
@@ -659,7 +667,9 @@ static void pt__run_actions(pt__match_context *context, pt_match_result *result)
         data_index++;
     }
     result->data = data_stack[0];
-    PT_FREE(data_stack, context->opts->userdata);
+    if(sizeof(PT_DATA) > sizeof(pt__match_action)) {
+        PT_FREE(data_stack, context->opts->userdata);
+    }
 }
 
 typedef struct pt__match_expr_result {
