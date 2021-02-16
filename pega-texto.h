@@ -1,16 +1,15 @@
 #ifndef PEGA_TEXTO_H
 #define PEGA_TEXTO_H
 
-#include <ctype.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 
-#ifndef PTDEF
+#ifndef PT_DECL
     #ifdef PT_STATIC
-        #define PTDEF static
+        #define PT_DECL static
     #else
-        #define PTDEF extern
+        #define PT_DECL extern
     #endif
 #endif
 
@@ -20,7 +19,7 @@
     typedef const char PT_ELEMENT_TYPE;
 #endif
 
-typedef PT_ELEMENT_TYPE *PT_STRING_TYPE;
+typedef PT_ELEMENT_TYPE *pt_element_string;
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,8 +55,8 @@ enum pt_operation {
     PT_OP_OPERATION_ENUM_COUNT,
 };
 
-/// String version of the possible operations.
-PTDEF const char* const pt_operation_names[];
+/// String literals of the operations.
+PT_DECL const char* const pt_operation_names[];
 
 /// Character classes supported by pega-texto.
 /// 
@@ -117,48 +116,39 @@ typedef enum pt_macth_error_code {
 #endif
 
 /// A function that receives a string and userdata and match it (positive) or not, advancing the matched number.
-typedef int (*pt_custom_matcher_function)(PT_STRING_TYPE, void*);
+typedef int (*pt_custom_matcher_function)(pt_element_string, void*);
 
-/**
- * Action to be called on an Expression, after the whole match succeeds.
- *
- * This is the action to be set to an Expression individually, and will be
- * called only if the whole match succeeds, in the order the Expressions were
- * matched.
- *
- * Expression Actions reduce inner Actions' result into a single value.
- *
- * Parameters:
- * - Pointer to the start of the match/capture
- * - Number of bytes contained in the match/capture
- * - Number of #PT_DATA arguments 
- * - #PT_DATA arguments, processed on inner Actions. Currently, this array is
- *   reused, so you should not rely on it after Action has returned
- * - User custom data from match options
- *
- * Return:
- *   Anything you want.
- *   This result will be used as argument for other actions below in the stack.
- */
+/// Action to be called for a capture after the whole match succeeds.
+/// 
+/// Actions will be called only if the whole match succeeds, in the order the
+/// Actions Expressions were matched.
+/// 
+/// Expression Actions reduce inner Actions' result into a single value.
+/// 
+/// Parameters:
+/// - Pointer to the start of the match/capture
+/// - Number of bytes contained in the match/capture
+/// - Number of #PT_DATA arguments 
+/// - #PT_DATA arguments, processed on inner Actions. Currently, this array is
+///   reused, so you should not rely on it after your function has returned
+/// - User custom data from match options
 typedef PT_DATA (*pt_expression_action)(
-    PT_STRING_TYPE str,
+    pt_element_string str,
     size_t size,
     int argc,
     PT_DATA* argv,
     void* userdata
 );
 
-/**
- * Action to be called when an Error Expression is matched (on syntatic errors).
- *
- * Parameters:
- * - The original subject string
- * - Position where the error was encountered
- * - Error code
- * - User custom data from match options
- */
+/// Action to be called when an Error Expression is matched (on syntatic errors).
+/// 
+/// Parameters:
+/// - The original subject string
+/// - Position where the error was encountered
+/// - Error code
+/// - User custom data from match options
 typedef PT_DATA (*pt_error_action)(
-    PT_STRING_TYPE str,
+    pt_element_string str,
     size_t where,
     int code,
     void* userdata
@@ -168,12 +158,12 @@ typedef PT_DATA (*pt_error_action)(
 typedef struct pt_expr {
     /// Operation to be performed
     uint8_t op;
-    /// At Least and At Most quantifiers, Range byte pair, Literal length, Character Class index.
-    int16_t N;
+    /// Range byte pair, Literal length, Character Class index.
+    uint16_t N;
     /// Literal and Character Set strings, Custom Matcher functions.
     union {
         void *data;
-        PT_STRING_TYPE str;
+        pt_element_string str;
         pt_custom_matcher_function matcher;
         pt_expression_action action;
         uintptr_t index;
@@ -298,66 +288,43 @@ typedef pt_expr* pt_grammar[];
 
 #define PT_RULE(...)  { __VA_ARGS__, PT_END() }
 
-/**
- * Match result: a {number of matched chars/match error code, action
- * result/syntactic error code} pair.
- *
- * This is returned by the `pt_match*` functions.
- */
+/// Match result: a {number of matched chars/match error code, action
+/// result} pair.
 typedef struct pt_match_result {
-    /**
-     * If non-negative, represents the number of characters matched;
-     * otherwise, it's an error code.
-     */
+    /// If non-negative, represents the number of characters matched;
+    /// otherwise, it's an error code.
     int matched;
-    /**
-     * Resulting data from the last top-level Action or first syntactic error
-     * found.
-     *
-     * If `matched` is `PT_MATCHED_ERROR`, `data.i` will be populated with the
-     * first syntactic error code found. This is useful if you don't want to
-     * specify a #pt_error_action just for capturing the error code.
-     *
-     * @note If you need a single result for all top-level Actions, just create
-     * an outer one that folds them (which will always be the last top-level
-     * one).
-     */
+    /// Resulting data from the last top-level Action.
+    /// 
+    /// @note If you need a single result for all top-level Actions, just create
+    /// an outer one that folds them (which will always be the last top-level
+    /// one).
     PT_DATA data;
 } pt_match_result;
 
-/**
- * Options passed to the `pt_match*` functions.
- *
- * This contains callbacks to be called, as well as some memory usage control.
- *
- * @note The first field is the userdata, so you can easily initialize it with
- *       an aggregate initializer.
- * @warning Zero initialize every unused option before calling `pt_match*`.
- */
+/// Options passed to `pt_match`.
 typedef struct pt_match_options {
-    void* userdata;  ///< Custom user data for the actions
+    void *userdata;  ///< Custom user data for the actions
     pt_error_action on_error;  ///< The action to be performed when a syntactic error is found
     size_t initial_stack_capacity;  ///< The initial capacity for the stack. If 0, stack capacity will begin at a reasonable default
 } pt_match_options;
 
 
-/// Default match options: all 0 or NULL =P
-PTDEF const pt_match_options pt_default_match_options;
+/// Default match options: all 0 or NULL.
+PT_DECL const pt_match_options pt_default_match_options;
 
-/**
- * Try to match the string `str` with a PEG composed by Expressions.
- *
- * @warning This function doesn't check for ill-formed grammars, so it's advised
- *          that you validate it before running the match algorithm.
- *
- * @param grammar  Expression array of arbitrary size. For a single Expression,
- *                 just pass a pointer to it.
- * @param str   Subject string to match.
- * @param opts  Match options. If NULL, pega-texto will use the default value
- *              @ref pt_default_match_options.
- * @return Number of matched characters/error code, result of Action folding.
- */
-PTDEF pt_match_result pt_match(const pt_grammar grammar, PT_STRING_TYPE str, const pt_match_options *const opts);
+/// Try to match the string `str` with a PEG.
+/// 
+/// @warning This function doesn't check for ill-formed grammars, so it's advised
+///          that you validate it before running the match algorithm.
+/// 
+/// @param grammar  Expression array of arbitrary size. For a single Expression,
+///                 just pass a pointer to it.
+/// @param str   Subject string to match.
+/// @param opts  Match options. If NULL, pega-texto will use the default value
+///              @ref pt_default_match_options.
+/// @return Number of matched characters/error code, result of Action folding.
+PT_DECL pt_match_result pt_match(const pt_grammar grammar, pt_element_string str, const pt_match_options *const opts);
 
 #ifdef __cplusplus
 }
@@ -368,6 +335,8 @@ PTDEF pt_match_result pt_match(const pt_grammar grammar, PT_STRING_TYPE str, con
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifdef PEGA_TEXTO_IMPLEMENTATION
+
+#include <ctype.h>
 
 #ifndef PT_ASSERT
     #include <assert.h>
@@ -439,7 +408,7 @@ const pt_match_options pt_default_match_options = {};
  */
 typedef struct pt__match_state {
     const pt_expr *e;  ///< Current expression being matched.
-    PT_STRING_TYPE sp;  ///< string pointer
+    pt_element_string sp;  ///< string pointer
     unsigned int qc;  ///< Quantifier counter
     unsigned int ac;  ///< Action counter.
 } pt__match_state;
@@ -458,7 +427,7 @@ typedef struct pt__match_state_stack {
  */
 typedef struct pt__match_action {
     pt_expression_action f;  ///< Action function.
-    PT_STRING_TYPE str;  ///< Pointer to capture start
+    pt_element_string str;  ///< Pointer to capture start
     size_t size;  ///< Size of a capture
     int argc;  ///< Number of arguments that will be passed when Action is executed.
 } pt__match_action;
@@ -521,7 +490,7 @@ static void pt__destroy_state_stack(pt__match_state_stack *s) {
  * @param ac  The new Action counter.
  * @return The newly pushed State.
  */
-static pt__match_state *pt__push_state(pt__match_context *context, const pt_expr *const e, PT_STRING_TYPE sp) {
+static pt__match_state *pt__push_state(pt__match_context *context, const pt_expr *const e, pt_element_string sp) {
     pt__match_state *state;
     // Double capacity, if reached
     if(context->state_stack.size == context->state_stack.capacity) {
@@ -555,7 +524,7 @@ static pt__match_state *pt__get_current_state(const pt__match_context *context) 
     return i >= 0 ? context->state_stack.states + i : NULL;
 }
 
-static void pt__peek_state(pt__match_context *context, PT_STRING_TYPE *sp) {
+static void pt__peek_state(pt__match_context *context, pt_element_string *sp) {
     pt__match_state *state = pt__get_current_state(context);
     if(state) {
         *sp = state->sp;
@@ -617,7 +586,7 @@ static void pt__destroy_action_stack(pt__match_context *context) {
  * @param argc  Number of arguments (inner action results) used by this action.
  * @return The newly pushed State.
  */
-static pt__match_action *pt__push_action(pt__match_context *context, pt_expression_action f, PT_STRING_TYPE str, size_t size, int argc) {
+static pt__match_action *pt__push_action(pt__match_context *context, pt_expression_action f, pt_element_string str, size_t size, int argc) {
     pt__match_action *action;
     // Double capacity, if reached
     if(context->action_stack.size == context->action_stack.capacity) {
@@ -693,9 +662,9 @@ typedef struct pt__match_expr_result {
     int e_advance;
 } pt__match_expr_result;
 
-static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt_expr *const e, PT_STRING_TYPE sp);
+static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt_expr *const e, pt_element_string sp);
 
-static pt__match_expr_result pt__match_sequence(pt__match_context *context, const pt_expr *const e, PT_STRING_TYPE sp) {
+static pt__match_expr_result pt__match_sequence(pt__match_context *context, const pt_expr *const e, pt_element_string sp) {
     pt__match_expr_result result = { 1, 0, 1 + e->N }, subresult;
     for(int i = 0; result.success && i < e->N; i += subresult.e_advance) {
         subresult = pt__match_expr(context, e + 1 + i, sp + result.sp_advance);
@@ -705,7 +674,7 @@ static pt__match_expr_result pt__match_sequence(pt__match_context *context, cons
     return result;
 }
 
-static pt__match_expr_result pt__match_rule(pt__match_context *context, size_t index, PT_STRING_TYPE sp) {
+static pt__match_expr_result pt__match_rule(pt__match_context *context, size_t index, pt_element_string sp) {
     pt__match_expr_result result = { 1, 0, 1 }, subresult;
     for(const pt_expr *e = context->grammar[index]; result.success && e->op != PT_OP_END; e += subresult.e_advance) {
         subresult = pt__match_expr(context, e, sp + result.sp_advance);
@@ -715,7 +684,7 @@ static pt__match_expr_result pt__match_rule(pt__match_context *context, size_t i
     return result;
 }
 
-static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt_expr *const e, PT_STRING_TYPE sp) {
+static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt_expr *const e, pt_element_string sp) {
     pt__match_expr_result result = { 0, 0, 1 };
     switch(e->op) {
         case PT_OP_END:
@@ -850,7 +819,7 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
     return result;
 }
 
-PTDEF pt_match_result pt_match(const pt_grammar grammar, PT_STRING_TYPE str, const pt_match_options *const opts) {
+PT_DECL pt_match_result pt_match(const pt_grammar grammar, pt_element_string str, const pt_match_options *const opts) {
     pt_match_result result = {};
     if(str == NULL) {
         result.matched = PT_NULL_INPUT;
