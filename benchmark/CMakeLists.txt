@@ -1,11 +1,10 @@
-include_directories("${PROJECT_SOURCE_DIR}/include")
+include_directories("${PROJECT_SOURCE_DIR}")
 
 # The grammar input
 configure_file(grammar.txt grammar.txt COPYONLY)
 
 # Pega-texto
 add_executable(PegaTexto pega-texto.c)
-target_link_libraries(PegaTexto pega-texto)
 
 # Flex + Bison
 find_package(FLEX)

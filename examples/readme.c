@@ -22,7 +22,7 @@ PT_DATA longest_line(const char *str, size_t size, int argc, PT_DATA *argv, void
     return longest;
 }
 
-// 2. Create some grammar rules, which are arrays expressions
+// 2. Create some grammar rules, which are arrays of expressions
 // Defining indices in an `enum` makes referencing rules clearer
 enum rule_indices {
     R_CSV,
