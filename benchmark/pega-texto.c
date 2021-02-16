@@ -3,8 +3,9 @@
  * and then match itself.
  */
 
-#include <pega-texto.h>
-#include <pega-texto/macro-on.h>
+#define PT_DEFINE_SHORTCUTS
+#define PEGA_TEXTO_IMPLEMENTATION
+#include "pega-texto.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -12,6 +13,192 @@
 #include <string.h>
 #include <stdarg.h>
 #include <assert.h>
+
+
+enum {
+    R_GRAMMAR,
+    R_DEFINITION,
+    R_EXP,
+    R_SEQ,
+    R_PREFIX,
+    R_SUFFIXED,
+    R_SUFFIX,
+    R_PRIMARY,
+    R_STRING,
+    R_LITERAL,
+    R_CASE,
+    R_CHAR_SET,
+    R_ITEM,
+    R_RANGE,
+    R_CHAR,
+    R_DEFINED,
+    R_S,
+    R_IDENTIFIER,
+    R_ARROW,
+    R_NUMBER,
+};
+
+pt_rule GRAMMAR = PT_RULE(
+    V(R_S), ONE_OR_MORE(V(R_DEFINITION)), NOT(ANY())
+);
+pt_rule DEFINITION = PT_RULE(
+    V(R_IDENTIFIER), V(R_ARROW), V(R_EXP)
+);
+pt_rule EXP = PT_RULE(
+    V(R_SEQ), ZERO_OR_MORE(B('/'), V(R_S), V(R_SEQ))
+);
+pt_rule SEQ = PT_RULE(
+    ONE_OR_MORE(V(R_PREFIX))
+);
+pt_rule PREFIX = PT_RULE(
+    OPTIONAL(S("&!"), V(R_S)),
+    V(R_SUFFIXED)
+);
+pt_rule SUFFIXED = PT_RULE(
+    V(R_PRIMARY), OPTIONAL(V(R_SUFFIX))
+);
+pt_rule SUFFIX = PT_RULE(
+    EITHER(
+        SEQ(S("+*?"), V(R_S)),
+        SEQ(B('^'), V(R_NUMBER))
+    )
+);
+pt_rule PRIMARY = PT_RULE(
+    EITHER(
+        SEQ(B('('), V(R_S), V(R_EXP), B(')'), V(R_S)),
+        SEQ(B('{'), V(R_S), V(R_EXP), B('}'), V(R_S)),
+        V(R_DEFINED),
+        V(R_LITERAL),
+        V(R_CASE),
+        V(R_CHAR_SET),
+        SEQ(B('.'), V(R_S)),
+        SEQ(V(R_IDENTIFIER), NOT(V(R_ARROW)))
+    )
+);
+pt_rule STRING = PT_RULE(
+    EITHER(
+        SEQ(B('\"'), ZERO_OR_MORE(NOT(B('\"')), V(R_CHAR)), B('\"'), V(R_S)),
+        SEQ(B('\''), ZERO_OR_MORE(NOT(B('\'')), V(R_CHAR)), B('\''), V(R_S))
+    )
+);
+pt_rule LITERAL = PT_RULE(V(R_STRING));
+pt_rule CASE = PT_RULE(
+    B('I'), V(R_STRING)
+);
+pt_rule CHAR_SET = PT_RULE(
+    B('['),
+    OPTIONAL(B('^')),
+    V(R_ITEM),
+    ZERO_OR_MORE(
+        NOT(B(']')),
+        V(R_ITEM)
+    ),
+    B(']'),
+    V(R_S)
+);
+pt_rule ITEM = PT_RULE(
+    EITHER(
+        V(R_DEFINED),
+        V(R_RANGE),
+        V(R_CHAR)
+    )
+);
+pt_rule RANGE = PT_RULE(
+    ANY(), B('-'), ANY_BUT(B(']'))
+);
+pt_rule CHAR = PT_RULE(
+    EITHER(
+        SEQ(B('\\'), S("abfnrtv\'\"[]\\")),
+        SEQ(B('\\'), R('0', '2'), R('0', '7'), R('0', '7')),
+        SEQ(B('\\'), R('0', '7'), OPTIONAL(R('0', '7'))),
+        ANY()
+    )
+);
+pt_rule DEFINED = PT_RULE(
+    B('\\'), S("wWaAcCdDgGlLpPsSuUxX"), V(R_S)
+);
+pt_rule _S = PT_RULE(
+    ZERO_OR_MORE(
+        EITHER(
+            SPACE(),
+            SEQ(B('#'), ZERO_OR_MORE(ANY_BUT(B('\n'))))
+        )
+    )
+);
+pt_rule IDENTIFIER = PT_RULE(
+    EITHER(ALPHA(), B('_')),
+    ZERO_OR_MORE(
+        EITHER(
+            ALNUM(),
+            S("_-")
+        )
+    ),
+    V(R_S)
+);
+pt_rule ARROW = PT_RULE(
+    L("<-"), V(R_S)
+);
+pt_rule NUMBER = PT_RULE(
+    OPTIONAL(S("+-")),
+    ONE_OR_MORE(DIGIT()),
+    V(R_S)
+);
+
+pt_grammar G = {
+    [R_GRAMMAR] = GRAMMAR,
+    [R_DEFINITION] = DEFINITION,
+    [R_EXP] = EXP,
+    [R_SEQ] = SEQ,
+    [R_PREFIX] = PREFIX,
+    [R_SUFFIXED] = SUFFIXED,
+    [R_SUFFIX] = SUFFIX,
+    [R_PRIMARY] = PRIMARY,
+    [R_STRING] = STRING,
+    [R_LITERAL] = LITERAL,
+    [R_CASE] = CASE,
+    [R_CHAR_SET] = CHAR_SET,
+    [R_ITEM] = ITEM,
+    [R_RANGE] = RANGE,
+    [R_CHAR] = CHAR,
+    [R_DEFINED] = DEFINED,
+    [R_S] = _S,
+    [R_IDENTIFIER] = IDENTIFIER,
+    [R_ARROW] = ARROW,
+    [R_NUMBER] = NUMBER,
+};
+
+char *readfile(const char *filename) {
+	FILE *fp = fopen(filename, "r");
+	assert(fp != NULL && "Error reading file");
+	fseek(fp, 0, SEEK_END);
+	long size = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+	char *buffer = malloc((size + 1) * sizeof(char));
+	assert(buffer && "[readfile] Couldn't malloc buffer");
+	fread(buffer, sizeof(char), size, fp);
+	buffer[size] = '\0';
+	fclose(fp);
+	return buffer;
+}
+
+#include "benchmark.h"
+
+int main(int argc, char **argv) {
+	char *input = readfile(argc > 1 ? argv[1] : "grammar.txt");
+
+	pt_match_options opts = { .initial_stack_capacity = 99999 };
+
+	int matched;
+	BENCHMARK(
+		matched = pt_match(G, input, &opts).matched;
+	)
+	puts(matched >= 0
+		 ? "Matched"
+		 : "No match");
+
+	free(input);
+	return 0;
+}
 
 // Parser Actions
 
@@ -224,144 +411,3 @@
 	/* } */
 	/* return (pt_data){ .p = e }; */
 /* } */
-
-void create_re_grammar(pt_grammar *g) {
-	/* Grammar <- S Definition+ !.
-	 * Definition <- Identifier Arrow Exp
-	 *
-	 * Exp <- Seq ("/" S Seq)*
-	 * Seq <- Prefix+
-	 * Prefix <- ([&!] S)? Suffixed
-	 * Suffixed <- Primary S Suffix?
-	 * Suffix <- [+*?] S
-	 *         / "^" Number
-	 *
-	 * Primary <- "(" S Exp ")" S
-	 *          / "{" S Exp "}" S
-	 *          / Defined
-	 *          / Literal
-	 *          / CaseInsensitive
-	 *          / CharacterSet
-	 *          / "." S
-	 *          / Identifier !Arrow
-	 *
-	 * Literal <- String
-	 * CaseInsensitive <- "I" String
-	 * String <- '"' (!'"' Character)* '"' S
-	 *         / "'" (!"'" Character)* "'" S
-	 * CharacterSet <- "[" "^"? Item (!"]" Item)* "]" S
-	 * Item <- Defined / Range / Character
-	 * Range <- . "-" [^]]
-	 * Character <- "\\" [abfnrtv'"\[\]\\]
-	 *            / "\\" [0-2][0-7][0-7]
-	 *            / "\\" [0-7][0-7]?
-	 *            / .
-	 * Defined <- "\\" [wWaAcCdDgGlLpPsSuUxX] S
-	 *
-	 * S <- (\s / "#" [^\n]*)*
-	 * Identifier <- [A-Za-z_][A-Za-z0-9_-]* S
-	 * Arrow <- "<-" S
-	 * Number <- [+-]? \d+ S
-	 */
-	pt_rule rules[] = {
-		{ "Grammar", SEQ(V("S"), Q(V("Definition"), 1), NOT(ANY)) },
-		{ "Definition", SEQ(V("Identifier"), V("Arrow"), V("Exp")) },
-
-		{ "Exp", SEQ(V("Seq"), Q(SEQ(B('/'), V("S"), V("Seq")), 0)) },
-		{ "Seq", Q(V("Prefix"), 1) },
-		{ "Prefix", SEQ(Q(SEQ(S("&!"), V("S")), -1), V("Suffixed")) },
-		{ "Suffixed", SEQ(V("Primary"), Q(V("Suffix"), -1)) },
-		{ "Suffix", OR(SEQ(S("+*?"), V("S")), SEQ(L("^"), V("Number"))) },
-
-		{ "Primary", OR(SEQ(B('('), V("S"), V("Exp"), B(')'), V("S")),
-		                SEQ(B('{'), V("S"), V("Exp"), B('}'), V("S")),
-		                V("Defined"),
-		                V("Literal"),
-		                V("CaseInsensitive"),
-		                V("CharacterSet"),
-		                SEQ(B('.'), V("S")),
-		                SEQ(V("Identifier"), NOT(V("Arrow")))) },
-		{ "String", OR(
-		                SEQ(B('\"'), Q(SEQ(NOT(B('\"')), V("Character")), 0), B('\"'), V("S")),
-		                SEQ(B('\''), Q(SEQ(NOT(B('\'')), V("Character")), 0), B('\''), V("S"))) },
-		{ "Literal", V("String") },
-		{ "CaseInsensitive", SEQ(B('I'), V("String")) },
-		{ "CharacterSet", SEQ(B('['), Q(B('^'), -1), V("Item"), Q(SEQ(NOT(B(']')), V("Item")), 0), B(']'), V("S")) },
-		{ "Item", OR(V("Defined"), V("Range"), V("Character")) },
-		{ "Range", SEQ(ANY, B('-'), BUT(B(']'))) },
-		{ "Character", OR(
-		                   SEQ(B('\\'), S("abfnrtv\'\"[]\\")),
-		                   SEQ(B('\\'), R('0', '2'), R('0', '7'), R('0', '7')),
-		                   SEQ(B('\\'), R('0', '7'), Q(R('0', '7'), -1)),
-		                   ANY) },
-		{ "Defined", SEQ(B('\\'), S("wWaAcCdDgGlLpPsSuUxX"), V("S")) },
-
-		{ "S", Q(OR(C(PT_SPACE), SEQ(B('#'), Q(BUT(B('\n')), 0))), 0) },
-		{ "Identifier", SEQ(OR(C(PT_ALPHA), B('_')), Q(OR(C(PT_ALNUM), S("_-")), 0), V("S")) },
-		{ "Arrow", SEQ(L("<-"), V("S")) },
-		{ "Number", SEQ(Q(S("+-"), -1), Q(C(PT_DIGIT), 1), V("S")) },
-		{ NULL, NULL },
-	};
-	pt_init_grammar(g, rules, 0);
-	/* pt_validate_grammar(g, PT_VALIDATE_ABORT); */
-}
-
-char *readfile(const char *filename) {
-	FILE *fp = fopen(filename, "r");
-	assert(fp != NULL && "Error reading file");
-	fseek(fp, 0, SEEK_END);
-	long size = ftell(fp);
-	fseek(fp, 0, SEEK_SET);
-	char *buffer = malloc((size + 1) * sizeof(char));
-	assert(buffer && "[readfile] Couldn't malloc buffer");
-	fread(buffer, sizeof(char), size, fp);
-	buffer[size] = '\0';
-	fclose(fp);
-	return buffer;
-}
-
-#include "benchmark.h"
-
-int main(int argc, char **argv) {
-	char *input = readfile(argc > 1 ? argv[1] : "grammar.txt");
-
-	pt_grammar g;
-	create_re_grammar(&g);
-	pt_match_options opts = { .initial_stack_capacity = 99999 };
-
-	int matched;
-	BENCHMARK(
-		matched = pt_match_grammar(&g, input, &opts).matched;
-	)
-	puts(matched >= 0
-		 ? "Matched"
-		 : "No match");
-
-	{
-		pt_bytecode bytecode;
-		pt_init_bytecode(&bytecode);
-		int result = pt_compile_grammar(&bytecode, &g);
-		printf("Compile result: %s\n", pt_get_compile_status_description(result));
-
-		if(result == PT_COMPILE_SUCCESS) {
-			pt_dump_bytecode(&bytecode);
-			pt_vm vm;
-			pt_init_vm(&vm);
-			pt_vm_load_bytecode(&vm, &bytecode);
-
-			printf("pronto?\n");
-			scanf("%d", &matched);
-
-			pt_match_result match_result = pt_vm_match(&vm, input, NULL);
-			printf("Match result: %d\n", match_result.matched);
-
-			pt_release_vm(&vm);
-		}
-
-		pt_release_bytecode(&bytecode);
-	}
-
-	pt_release_grammar(&g);
-	free(input);
-	return 0;
-}
