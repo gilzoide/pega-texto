@@ -1,3 +1,31 @@
+/**
+ * pega-texto.h -- Parsing Expression Grammar (PEG) runtime engine
+ *
+ * Project URL: https://github.com/gilzoide/pega-texto
+ *
+ * Do this:
+ *    #define PEGA_TEXTO_IMPLEMENTATION
+ * before you include this file in *one* C or C++ file to create the implementation.
+ *
+ * i.e.:
+ *   #include ...
+ *   #include ...
+ *   #define PEGA_TEXTO_IMPLEMENTATION
+ *   #include "pega-texto.h"
+ *
+ * Optionally provide the following defines with your own implementations:
+ *
+ * PT_MALLOC(size, userdata)      - Your own malloc function (default: `malloc(size)`)
+ * PT_REALLOC(p, size, userdata)  - Your own realloc function (default: `realloc(p, size)`)
+ * PT_FREE(p, userdata)           - Your own free function (default: `free(p)`)
+ * PT_ASSERT(cond, msg, userdata) - Your own assert function (default: `assert(cond && msg)`)
+ * PT_STATIC                      - If defined and PT_DECL is not defined, functions will be declared `static` instead of `extern`
+ * PT_DECL                        - Function declaration prefix (default: `extern` or `static` depending on PT_STATIC)
+ * PT_DEFINE_SHORTCUTS            - Define some shorcut macros for building grammars.
+ *                                  They are not prefixed by `PT_`, so beware with define clashes!
+ * PT_ELEMENT_TYPE                - Type that describes each element in input string (default: `const char`)
+ * PT_DATA                        - Data type to be returned by Actions (default: simple union with several primitive types)
+ */
 #ifndef PEGA_TEXTO_H
 #define PEGA_TEXTO_H
 
@@ -89,7 +117,7 @@ typedef enum pt_macth_error_code {
 } pt_macth_error_code;
 
 #ifndef PT_DATA
-    /// Default data types for Expression Actions to return.
+    /// Default data type for Actions to return.
     ///
     /// Define `PT_DATA` before including "pega-texto.h" to provide your own data type
     /// 
@@ -116,7 +144,7 @@ typedef enum pt_macth_error_code {
 #endif
 
 /// A function that receives a string and userdata and match it (positive) or not, advancing the matched number.
-typedef int (*pt_custom_matcher_function)(pt_element_string, void*);
+typedef int (*pt_custom_matcher_function)(pt_element_string, void *);
 
 /// Action to be called for a capture after the whole match succeeds.
 /// 
@@ -136,8 +164,8 @@ typedef PT_DATA (*pt_expression_action)(
     pt_element_string str,
     size_t size,
     int argc,
-    PT_DATA* argv,
-    void* userdata
+    PT_DATA *argv,
+    void *userdata
 );
 
 /// Action to be called when an Error Expression is matched (on syntatic errors).
@@ -151,7 +179,7 @@ typedef PT_DATA (*pt_error_action)(
     pt_element_string str,
     size_t where,
     int code,
-    void* userdata
+    void *userdata
 );
 
 /// Parsing Expressions.
@@ -162,10 +190,10 @@ typedef struct pt_expr {
     uint16_t N;
     /// Literal and Character Set strings, Custom Matcher functions.
     union {
-        void *data;
-        pt_element_string str;
-        pt_custom_matcher_function matcher;
-        pt_expression_action action;
+        const void *data;
+        const pt_element_string str;
+        const pt_custom_matcher_function matcher;
+        const pt_expression_action action;
         uintptr_t index;
         uintptr_t quantifier;
     };
@@ -340,7 +368,7 @@ PT_DECL pt_match_result pt_match(const pt_grammar grammar, pt_element_string str
 
 #ifndef PT_ASSERT
     #include <assert.h>
-    #define PT_ASSERT(cond, d) assert(cond)
+    #define PT_ASSERT(cond, message, d) assert(cond && message)
 #endif
 
 #ifndef PT_MALLOC
@@ -448,115 +476,13 @@ typedef struct pt__match_context {
     pt__match_action_stack action_stack;
 } pt__match_context;
 
-/**
- * Initializes the State Stack, `malloc`ing the stack with `initial_capacity`.
- *
- * @param s                The state stack to be initialized.
- * @param initial_capacity The initial stack capacity. If 0, stack is
- *                         initialized with a default value.
- * @return 1 if the allocation went well, 0 otherwise
- */
-static int pt__initialize_state_stack(pt__match_context *context) {
-    size_t initial_capacity = context->opts->initial_stack_capacity;
-    if(initial_capacity == 0) {
-        initial_capacity = PT_DEFAULT_INITIAL_STACK_CAPACITY;
-    }
-    context->state_stack.states = (pt__match_state *) malloc(initial_capacity * sizeof(pt__match_state));
-    if(context->state_stack.states) {
-        context->state_stack.size = 0;
-        context->state_stack.capacity = initial_capacity;
-        return 1;
-    }
-    else {
-        return 0;
-    }
-}
 
-/**
- * Destroy the State Stack, freeing the memory used.
- *
- * @param s The state stack to be destroyed.
- */
-static void pt__destroy_state_stack(pt__match_state_stack *s) {
-    free(s->states);
-}
-
-/**
- * Push a State into the State Stack, doubling it's capacity, if needed.
- *
- * @param s   The state stack.
- * @param e   The Parsing Expression to be used for the next iteration.
- * @param pos The starting position of the stream for next iteration.
- * @param ac  The new Action counter.
- * @return The newly pushed State.
- */
-static pt__match_state *pt__push_state(pt__match_context *context, const pt_expr *const e, pt_element_string sp) {
-    pt__match_state *state;
-    // Double capacity, if reached
-    if(context->state_stack.size == context->state_stack.capacity) {
-        size_t new_capacity = context->state_stack.capacity * 2;
-        state = (pt__match_state *) realloc(context->state_stack.states, new_capacity * sizeof(pt__match_state));
-        if(state) {
-            context->state_stack.capacity = new_capacity;
-            context->state_stack.states = state;
-        }
-        else {
-            return NULL;
-        }
-    }
-    state = context->state_stack.states + (context->state_stack.size)++;
-    state->e = e;
-    state->sp = sp;
-    state->qc = 0;
-    state->ac = context->action_stack.size;
-
-    return state;
-}
-
-/**
- * Get the current State on top of the State Stack
- *
- * @param s The state stack.
- * @return Current State, if there is any, `NULL` otherwise.
- */
-static pt__match_state *pt__get_current_state(const pt__match_context *context) {
-    int i = context->state_stack.size - 1;
-    return i >= 0 ? context->state_stack.states + i : NULL;
-}
-
-static void pt__peek_state(pt__match_context *context, pt_element_string *sp) {
-    pt__match_state *state = pt__get_current_state(context);
-    if(state) {
-        *sp = state->sp;
-        context->action_stack.size = state->ac;
-    }
-}
-
-static pt__match_state *pt__pop_state(pt__match_context *context) {
-    if(context->state_stack.size > 1) {
-        context->state_stack.size--;
-        return &context->state_stack.states[context->state_stack.size - 1];
-    }
-    else {
-        context->state_stack.size = 0;
-        return NULL;
-    }
-}
-
-/**
- * Initializes the State Stack, `malloc`ing the stack with `initial_capacity`.
- *
- * @param a                The action stack to be initialized.
- * @param initial_capacity The initial stack capacity. If 0, stack is
- *                         initialized with a default value.
- * @return 1 if the allocation went well, 0 otherwise
- */
 static int pt__initialize_action_stack(pt__match_context *context) {
     size_t initial_capacity = context->opts->initial_stack_capacity;
     if(initial_capacity == 0) {
         initial_capacity = PT_DEFAULT_INITIAL_STACK_CAPACITY;
     }
-    context->action_stack.actions = (pt__match_action *) malloc(initial_capacity * sizeof(pt__match_action));
+    context->action_stack.actions = (pt__match_action *) PT_MALLOC(initial_capacity * sizeof(pt__match_action), context->opts->userdata);
     if(context->action_stack.actions) {
         context->action_stack.size = 0;
         context->action_stack.capacity = initial_capacity;
@@ -567,31 +493,16 @@ static int pt__initialize_action_stack(pt__match_context *context) {
     }
 }
 
-/**
- * Destroy the Action Stack, freeing the memory used.
- *
- * @param a The action stack to be destroyed.
- */
 static void pt__destroy_action_stack(pt__match_context *context) {
-    free(context->action_stack.actions);
+    PT_FREE(context->action_stack.actions, context->opts->userdata);
 }
 
-/**
- * Push an Action into the Action Stack, doubling it's capacity, if needed.
- *
- * @param context  Match context
- * @param f     The function to be called as action.
- * @param start The starting position of the stream for action.
- * @param end   The ending position of the stream for action.
- * @param argc  Number of arguments (inner action results) used by this action.
- * @return The newly pushed State.
- */
 static pt__match_action *pt__push_action(pt__match_context *context, pt_expression_action f, pt_element_string str, size_t size, int argc) {
     pt__match_action *action;
     // Double capacity, if reached
     if(context->action_stack.size == context->action_stack.capacity) {
         int new_capacity = context->action_stack.capacity * 2;
-        action = (pt__match_action *) realloc(context->action_stack.actions, new_capacity * sizeof(pt__match_action));
+        action = (pt__match_action *) PT_REALLOC(context->action_stack.actions, new_capacity * sizeof(pt__match_action), context->opts->userdata);
         if(action) {
             context->action_stack.capacity = new_capacity;
             context->action_stack.actions = action;
@@ -609,10 +520,6 @@ static pt__match_action *pt__push_action(pt__match_context *context, pt_expressi
     return action;
 }
 
-/**
- * Run all actions in the Action Stack in the right way, folding them into
- * one value.
- */
 static void pt__run_actions(pt__match_context *context, pt_match_result *result) {
     PT_DATA *data_stack;
     if(sizeof(PT_DATA) > sizeof(pt__match_action)) {
@@ -740,7 +647,7 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
             return pt__match_rule(context, e->index, sp);
 
         case PT_OP_AT_LEAST: {
-            int counter = 0;
+            unsigned int counter = 0;
             while(1) {
                 pt__match_expr_result subresult = pt__match_sequence(context, e, sp + result.sp_advance);
                 if(subresult.success) {
@@ -757,7 +664,7 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
         }
 
         case PT_OP_AT_MOST: {
-            for(int counter = 0; counter < e->quantifier; counter++) {
+            for(unsigned int counter = 0; counter < e->quantifier; counter++) {
                 pt__match_expr_result subresult = pt__match_sequence(context, e, sp + result.sp_advance);
                 if(subresult.success) {
                     result.sp_advance += subresult.sp_advance;
@@ -801,7 +708,7 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
             if(result.success) {
                 if(!pt__push_action(context, e->action, sp, result.sp_advance, context->action_stack.size - previous_action_count)) {
                     // TODO: PT_NO_STACK_MEM result
-                    PT_ASSERT(0 && "FIXME", context->opts->userdata);
+                    PT_ASSERT(0, "FIXME", context->opts->userdata);
                 }
             }
             break;

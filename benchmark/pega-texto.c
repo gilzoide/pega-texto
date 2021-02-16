@@ -173,7 +173,7 @@ char *readfile(const char *filename) {
 	fseek(fp, 0, SEEK_END);
 	long size = ftell(fp);
 	fseek(fp, 0, SEEK_SET);
-	char *buffer = malloc((size + 1) * sizeof(char));
+	char *buffer = (char *) malloc((size + 1) * sizeof(char));
 	assert(buffer && "[readfile] Couldn't malloc buffer");
 	fread(buffer, sizeof(char), size, fp);
 	buffer[size] = '\0';
