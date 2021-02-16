@@ -328,6 +328,7 @@ typedef pt_expr* pt_grammar[];
     #define F PT_CUSTOM_MATCHER
     #define ERROR PT_ERROR
     #define E PT_ERROR
+    #define ACTION PT_ACTION
     #define ACT PT_ACTION
     #define ANY_BUT PT_ANY_BUT
 #endif
