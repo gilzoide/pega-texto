@@ -90,8 +90,8 @@ enum pt_operation {
     // N-ary
     PT_OP_SEQUENCE,         // e1 e2
     PT_OP_CHOICE,           // e1 / e2
-    PT_OP_ERROR,            // ERROR // Represents a syntactic error
     PT_OP_ACTION,           // Push an action to the stack
+    PT_OP_ERROR,            // ERROR // Represents a syntactic error
 
     PT_OP_OPERATION_ENUM_COUNT,
 };
@@ -184,12 +184,10 @@ typedef PT_DATA (*pt_expression_action)(
 /// Parameters:
 /// - The original subject string
 /// - Position where the error was encountered
-/// - Error code
 /// - User custom data from match options
-typedef PT_DATA (*pt_error_action)(
+typedef void (*pt_error_action)(
     pt_element_string str,
     size_t where,
-    int code,
     void *userdata
 );
 
@@ -205,6 +203,7 @@ typedef struct pt_expr {
         const pt_element_string str;
         const pt_custom_matcher_function matcher;
         const pt_expression_action action;
+        const pt_error_action error_action;
         uintptr_t element;
         uintptr_t index;
         uintptr_t range;
@@ -278,8 +277,8 @@ typedef pt_expr* pt_grammar[];
 #define PT_SEQUENCE(...)  ((pt_expr){ PT_OP_SEQUENCE, PT_NARG(__VA_ARGS__) }), __VA_ARGS__
 #define PT_CHOICE(...)  ((pt_expr){ PT_OP_CHOICE, PT_NARG(__VA_ARGS__) }), __VA_ARGS__
 #define PT_CUSTOM_MATCHER(f)  ((pt_expr){ PT_OP_CUSTOM_MATCHER, 0, (void *) f })
-#define PT_ERROR(index)  ((pt_expr){ PT_OP_ERROR, 0 })
 #define PT_ACTION(action, ...)  ((pt_expr){ PT_OP_ACTION, PT_NARG(__VA_ARGS__), (void *) action }), __VA_ARGS__
+#define PT_ERROR(error_action)  ((pt_expr){ PT_OP_ERROR, 0, (void *) error_action })
 
 // Aliases
 #define PT_ONE_OR_MORE(...)  PT_AT_LEAST(1, __VA_ARGS__)
@@ -287,6 +286,7 @@ typedef pt_expr* pt_grammar[];
 #define PT_OPTIONAL(...)  PT_AT_MOST(1, __VA_ARGS__)
 #define PT_ANY_BUT(...) PT_NOT(__VA_ARGS__), PT_ANY()
 #define PT_RULE(...)  { __VA_ARGS__, PT_END() }
+#define PT_ERROR_IF(error_action, ...)  PT_OPTIONAL(PT_AND(__VA_ARGS__), PT_ERROR(error_action))
 
 #ifdef PT_DEFINE_SHORTCUTS
     #define ELEMENT PT_ELEMENT
@@ -327,6 +327,7 @@ typedef pt_expr* pt_grammar[];
     #define CUSTOM_MATCHER PT_CUSTOM_MATCHER
     #define F PT_CUSTOM_MATCHER
     #define ERROR PT_ERROR
+    #define ERROR_IF PT_ERROR_IF
     #define E PT_ERROR
     #define ACTION PT_ACTION
     #define ACT PT_ACTION
@@ -417,8 +418,8 @@ const char * const pt_operation_names[] = {
     "PT_OP_NOT",
     "PT_OP_SEQUENCE",
     "PT_OP_CHOICE",
-    "PT_OP_ERROR",
     "PT_OP_ACTION",
+    "PT_OP_ERROR",
 };
 
 /// A function that receives a character (int) and match it (non-zero) or not (0).
@@ -450,28 +451,7 @@ const pt_match_options pt_default_match_options = {};
     #define PT_DEFAULT_INITIAL_STACK_CAPACITY 64
 #endif
 
-/**
- * A State on the Matching algorithm.
- */
-typedef struct pt__match_state {
-    const pt_expr *e;  ///< Current expression being matched.
-    pt_element_string sp;  ///< string pointer
-    unsigned int qc;  ///< Quantifier counter
-    unsigned int ac;  ///< Action counter.
-} pt__match_state;
-
-/**
- * Dynamic sequential stack of States.
- */
-typedef struct pt__match_state_stack {
-    pt__match_state *states;  ///< States buffer.
-    size_t size;  ///< Current number of States.
-    size_t capacity;  ///< Capacity of the States buffer.
-} pt__match_state_stack;
-
-/**
- * Queried actions, to be executed on match success.
- */
+/// Queried actions, to be executed on match success.
 typedef struct pt__match_action {
     pt_expression_action f;  ///< Action function.
     pt_element_string str;  ///< Pointer to capture start
@@ -479,19 +459,17 @@ typedef struct pt__match_action {
     int argc;  ///< Number of arguments that will be passed when Action is executed.
 } pt__match_action;
 
-/**
- * Dynamic sequential stack of Actions.
- */
+/// Dynamic sequential stack of Actions.
 typedef struct pt__match_action_stack {
     pt__match_action *actions;  ///< Queried Actions buffer.
-    size_t size;  ///< Current number of Queried Actions.
     size_t capacity;  ///< Capacity of the Queried Actions buffer.
+    size_t size;  ///< Current number of Queried Actions.
 } pt__match_action_stack;
 
 typedef struct pt__match_context {
     const pt_expr *const *const grammar;
-    const pt_match_options* opts;
-    pt__match_state_stack state_stack;
+    const pt_match_options *opts;
+    const pt_element_string str;
     pt__match_action_stack action_stack;
 } pt__match_context;
 
@@ -583,7 +561,7 @@ static void pt__run_actions(pt__match_context *context, pt_match_result *result)
 }
 
 typedef struct pt__match_expr_result {
-    int success;
+    int success; // < 0 on exception, 0 on no match, 1 on match success
     int sp_advance;
     int e_advance;
 } pt__match_expr_result;
@@ -592,20 +570,28 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
 
 static pt__match_expr_result pt__match_sequence(pt__match_context *context, const pt_expr *const e, pt_element_string sp) {
     pt__match_expr_result result = { 1, 0, 1 + e->N }, subresult;
-    for(int i = 0; result.success && i < e->N; i += subresult.e_advance) {
+    size_t current_action_count = context->action_stack.size;
+    for(int i = 0; result.success > 0 && i < e->N; i += subresult.e_advance) {
         subresult = pt__match_expr(context, e + 1 + i, sp + result.sp_advance);
         result.success = subresult.success;
         result.sp_advance += subresult.sp_advance;
+    }
+    if(result.success <= 0) {
+        context->action_stack.size = current_action_count;
     }
     return result;
 }
 
 static pt__match_expr_result pt__match_rule(pt__match_context *context, size_t index, pt_element_string sp) {
     pt__match_expr_result result = { 1, 0, 1 }, subresult;
-    for(const pt_expr *e = context->grammar[index]; result.success && e->op != PT_OP_END; e += subresult.e_advance) {
+    size_t current_action_count = context->action_stack.size;
+    for(const pt_expr *e = context->grammar[index]; result.success > 0 && e->op != PT_OP_END; e += subresult.e_advance) {
         subresult = pt__match_expr(context, e, sp + result.sp_advance);
         result.success = subresult.success;
         result.sp_advance += subresult.sp_advance;
+    }
+    if(result.success <= 0) {
+        context->action_stack.size = current_action_count;
     }
     return result;
 }
@@ -666,9 +652,10 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
 
         case PT_OP_AT_LEAST: {
             unsigned int counter = 0;
+            pt__match_expr_result subresult;
             while(1) {
-                pt__match_expr_result subresult = pt__match_sequence(context, e, sp + result.sp_advance);
-                if(subresult.success) {
+                subresult = pt__match_sequence(context, e, sp + result.sp_advance);
+                if(subresult.success > 0 && subresult.sp_advance > 0) {
                     result.sp_advance += subresult.sp_advance;
                     counter++;
                 }
@@ -676,35 +663,52 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
                     break;
                 }
             }
-            result.success = counter >= e->quantifier;
-            result.e_advance = 1 + e->N;
+            if(subresult.success >= 0) {
+                result.success = counter >= e->quantifier;
+                result.e_advance = 1 + e->N;
+            }
+            else {
+                result.success = subresult.success;
+            }
             break;
         }
 
         case PT_OP_AT_MOST: {
+            pt__match_expr_result subresult;
             for(unsigned int counter = 0; counter < e->quantifier; counter++) {
-                pt__match_expr_result subresult = pt__match_sequence(context, e, sp + result.sp_advance);
-                if(subresult.success) {
+                subresult = pt__match_sequence(context, e, sp + result.sp_advance);
+                if(subresult.success > 0 && subresult.sp_advance > 0) {
                     result.sp_advance += subresult.sp_advance;
                 }
                 else {
                     break;
                 }
             }
-            result.success = 1;
-            result.e_advance = 1 + e->N;
+            if(subresult.success >= 0) {
+                result.success = 1;
+                result.e_advance = 1 + e->N;
+            }
+            else {
+                result.success = subresult.success;
+            }
             break;
         }
 
         case PT_OP_NOT: {
+            size_t current_action_count = context->action_stack.size;
             result = pt__match_sequence(context, e, sp);
-            result.success = !result.success;
-            result.sp_advance = 0;
+            if(result.success >= 0) {
+                context->action_stack.size = current_action_count; // ignore captures
+                result.success = !result.success;
+                result.sp_advance = 0;
+            }
             break;
         }
 
         case PT_OP_AND: {
+            size_t current_action_count = context->action_stack.size;
             result = pt__match_sequence(context, e, sp);
+            context->action_stack.size = current_action_count; // ignore captures
             result.sp_advance = 0;
             break;
         }
@@ -713,7 +717,7 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
             return pt__match_sequence(context, e, sp);
 
         case PT_OP_CHOICE: {
-            for(int i = 0; !result.success && i < e->N; i += result.e_advance) {
+            for(int i = 0; result.success == 0 && i < e->N; i += result.e_advance) {
                 result = pt__match_expr(context, e + 1 + i, sp);
             }
             result.e_advance = 1 + e->N;
@@ -723,22 +727,24 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
         case PT_OP_ACTION: {
             size_t previous_action_count = context->action_stack.size;
             result = pt__match_sequence(context, e, sp);
-            if(result.success) {
+            if(result.success > 0) {
                 if(!pt__push_action(context, e->action, sp, result.sp_advance, context->action_stack.size - previous_action_count)) {
-                    // TODO: PT_NO_STACK_MEM result
-                    PT_ASSERT(0, "FIXME", context->opts->userdata);
+                    result.success = PT_NO_STACK_MEM;
                 }
             }
             break;
         }
 
         case PT_OP_ERROR: {
-            // TODO: handle syntactic error
+            if(e->error_action) {
+                e->error_action(context->str, sp - context->str, context->opts->userdata);
+            }
+            result.success = PT_MATCHED_ERROR;
             break;
         }
 
         default:
-            // TODO: assert unknown operation?
+            PT_ASSERT(0, "Unknown operation", context->opts->userdata);
             break;
     }
     return result;
@@ -753,20 +759,24 @@ PT_DECL pt_match_result pt_match(const pt_grammar grammar, pt_element_string str
     pt__match_context context = {
         (const pt_expr *const *const) grammar,
         opts == NULL ? &pt_default_match_options : opts,
+        str,
     };
     if(!pt__initialize_action_stack(&context)) {
         result.matched = PT_NO_STACK_MEM;
         return result;
     }
     pt__match_expr_result subresult = pt__match_rule(&context, 0, str);
-    if(subresult.success) {
+    if(subresult.success > 0) {
         result.matched = subresult.sp_advance;
         if(context.action_stack.size > 0) {
             pt__run_actions(&context, &result);
         }
     }
-    else {
+    else if(subresult.success == 0) {
         result.matched = PT_NO_MATCH;
+    }
+    else {
+        result.matched = subresult.success;
     }
     pt__destroy_action_stack(&context);
     return result;
