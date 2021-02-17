@@ -284,7 +284,7 @@ typedef pt_expr* pt_grammar[];
 #define PT_ONE_OR_MORE(...)  PT_AT_LEAST(1, __VA_ARGS__)
 #define PT_ZERO_OR_MORE(...)  PT_AT_LEAST(0, __VA_ARGS__)
 #define PT_OPTIONAL(...)  PT_AT_MOST(1, __VA_ARGS__)
-#define PT_ANY_BUT(...) PT_NOT(__VA_ARGS__), PT_ANY()
+#define PT_ANY_BUT(...) PT_SEQUENCE(PT_NOT(__VA_ARGS__), PT_ANY())
 #define PT_RULE(...)  { __VA_ARGS__, PT_END() }
 #define PT_ERROR_IF(error_action, ...)  PT_OPTIONAL(PT_AND(__VA_ARGS__), PT_ERROR(error_action))
 
@@ -599,34 +599,40 @@ static pt__match_expr_result pt__match_rule(pt__match_context *context, size_t i
 static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt_expr *const e, pt_element_string sp) {
     pt__match_expr_result result = { 0, 0, 1 };
     switch(e->op) {
-        case PT_OP_END:
+        case PT_OP_END: {
             result.success = 1;
             break;
+        }
 
-        case PT_OP_ELEMENT:
+        case PT_OP_ELEMENT: {
             result.success = (*sp) == (PT_ELEMENT_TYPE) e->element;
             result.sp_advance = 1;
             break;
+        }
 
-        case PT_OP_LITERAL:
+        case PT_OP_LITERAL: {
             result.success = strncmp(sp, e->str, e->N) == 0;
             result.sp_advance = e->N;
             break;
+        }
 
-        case PT_OP_CASE_INSENSITIVE:
+        case PT_OP_CASE_INSENSITIVE: {
             result.success = strncasecmp(sp, e->str, e->N) == 0;
             result.sp_advance = e->N;
             break;
+        }
 
-        case PT_OP_CHARACTER_CLASS:
+        case PT_OP_CHARACTER_CLASS: {
             result.success = pt__function_for_character_class((enum pt_character_class) e->N)(*sp) != 0;
             result.sp_advance = 1;
             break;
+        }
 
-        case PT_OP_SET:
+        case PT_OP_SET: {
             result.success = *sp && strchr(e->str, *sp);
             result.sp_advance = 1;
             break;
+        }
 
         case PT_OP_RANGE: {
             PT_ELEMENT_TYPE element = *sp;
@@ -635,10 +641,11 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
             break;
         }
 
-        case PT_OP_ANY:
+        case PT_OP_ANY: {
             result.success = (*sp) != 0;
             result.sp_advance = 1;
             break;
+        }
 
         case PT_OP_CUSTOM_MATCHER: {
             int custom_matcher_result = e->matcher(sp, context->opts->userdata);
@@ -743,9 +750,10 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
             break;
         }
 
-        default:
+        default: {
             PT_ASSERT(0, "Unknown operation", context->opts->userdata);
             break;
+        }
     }
     return result;
 }
