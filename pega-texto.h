@@ -351,7 +351,6 @@ typedef struct pt_match_result {
 /// Options passed to `pt_match`.
 typedef struct pt_match_options {
     void *userdata;  ///< Custom user data for the actions
-    pt_error_action on_error;  ///< The action to be performed when a syntactic error is found
     size_t initial_stack_capacity;  ///< The initial capacity for the stack. If 0, stack capacity will begin at a reasonable default
 } pt_match_options;
 
