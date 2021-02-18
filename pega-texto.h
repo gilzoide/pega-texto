@@ -42,6 +42,7 @@
 #ifndef PEGA_TEXTO_H
 #define PEGA_TEXTO_H
 
+#include <ctype.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -73,8 +74,8 @@ enum pt_operation {
     PT_OP_ELEMENT,          // 'b'
     PT_OP_LITERAL,          // "string"
     PT_OP_CASE_INSENSITIVE, // I"string"
-    PT_OP_CHARACTER_CLASS,  // int(char) // If return 0, match fails
-                                          // If return non-zero, match succeeds, advance 1
+    PT_OP_CHARACTER_CLASS,  // int(int) // If return 0, match fails
+                                        // If return non-zero, match succeeds, advance 1
     PT_OP_SET,              // [chars]
     PT_OP_RANGE,            // [c1-c2]
     PT_OP_ANY,              // .
@@ -98,22 +99,6 @@ enum pt_operation {
 
 /// String literals of the operations.
 PT_DECL const char* const pt_operation_names[];
-
-/// Character classes supported by pega-texto.
-/// 
-/// Each of them correspond to the `is*` functions defined in `ctype.h` header.
-enum pt_character_class {
-    PT_CLASS_ALNUM  = 'w',
-    PT_CLASS_ALPHA  = 'a',
-    PT_CLASS_CNTRL  = 'c',
-    PT_CLASS_DIGIT  = 'd',
-    PT_CLASS_GRAPH  = 'g',
-    PT_CLASS_LOWER  = 'l',
-    PT_CLASS_PUNCT  = 'p',
-    PT_CLASS_SPACE  = 's',
-    PT_CLASS_UPPER  = 'u',
-    PT_CLASS_XDIGIT = 'x',
-};
 
 /// Possible error codes returned by `pt_match`.
 typedef enum pt_macth_error_code {
@@ -156,6 +141,8 @@ typedef enum pt_macth_error_code {
 
 /// A function that receives a string and userdata and match it (positive) or not, advancing the matched number.
 typedef int (*pt_custom_matcher_function)(pt_element_string, void *);
+/// A ctype-like function that receives an element and match it (non-zero) or not, advancing 1.
+typedef int (*pt_character_class_function)(int);
 
 /// Action to be called for a capture after the whole match succeeds.
 /// 
@@ -195,12 +182,12 @@ typedef void (*pt_error_action)(
 typedef struct pt_expr {
     /// Operation to be performed
     uint8_t op;
-    /// Range byte pair, Literal length, Character Class index.
+    /// `str` length or inner expression count.
     uint16_t N;
-    /// Literal and Character Set strings, Custom Matcher functions.
     union {
         const void *data;
         const pt_element_string str;
+        const pt_character_class_function character_class_matcher;
         const pt_custom_matcher_function matcher;
         const pt_expression_action action;
         const pt_error_action error_action;
@@ -253,17 +240,17 @@ typedef pt_expr* pt_grammar[];
 #define PT_CASE(str, size)  ((pt_expr){ PT_OP_CASE_INSENSITIVE, size, str })
 #define PT_CASE_S(str)  ((pt_expr){ PT_OP_CASE_INSENSITIVE, sizeof(str) - 1, str })
 #define PT_CASE_0(str)  ((pt_expr){ PT_OP_CASE_INSENSITIVE, strlen(str), str })
-#define PT_CLASS(c)  ((pt_expr){ PT_OP_CHARACTER_CLASS, c })
-#define PT_ALNUM()  PT_CLASS(PT_CLASS_ALNUM)
-#define PT_ALPHA()  PT_CLASS(PT_CLASS_ALPHA)
-#define PT_CNTRL()  PT_CLASS(PT_CLASS_CNTRL)
-#define PT_DIGIT()  PT_CLASS(PT_CLASS_DIGIT)
-#define PT_GRAPH()  PT_CLASS(PT_CLASS_GRAPH)
-#define PT_LOWER()  PT_CLASS(PT_CLASS_LOWER)
-#define PT_PUNCT()  PT_CLASS(PT_CLASS_PUNCT)
-#define PT_SPACE()  PT_CLASS(PT_CLASS_SPACE)
-#define PT_UPPER()  PT_CLASS(PT_CLASS_UPPER)
-#define PT_XDIGIT()  PT_CLASS(PT_CLASS_XDIGIT)
+#define PT_CLASS(f)  ((pt_expr){ PT_OP_CHARACTER_CLASS, 0, (void *) f })
+#define PT_ALNUM()  PT_CLASS(&isalnum)
+#define PT_ALPHA()  PT_CLASS(&isalpha)
+#define PT_CNTRL()  PT_CLASS(&iscntrl)
+#define PT_DIGIT()  PT_CLASS(&isdigit)
+#define PT_GRAPH()  PT_CLASS(&isgraph)
+#define PT_LOWER()  PT_CLASS(&islower)
+#define PT_PUNCT()  PT_CLASS(&ispunct)
+#define PT_SPACE()  PT_CLASS(&isspace)
+#define PT_UPPER()  PT_CLASS(&isupper)
+#define PT_XDIGIT()  PT_CLASS(&isxdigit)
 #define PT_SET(str, size)  ((pt_expr){ PT_OP_SET, size, str })
 #define PT_SET_S(str)  ((pt_expr){ PT_OP_SET, sizeof(str) - 1, str })
 #define PT_SET_0(str)  ((pt_expr){ PT_OP_SET, strlen(str), str })
@@ -383,8 +370,6 @@ PT_DECL pt_match_result pt_match(const pt_grammar grammar, pt_element_string str
 
 #ifdef PEGA_TEXTO_IMPLEMENTATION
 
-#include <ctype.h>
-
 #ifndef PT_ASSERT
     #include <assert.h>
     #define PT_ASSERT(cond, message, d) assert(cond && message)
@@ -420,28 +405,6 @@ const char * const pt_operation_names[] = {
     "PT_OP_ACTION",
     "PT_OP_ERROR",
 };
-
-/// A function that receives a character (int) and match it (non-zero) or not (0).
-typedef int(*pt__character_class_function)(int);
-
-/**
- * Get the function to be used for matching a Character Class.
- */
-static inline pt__character_class_function pt__function_for_character_class(enum pt_character_class c) {
-    switch(c) {
-        case PT_CLASS_ALNUM: return isalnum;
-        case PT_CLASS_ALPHA: return isalpha;
-        case PT_CLASS_CNTRL: return iscntrl;
-        case PT_CLASS_DIGIT: return isdigit;
-        case PT_CLASS_GRAPH: return isgraph;
-        case PT_CLASS_LOWER: return islower;
-        case PT_CLASS_PUNCT: return ispunct;
-        case PT_CLASS_SPACE: return isspace;
-        case PT_CLASS_UPPER: return isupper;
-        case PT_CLASS_XDIGIT: return isxdigit;
-        default: return NULL;
-    }
-}
 
 const pt_match_options pt_default_match_options = {};
 
@@ -622,7 +585,7 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
         }
 
         case PT_OP_CHARACTER_CLASS: {
-            result.success = pt__function_for_character_class((enum pt_character_class) e->N)(*sp) != 0;
+            result.success = e->character_class_matcher(*sp) != 0;
             result.sp_advance = 1;
             break;
         }
