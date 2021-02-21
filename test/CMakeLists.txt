@@ -1,55 +1,19 @@
-include_directories("${PROJECT_SOURCE_DIR}")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}")
+find_package(Criterion REQUIRED)
+
+include_directories("${PROJECT_SOURCE_DIR}" ${CRITERION_INCLUDE_DIRS})
+
+link_libraries(${CRITERION_LIBRARIES})
 
 # valgrind, for memory checks
 find_program(VALGRIND valgrind)
 
-function(run_test_ext test_name pass ext)
-	add_executable(${test_name} "${test_name}.${ext}")
-	target_link_libraries(${test_name} $<TARGET_LINKER_FILE:pega-texto>)
+function(run_test source)
+    get_filename_component(test_name ${source} NAME_WE)
+	add_executable(${test_name} ${source})
+    target_link_libraries(${test_name} ${CRITERION_LIBRARIES})
 	add_test(${test_name} ${test_name} ${ARGN})
-
-	set(_pass ${pass})
-	if(_pass STREQUAL "valgrind")
-		if(VALGRIND)
-			# memcheck with valgrind
-			add_test(${test_name}_memcheck valgrind ./${test_name} ${ARGN})
-			set_tests_properties(${test_name}_memcheck
-				PROPERTIES PASS_REGULAR_EXPRESSION "All heap blocks were freed -- no leaks are possible"
-			)
-		endif()
-	elseif(_pass)
-		set_tests_properties(${test_name} PROPERTIES
-			PASS_REGULAR_EXPRESSION "PASS"
-			FAIL_REGULAR_EXPRESSION "FAIL"
-		)
-	endif()
 endfunction()
 
-macro(run_test test_name pass)
-    # Tests are not working with single-header version!
-	#run_test_ext(${test_name} ${pass} "c")
-endmacro()
-
 include(CTest)
-run_test(JustInclude "PASS")
-# memory management
-run_test(DestroysExpr "valgrind")
-run_test(DestroysGrammar "valgrind")
-# test each operation apart
-run_test(HelloWorldMatcher "valgrind")
-run_test(PrimaryMatchers "PASS")
-run_test(UnaryMatchers "PASS")
-run_test(N-aryMatchers "PASS")
-run_test(CustomMatchers "PASS")
-# actions
-run_test(SuccessAction "PASS")
-run_test(CountAndSumNumbers "PASS")
-# validation
-run_test(GrammarValidation "PASS")
-# syntatic error
-run_test(SyntacticError "valgrind")
-# full tests
-run_test(MatchingParens "PASS")
-# C++
-set(CMAKE_CXX_STANDARD 11)
-run_test_ext(RunsOnC++ "valgrind" cxx)
+run_test("expressions.c")
