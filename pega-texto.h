@@ -98,7 +98,7 @@ enum pt_operation {
 };
 
 /// String literals of the operations.
-PT_DECL const char* const pt_operation_names[];
+PT_DECL const char *const pt_operation_names[];
 
 /// Possible error codes returned by `pt_match`.
 typedef enum pt_macth_error_code {
@@ -201,7 +201,7 @@ typedef struct pt_expr {
 /// Rule typedef, an array of expressions.
 typedef pt_expr pt_rule[];
 /// Grammar typedef, a 2D array of expressions, or array of Rules.
-typedef pt_expr* pt_grammar[];
+typedef pt_expr *pt_grammar[];
 
 #define PT_RANGE_PACK(from, to) \
     (((uintptr_t) (from)) | (((uintptr_t) (to)) << (8 * sizeof(uintptr_t) / 2)))
@@ -233,7 +233,7 @@ typedef pt_expr* pt_grammar[];
          9,8,7,6,5,4,3,2,1,0
 
 #define PT_END()  ((pt_expr){ PT_OP_END })
-#define PT_ELEMENT(e)  ((pt_expr){ PT_OP_ELEMENT, 0, (void *) e })
+#define PT_ELEMENT(e)  ((pt_expr){ PT_OP_ELEMENT, 0, (void *)(uintptr_t) e })
 #define PT_LITERAL(str, size)  ((pt_expr){ PT_OP_LITERAL, size, str })
 #define PT_LITERAL_S(str)  ((pt_expr){ PT_OP_LITERAL, sizeof(str) - 1, str })
 #define PT_LITERAL_0(str)  ((pt_expr){ PT_OP_LITERAL, strlen(str), str })
@@ -254,9 +254,9 @@ typedef pt_expr* pt_grammar[];
 #define PT_SET(str, size)  ((pt_expr){ PT_OP_SET, size, str })
 #define PT_SET_S(str)  ((pt_expr){ PT_OP_SET, sizeof(str) - 1, str })
 #define PT_SET_0(str)  ((pt_expr){ PT_OP_SET, strlen(str), str })
-#define PT_RANGE(from, to)  ((pt_expr){ PT_OP_RANGE, 0, (void *) PT_RANGE_PACK(from, to) })
+#define PT_RANGE(from, to)  ((pt_expr){ PT_OP_RANGE, 0, (void *)(uintptr_t) PT_RANGE_PACK(from, to) })
 #define PT_ANY()  ((pt_expr){ PT_OP_ANY, 0 })
-#define PT_CALL(index)  ((pt_expr){ PT_OP_NON_TERMINAL, 0, (void *) index })
+#define PT_CALL(index)  ((pt_expr){ PT_OP_NON_TERMINAL, 0, (void *)(uintptr_t) index })
 #define PT_AT_LEAST(n, ...)  ((pt_expr){ PT_OP_AT_LEAST, PT_NARG(__VA_ARGS__), (void *) n }), __VA_ARGS__
 #define PT_AT_MOST(n, ...)  ((pt_expr){ PT_OP_AT_MOST, PT_NARG(__VA_ARGS__), (void *) n }), __VA_ARGS__
 #define PT_AND(...)  ((pt_expr){ PT_OP_AND, PT_NARG(__VA_ARGS__) }), __VA_ARGS__

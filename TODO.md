@@ -1,3 +1,5 @@
+- [ ] Better documentation
+- [ ] Automated tests
 - [ ] Handle sized strings (pointer + size pairs)
 - [ ] Special common operations like "Not {Element,Literal,Set,Range}"?
 - [ ] Add `#ifdef` guarded tracing logs to match algorithm, for debugging purposes
