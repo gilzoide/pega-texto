@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['_3ca_20href_3d_22pega_2dtexto_2eh_22_3epega_2dtexto_2eh_3c_2fa_3e_0',['&lt;a href=&quot;pega-texto.h&quot;&gt;pega-texto.h&lt;/a&gt;',['../index.html',1,'']]]
+  ['data_0',['data',['../structpt__match__result.html#a94854fbd8cfe1ce3048593faa9496ee9',1,'pt_match_result']]]
 ];
