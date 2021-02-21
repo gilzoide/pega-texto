@@ -2,13 +2,14 @@ language: c
 
 branches:
   only:
-  - master
+  - main
 
 sudo: false
-addons:
-  apt:
-    packages:
-    - valgrind
+
+before_install:
+- sudo add-apt-repository ppa:snaipewastaken/ppa -y
+- sudo apt-get update -q
+- sudo apt-get install criterion-dev -y
 
 install:
 - "cmake . -DENABLE_TESTS=ON"

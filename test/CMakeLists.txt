@@ -16,4 +16,4 @@ function(run_test source)
 endfunction()
 
 include(CTest)
-run_test("expressions.c")
+run_test("primitives.c")
