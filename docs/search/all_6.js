@@ -1,0 +1,23 @@
+var searchData=
+[
+  ['pega_2dtexto_2eh_6',['pega-texto.h',['../pega-texto_8h.html',1,'']]],
+  ['pt_5fcharacter_5fclass_5ffunction_7',['pt_character_class_function',['../pega-texto_8h.html#a2b61dbba8378cf0871012bcd19c47929',1,'pega-texto.h']]],
+  ['pt_5fcustom_5fmatcher_5ffunction_8',['pt_custom_matcher_function',['../pega-texto_8h.html#ad3e785259a65654cc5e13a0db93c6fa9',1,'pega-texto.h']]],
+  ['pt_5fdata_9',['PT_DATA',['../union_p_t___d_a_t_a.html',1,'']]],
+  ['pt_5fdefault_5fmatch_5foptions_10',['pt_default_match_options',['../pega-texto_8h.html#a62aa7003c84ccc17f6dc28864731d44a',1,'pega-texto.h']]],
+  ['pt_5ferror_5faction_11',['pt_error_action',['../pega-texto_8h.html#ae0f43e4f93ac893f7613a0a7aa964000',1,'pega-texto.h']]],
+  ['pt_5fexpr_12',['pt_expr',['../structpt__expr.html',1,'']]],
+  ['pt_5fexpression_5faction_13',['pt_expression_action',['../pega-texto_8h.html#a8ebbaaca3788e1acc6d4626eb585841c',1,'pega-texto.h']]],
+  ['pt_5fgrammar_14',['pt_grammar',['../pega-texto_8h.html#a57fc278815e75cba166d02814b5d0240',1,'pega-texto.h']]],
+  ['pt_5fmacth_5ferror_5fcode_15',['pt_macth_error_code',['../pega-texto_8h.html#ae6592b49fc3b4d6afaf0dbea6a6c6dbd',1,'pega-texto.h']]],
+  ['pt_5fmatch_16',['pt_match',['../pega-texto_8h.html#a259c22e572ea64e2673a312b80e6e8c3',1,'pega-texto.h']]],
+  ['pt_5fmatch_5foptions_17',['pt_match_options',['../structpt__match__options.html',1,'']]],
+  ['pt_5fmatch_5fresult_18',['pt_match_result',['../structpt__match__result.html',1,'']]],
+  ['pt_5fmatched_5ferror_19',['PT_MATCHED_ERROR',['../pega-texto_8h.html#ae6592b49fc3b4d6afaf0dbea6a6c6dbdae7ed631ef63d879a982c4b5f8df25282',1,'pega-texto.h']]],
+  ['pt_5fno_5fmatch_20',['PT_NO_MATCH',['../pega-texto_8h.html#ae6592b49fc3b4d6afaf0dbea6a6c6dbda1e14536da61e972a4ac0bc3f0c6ed166',1,'pega-texto.h']]],
+  ['pt_5fno_5fstack_5fmem_21',['PT_NO_STACK_MEM',['../pega-texto_8h.html#ae6592b49fc3b4d6afaf0dbea6a6c6dbda47707ce268d09f037ad0a14bf8837d24',1,'pega-texto.h']]],
+  ['pt_5fnull_5finput_22',['PT_NULL_INPUT',['../pega-texto_8h.html#ae6592b49fc3b4d6afaf0dbea6a6c6dbda0bfb30c6d1efd33bd8ee02a2ce246a6e',1,'pega-texto.h']]],
+  ['pt_5foperation_23',['pt_operation',['../pega-texto_8h.html#a46b948c8e8698343d6e434195e4b6f33',1,'pega-texto.h']]],
+  ['pt_5foperation_5fnames_24',['pt_operation_names',['../pega-texto_8h.html#a269a0e1d4fb3a7646804ee14a7dd6202',1,'pega-texto.h']]],
+  ['pt_5frule_25',['pt_rule',['../pega-texto_8h.html#aedea82048489fbecf422ca9a74b82e80',1,'pega-texto.h']]]
+];
