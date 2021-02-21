@@ -1,8 +1,8 @@
-# [pega-texto.h](pega-texto.h)
+# pega-texto
 
 Single-file [Parsing Expression Grammars (PEG)](http://bford.info/packrat/) runtime engine for C.
 
-To use it, copy `pega-texto.h` file to your project and `#define PEGA_TEXTO_IMPLEMENTATION`
+To use it, copy [pega-texto.h](pega-texto.h) file to your project and `#define PEGA_TEXTO_IMPLEMENTATION`
 before including it in **one** C or C++ source file to create the implementation.
 
 
