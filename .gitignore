@@ -60,3 +60,6 @@ build/
 
 # VSCode stuff
 .vscode
+
+# clang index
+.cache
