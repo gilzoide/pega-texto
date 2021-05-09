@@ -337,8 +337,10 @@ typedef struct pt_match_result {
 
 /// Options passed to `pt_match`.
 typedef struct pt_match_options {
-    void *userdata;  ///< Custom user data for the actions
-    size_t initial_stack_capacity;  ///< The initial capacity for the stack. If 0, stack capacity will begin at a reasonable default
+    /// Custom user data for the actions
+    void *userdata;
+    /// The initial capacity for the stack. If 0, defaults to #PT_DEFAULT_INITIAL_STACK_CAPACITY
+    size_t initial_stack_capacity;
 } pt_match_options;
 
 
@@ -347,8 +349,9 @@ PT_DECL const pt_match_options pt_default_match_options;
 
 /// Try to match the string `str` with a PEG.
 /// 
-/// @warning This function doesn't check for ill-formed grammars, so it's advised
-///          that you validate it before running the match algorithm.
+/// @warning This function doesn't check if grammars are well-formed or not.
+///          It does, though, refuse to loop infinitely on repetitions of
+///          expressions that accept the empty string, like "(.?)*".
 /// 
 /// @param grammar  Expression array of arbitrary size. For a single Expression,
 ///                 just pass a pointer to it.
@@ -358,7 +361,7 @@ PT_DECL const pt_match_options pt_default_match_options;
 /// @return Number of matched characters/error code, result of Action folding.
 PT_DECL pt_match_result pt_match(const pt_grammar grammar, pt_element_string str, const pt_match_options *const opts);
 
-// TODO: grammar validation
+// TODO: grammar validation?
 
 #ifdef __cplusplus
 }
@@ -499,8 +502,7 @@ static void pt__run_actions(pt__match_context *context, pt_match_result *result)
     int data_index = 0;
 
     // Fold It, 'til there are no Actions left.
-    // Note that this only works because of how the Actions are layed out in
-    // the Action Stack.
+    // Note that this only works because of how the Actions are layed out in the Action Stack.
     pt__match_action *action;
     for(action = context->action_stack.actions; action < context->action_stack.actions + context->action_stack.size; action++) {
         // "pop" arguments
