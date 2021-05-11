@@ -101,7 +101,7 @@ enum pt_operation {
 PT_DECL const char *const pt_operation_names[];
 
 /// Possible error codes returned by `pt_match`.
-typedef enum pt_macth_error_code {
+typedef enum pt_match_error_code {
     /// Subject string didn't match the given PEG.
     PT_NO_MATCH = -1,
     /// Error while allocating memory for the Action stack.
@@ -110,7 +110,7 @@ typedef enum pt_macth_error_code {
     PT_MATCHED_ERROR = -3,
     /// Provided string is a NULL pointer.
     PT_NULL_INPUT = -4,
-} pt_macth_error_code;
+} pt_match_error_code;
 
 #ifndef PT_DATA
     /// Default data type for Actions to return.
