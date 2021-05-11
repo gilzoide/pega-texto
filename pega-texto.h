@@ -132,7 +132,6 @@ typedef enum pt_match_error_code {
         unsigned long ul;
         long long ll;
         unsigned long long ull;
-        ssize_t ssz;
         size_t sz;
         float f;
         double d;
