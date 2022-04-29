@@ -12,7 +12,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -q
-          sudo apt-get install catch2 ninja-build
+          sudo apt-get install ninja-build
       - name: Build and test
         run: |
           cmake . -B build -GNinja -DENABLE_TESTS=ON
