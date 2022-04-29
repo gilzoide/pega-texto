@@ -9,13 +9,10 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: true
-      - name: Install dependencies
+      - name: Build
         run: |
-          sudo apt-get update -q
-          sudo apt-get install ninja-build
-      - name: Build and test
-        run: |
-          cmake . -B build -GNinja -DENABLE_TESTS=ON
-          ninja -C build
-          ninja -C build test
+          cmake . -B build -DENABLE_TESTS=ON
+          make -C build
+      - name: Test
+        run: make -C build test
 
