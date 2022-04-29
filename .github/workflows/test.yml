@@ -1,0 +1,19 @@
+name: Test
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install catch2 ninja-build
+      - name: Build and test
+        run: |
+          cmake . -B build -GNinja -DENABLE_TESTS=ON
+          ninja -C build
+          ninja -C build test
+
