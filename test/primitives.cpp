@@ -1,4 +1,4 @@
-#include <catch2/catch.hpp>
+#include "catch2/catch.hpp"
 
 #define PT_DEFINE_SHORTCUTS
 #define PEGA_TEXTO_IMPLEMENTATION
