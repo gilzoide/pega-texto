@@ -10,5 +10,6 @@ function(run_test source)
 endfunction()
 
 include(CTest)
-run_test("primitives.cpp")
+run_test("actions.cpp")
 run_test("memory.cpp")
+run_test("primitives.cpp")
