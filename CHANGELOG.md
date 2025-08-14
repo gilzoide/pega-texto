@@ -3,6 +3,9 @@
 ### Added
 - Support for passing custom `malloc`/ `realloc` / `free` functions in `pt_match_options`
 
+### Fixed
+- Compilation and support for literals, case insensitive and set expressions when `PT_ELEMENT_TYPE` is not `char`
+
 ### Deprecated
 - `PT_MALLOC`, `PT_REALLOC` and `PT_FREE` macros.
   Pass custom memory functions in `pt_match_options` instead.

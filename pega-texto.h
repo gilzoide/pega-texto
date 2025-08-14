@@ -228,10 +228,10 @@ typedef pt_expr *pt_grammar[];
 #define PT_END()  ((pt_expr){ PT_OP_END })
 #define PT_ELEMENT(e)  ((pt_expr){ PT_OP_ELEMENT, 0, (void *)(uintptr_t) e })
 #define PT_LITERAL(str, size)  ((pt_expr){ PT_OP_LITERAL, size, str })
-#define PT_LITERAL_S(str)  ((pt_expr){ PT_OP_LITERAL, sizeof(str) - 1, str })
+#define PT_LITERAL_S(str)  ((pt_expr){ PT_OP_LITERAL, (sizeof(str) - 1) / sizeof(PT_ELEMENT_TYPE), str })
 #define PT_LITERAL_0(str)  ((pt_expr){ PT_OP_LITERAL, strlen(str), str })
 #define PT_CASE(str, size)  ((pt_expr){ PT_OP_CASE_INSENSITIVE, size, str })
-#define PT_CASE_S(str)  ((pt_expr){ PT_OP_CASE_INSENSITIVE, sizeof(str) - 1, str })
+#define PT_CASE_S(str)  ((pt_expr){ PT_OP_CASE_INSENSITIVE, (sizeof(str) - 1) / sizeof(PT_ELEMENT_TYPE), str })
 #define PT_CASE_0(str)  ((pt_expr){ PT_OP_CASE_INSENSITIVE, strlen(str), str })
 #define PT_CLASS(f)  ((pt_expr){ PT_OP_CHARACTER_CLASS, 0, (void *) f })
 #define PT_ALNUM()  PT_CLASS(&isalnum)
@@ -245,7 +245,7 @@ typedef pt_expr *pt_grammar[];
 #define PT_UPPER()  PT_CLASS(&isupper)
 #define PT_XDIGIT()  PT_CLASS(&isxdigit)
 #define PT_SET(str, size)  ((pt_expr){ PT_OP_SET, size, str })
-#define PT_SET_S(str)  ((pt_expr){ PT_OP_SET, sizeof(str) - 1, str })
+#define PT_SET_S(str)  ((pt_expr){ PT_OP_SET, (sizeof(str) - 1) / sizeof(PT_ELEMENT_TYPE), str })
 #define PT_SET_0(str)  ((pt_expr){ PT_OP_SET, strlen(str), str })
 #define PT_RANGE(from, to)  ((pt_expr){ PT_OP_RANGE, 0, (void *)(uintptr_t) PT_RANGE_PACK(from, to) })
 #define PT_ANY()  ((pt_expr){ PT_OP_ANY, 0 })
@@ -387,6 +387,7 @@ PT_DECL pt_match_result pt_match(const pt_grammar grammar, pt_element_string str
     #warning "PT_FREE is obsolete. Pass a `free` function to pt_match_options instead."
 #endif
 
+// Default memory functions
 static void *pt__malloc(size_t size, void *userdata) {
     return malloc(size);
 }
@@ -395,6 +396,32 @@ static void *pt__realloc(void *ptr, size_t size, void *userdata) {
 }
 static void pt__free(void *ptr, void *userdata) {
     free(ptr);
+}
+
+// Versions of strncmp, strcasecmp and strchr supporting PT_ELEMENT_TYPE
+int pt__strncmp(pt_element_string s1, pt_element_string s2, size_t n) {
+    for(size_t i = 0; i < n; i++) {
+        if(s1[i] != s2[i] || !s1[i] || !s2[i]) {
+            return 1;
+        }
+    }
+    return 0;
+}
+int pt__strncasecmp(pt_element_string s1, pt_element_string s2, size_t n) {
+    for(size_t i = 0; i < n; i++) {
+        if(tolower(s1[i]) != tolower(s2[i]) || !s1[i] || !s2[i]) {
+            return 1;
+        }
+    }
+    return 0;
+}
+pt_element_string pt__strchr(pt_element_string s, int c) {
+    for( ; *s; s++) {
+        if(*s == c) {
+            return s;
+        }
+    }
+    return NULL;
 }
 
 const char * const pt_operation_names[] = {
@@ -534,9 +561,9 @@ static void pt__run_actions(pt__match_context *context, pt_match_result *result)
 }
 
 typedef struct pt__match_expr_result {
-    int success; // < 0 on exception, 0 on no match, 1 on match success
-    int sp_advance;
-    int e_advance;
+    int success;  // < 0 on exception, 0 on no match, 1 on match success
+    int sp_advance;  // "str pointer" advance: how many elements were successfully matched
+    int e_advance;  // "expression" advance: how many expressions were successfully matched
 } pt__match_expr_result;
 
 static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt_expr *const e, pt_element_string sp);
@@ -584,13 +611,13 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
         }
 
         case PT_OP_LITERAL: {
-            result.success = strncmp(sp, e->str, e->N) == 0;
+            result.success = pt__strncmp(sp, e->str, e->N) == 0;
             result.sp_advance = e->N;
             break;
         }
 
         case PT_OP_CASE_INSENSITIVE: {
-            result.success = strncasecmp(sp, e->str, e->N) == 0;
+            result.success = pt__strncasecmp(sp, e->str, e->N) == 0;
             result.sp_advance = e->N;
             break;
         }
@@ -602,7 +629,7 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
         }
 
         case PT_OP_SET: {
-            result.success = *sp && strchr(e->str, *sp);
+            result.success = *sp && pt__strchr(e->str, *sp);
             result.sp_advance = 1;
             break;
         }

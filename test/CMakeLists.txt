@@ -11,5 +11,6 @@ endfunction()
 
 include(CTest)
 run_test("actions.cpp")
+run_test("custom_element_type.cpp")
 run_test("memory.cpp")
 run_test("primitives.cpp")
