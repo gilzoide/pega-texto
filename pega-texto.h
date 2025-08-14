@@ -19,12 +19,6 @@
  *
  * Optionally provide the following defines with your own implementations:
  *
- * - PT_MALLOC(size, userdata):
- *   Your own malloc function (default: `malloc(size)`)
- * - PT_REALLOC(p, size, userdata):
- *   Your own realloc function (default: `realloc(p, size)`)
- * - PT_FREE(p, userdata):
- *   Your own free function (default: `free(p)`)
  * - PT_ASSERT(cond, msg, userdata):
  *   Your own assert function (default: `assert(cond && msg)`)
  * - PT_STATIC:
@@ -340,6 +334,12 @@ typedef struct pt_match_options {
     void *userdata;
     /// The initial capacity for the stack. If 0, defaults to #PT_DEFAULT_INITIAL_STACK_CAPACITY
     size_t initial_stack_capacity;
+    /// Memory allocation function. If NULL, `malloc` will be used.
+    void *(*malloc)(size_t size, void *userdata);
+    /// Memory reallocation function. If NULL, `realloc` will be used.
+    void *(*realloc)(void *ptr, size_t size, void *userdata);
+    /// Memory free function. If NULL, `free` will be used.
+    void (*free)(void *ptr, void *userdata);
 } pt_match_options;
 
 
@@ -377,15 +377,25 @@ PT_DECL pt_match_result pt_match(const pt_grammar grammar, pt_element_string str
     #define PT_ASSERT(cond, message, d) assert(cond && message)
 #endif
 
-#ifndef PT_MALLOC
-    #define PT_MALLOC(size, d) malloc(size)
+#ifdef PT_MALLOC
+    #warning "PT_MALLOC is obsolete. Pass a `malloc` function to pt_match_options instead."
 #endif
-#ifndef PT_REALLOC
-    #define PT_REALLOC(p, size, d) realloc(p, size)
+#ifdef PT_REALLOC
+    #warning "PT_REALLOC is obsolete. Pass a `realloc` function to pt_match_options instead."
 #endif
-#ifndef PT_FREE
-    #define PT_FREE(p, d) free(p)
+#ifdef PT_FREE
+    #warning "PT_FREE is obsolete. Pass a `free` function to pt_match_options instead."
 #endif
+
+static void *pt__malloc(size_t size, void *userdata) {
+    return malloc(size);
+}
+static void *pt__realloc(void *ptr, size_t size, void *userdata) {
+    return realloc(ptr, size);
+}
+static void pt__free(void *ptr, void *userdata) {
+    free(ptr);
+}
 
 const char * const pt_operation_names[] = {
     "PT_OP_END",
@@ -432,18 +442,18 @@ typedef struct pt__match_action_stack {
 
 typedef struct pt__match_context {
     const pt_expr *const *const grammar;
-    const pt_match_options *opts;
+    pt_match_options opts;
     const pt_element_string str;
     pt__match_action_stack action_stack;
 } pt__match_context;
 
 
 static int pt__initialize_action_stack(pt__match_context *context) {
-    size_t initial_capacity = context->opts->initial_stack_capacity;
+    size_t initial_capacity = context->opts.initial_stack_capacity;
     if(initial_capacity == 0) {
         initial_capacity = PT_DEFAULT_INITIAL_STACK_CAPACITY;
     }
-    context->action_stack.actions = (pt__match_action *) PT_MALLOC(initial_capacity * sizeof(pt__match_action), context->opts->userdata);
+    context->action_stack.actions = (pt__match_action *) context->opts.malloc(initial_capacity * sizeof(pt__match_action), context->opts.userdata);
     if(context->action_stack.actions) {
         context->action_stack.size = 0;
         context->action_stack.capacity = initial_capacity;
@@ -455,7 +465,7 @@ static int pt__initialize_action_stack(pt__match_context *context) {
 }
 
 static void pt__destroy_action_stack(pt__match_context *context) {
-    PT_FREE(context->action_stack.actions, context->opts->userdata);
+    context->opts.free(context->action_stack.actions, context->opts.userdata);
 }
 
 static pt__match_action *pt__push_action(pt__match_context *context, pt_expression_action f, pt_element_string str, size_t size, int argc) {
@@ -463,7 +473,7 @@ static pt__match_action *pt__push_action(pt__match_context *context, pt_expressi
     // Double capacity, if reached
     if(context->action_stack.size == context->action_stack.capacity) {
         int new_capacity = context->action_stack.capacity * 2;
-        action = (pt__match_action *) PT_REALLOC(context->action_stack.actions, new_capacity * sizeof(pt__match_action), context->opts->userdata);
+        action = (pt__match_action *) context->opts.realloc(context->action_stack.actions, new_capacity * sizeof(pt__match_action), context->opts.userdata);
         if(action) {
             context->action_stack.capacity = new_capacity;
             context->action_stack.actions = action;
@@ -485,7 +495,7 @@ static void pt__run_actions(pt__match_context *context, pt_match_result *result)
     PT_DATA *data_stack;
     if(sizeof(PT_DATA) > sizeof(pt__match_action)) {
         // Allocate the data stack
-        data_stack = (PT_DATA *) PT_MALLOC(context->action_stack.size * sizeof(PT_DATA), context->opts->userdata);
+        data_stack = (PT_DATA *) context->opts.malloc(context->action_stack.size * sizeof(PT_DATA), context->opts.userdata);
         if(data_stack == NULL) {
             result->matched = PT_NO_STACK_MEM;
             return;
@@ -500,7 +510,7 @@ static void pt__run_actions(pt__match_context *context, pt_match_result *result)
     // index to current Data on the stack
     int data_index = 0;
 
-    // Fold It, 'til there are no Actions left.
+    // Fold It, until there are no Actions left.
     // Note that this only works because of how the Actions are layed out in the Action Stack.
     pt__match_action *action;
     for(action = context->action_stack.actions; action < context->action_stack.actions + context->action_stack.size; action++) {
@@ -512,14 +522,14 @@ static void pt__run_actions(pt__match_context *context, pt_match_result *result)
             action->size,
             action->argc,
             data_stack + data_index,
-            context->opts->userdata
+            context->opts.userdata
         );
         // "push" result
         data_index++;
     }
     result->data = data_stack[0];
     if(sizeof(PT_DATA) > sizeof(pt__match_action)) {
-        PT_FREE(data_stack, context->opts->userdata);
+        context->opts.free(data_stack, context->opts.userdata);
     }
 }
 
@@ -611,7 +621,7 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
         }
 
         case PT_OP_CUSTOM_MATCHER: {
-            int custom_matcher_result = e->matcher(sp, context->opts->userdata);
+            int custom_matcher_result = e->matcher(sp, context->opts.userdata);
             result.success = custom_matcher_result > 0;
             result.sp_advance = custom_matcher_result;
             break;
@@ -707,14 +717,14 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
 
         case PT_OP_ERROR: {
             if(e->error_action) {
-                e->error_action(context->str, sp - context->str, context->opts->userdata);
+                e->error_action(context->str, sp - context->str, context->opts.userdata);
             }
             result.success = PT_MATCHED_ERROR;
             break;
         }
 
         default: {
-            PT_ASSERT(0, "Unknown operation", context->opts->userdata);
+            PT_ASSERT(0, "Unknown operation", context->opts.userdata);
             break;
         }
     }
@@ -729,9 +739,18 @@ PT_DECL pt_match_result pt_match(const pt_grammar grammar, pt_element_string str
     }
     pt__match_context context = {
         (const pt_expr *const *const) grammar,
-        opts == NULL ? &pt_default_match_options : opts,
+        opts == NULL ? pt_default_match_options : *opts,
         str,
     };
+    if (!context.opts.malloc) {
+        context.opts.malloc = &pt__malloc;
+    }
+    if (!context.opts.realloc) {
+        context.opts.realloc = &pt__realloc;
+    }
+    if (!context.opts.free) {
+        context.opts.free = &pt__free;
+    }
     if(!pt__initialize_action_stack(&context)) {
         result.matched = PT_NO_STACK_MEM;
         return result;

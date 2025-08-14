@@ -11,3 +11,4 @@ endfunction()
 
 include(CTest)
 run_test("primitives.cpp")
+run_test("memory.cpp")

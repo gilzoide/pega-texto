@@ -1,5 +1,11 @@
 # Changelog
 ## [Unreleased](https://github.com/gilzoide/pega-texto/compare/v4.0.0...HEAD)
+### Added
+- Support for passing custom `malloc`/ `realloc` / `free` functions in `pt_match_options`
+
+### Deprecated
+- `PT_MALLOC`, `PT_REALLOC` and `PT_FREE` macros.
+  Pass custom memory functions in `pt_match_options` instead.
 
 
 ## [v4.0.0](https://github.com/gilzoide/lua-gdextension/releases/tag/v4.0.0)
