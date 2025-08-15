@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['pt_5fdefault_5fmatch_5foptions_39',['pt_default_match_options',['../pega-texto_8h.html#a62aa7003c84ccc17f6dc28864731d44a',1,'pega-texto.h']]],
-  ['pt_5foperation_5fnames_40',['pt_operation_names',['../pega-texto_8h.html#a269a0e1d4fb3a7646804ee14a7dd6202',1,'pega-texto.h']]]
+  ['op_0',['op',['../structpt__expr.html#a3fe410a28ee11b520d9dd574d2139f4b',1,'pt_expr']]]
 ];

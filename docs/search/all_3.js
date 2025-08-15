@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['n_3',['N',['../structpt__expr.html#a37d49571fe35012087153c093705cd11',1,'pt_expr']]]
+  ['malloc_0',['malloc',['../structpt__match__options.html#ac8e7e1bf3c5161d04def41f92966825b',1,'pt_match_options']]],
+  ['matched_1',['matched',['../structpt__match__result.html#a2cac697b53844ad0bb0ab9487798c50f',1,'pt_match_result']]]
 ];

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['pega_2dtexto_54',['pega-texto',['../index.html',1,'']]]
+  ['pega_20texto_0',['pega-texto',['../index.html',1,'']]]
 ];

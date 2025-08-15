@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['matched_2',['matched',['../structpt__match__result.html#a2cac697b53844ad0bb0ab9487798c50f',1,'pt_match_result']]]
+  ['initial_5fstack_5fcapacity_0',['initial_stack_capacity',['../structpt__match__options.html#aa5e83285e0c4838fd0ee6cf153fc77a5',1,'pt_match_options']]]
 ];
