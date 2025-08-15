@@ -332,7 +332,7 @@ typedef struct pt_match_result {
 typedef struct pt_match_options {
     /// Custom user data for the actions
     void *userdata;
-    /// The initial capacity for the stack. If 0, defaults to #PT_DEFAULT_INITIAL_STACK_CAPACITY
+    /// The initial capacity for the action stack. If 0, defaults to #PT_DEFAULT_INITIAL_STACK_CAPACITY
     size_t initial_stack_capacity;
     /// Memory allocation function. If NULL, `malloc` will be used.
     void *(*malloc)(size_t size, void *userdata);
@@ -359,8 +359,6 @@ PT_DECL const pt_match_options pt_default_match_options;
 ///              @ref pt_default_match_options.
 /// @return Number of matched characters/error code, result of Action folding.
 PT_DECL pt_match_result pt_match(const pt_grammar grammar, pt_element_string str, const pt_match_options *const opts);
-
-// TODO: grammar validation?
 
 #ifdef __cplusplus
 }
@@ -399,6 +397,7 @@ static void pt__free(void *ptr, void *userdata) {
 }
 
 // Versions of strncmp, strcasecmp and strchr supporting PT_ELEMENT_TYPE
+// Note that we don't really need them to worry about returning negative vs positive, we only care for equality
 int pt__strncmp(pt_element_string s1, pt_element_string s2, size_t n) {
     for(size_t i = 0; i < n; i++) {
         if(s1[i] != s2[i] || !s1[i] || !s2[i]) {
