@@ -154,48 +154,4 @@ int main(int argc, const char **argv) {
     }
     return 0;
 }
-
 ```
-
-
-Change log
-----------
-+ 4.0.0 - Refactor project as a single header implementation,
-  split Quantifier Expressions into At Least and At Most expressions,
-  make `PT_DATA` type configurable, add Action Expressions to
-  simplify implementation and make code more readable, reimplement
-  match algorithm with a recursive approach, make Expressions be
-  layed out contiguously in memory and remove heap based creation
-  and destruction of them, make grammar literal definable at
-  compile-time.
-+ 3.0.0 - Change actions to receive the capture with pointer and size, instead
-  of pointer to input string, start and end of capture; add Byte expression,
-  change Character Class Expressions to use only functions defined in `ctype.h`,
-  change Range Expressions to use 2 bytes instead of a NULL terminated string;
-  use Grammars without malloc'ing them.
-+ 2.1.0 - Populate `pt_match_result.data.i` with the first syntactic error code
-  when syntactic errors occur.
-+ 2.0.1 - Put `extern "C"` declarations in inner headers.
-+ 2.0.0 - ABI change on `pt_match_options`, included Case Insensitive and
-  Character Class Expressions (the old Custom Matcher), changed Custom Matcher
-  Expressions to allow operating on strings, also receiving userdata.
-+ 1.2.7 - Removed all the Action sequence computation, as Actions are already
-  stacked in the right sequence. Running actions is now iterative, O(n) and use
-  far less memory.
-+ 1.2.6 - Fixed `SEQ` and `OR` expression macros on C++, turns out they behave
-  differently about temporary lifetime of arrays.
-+ 1.2.5 - Fixed `SEQ` and `OR` expression macros to compile on both C and C++
-  using preprocessor macros and `initializer_list` directly on `macro-on.h`.
-+ 1.2.4 - Added `extern "C"` declaration on `pega-texto.h` for using in C++. 
-+ 1.2.3 - Fixed validation error code emmited when `pt_is_nullable` returned
-  true, as it may find an error other than `PT_VALIDATE_LOOP_EMPTY_STRING`.
-+ 1.2.2 - Added `NULL` string check on match.
-+ 1.2.1 - Fixed validation error on empty `SEQ` and `OR` Expressions, which
-  are valid with a `NULL` pointer.
-+ 1.2.0 - Macros for Expressions to not own memory buffers, empty `SEQ` and
-  `OR` Expressions don't allocate a 0-byte buffer anymore, fixed validation
-  error on Non-terminal cycles.
-+ 1.1.1 - Fixed validation error on Non-terminal cycles.
-+ 1.1.0 - Added basic error handling support.
-+ 1.0.0 - Expressions, Grammars, parsing, validation, actions.
-

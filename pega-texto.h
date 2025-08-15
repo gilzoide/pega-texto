@@ -19,12 +19,6 @@
  *
  * Optionally provide the following defines with your own implementations:
  *
- * - PT_MALLOC(size, userdata):
- *   Your own malloc function (default: `malloc(size)`)
- * - PT_REALLOC(p, size, userdata):
- *   Your own realloc function (default: `realloc(p, size)`)
- * - PT_FREE(p, userdata):
- *   Your own free function (default: `free(p)`)
  * - PT_ASSERT(cond, msg, userdata):
  *   Your own assert function (default: `assert(cond && msg)`)
  * - PT_STATIC:
@@ -101,7 +95,7 @@ enum pt_operation {
 PT_DECL const char *const pt_operation_names[];
 
 /// Possible error codes returned by `pt_match`.
-typedef enum pt_macth_error_code {
+typedef enum pt_match_error_code {
     /// Subject string didn't match the given PEG.
     PT_NO_MATCH = -1,
     /// Error while allocating memory for the Action stack.
@@ -110,7 +104,7 @@ typedef enum pt_macth_error_code {
     PT_MATCHED_ERROR = -3,
     /// Provided string is a NULL pointer.
     PT_NULL_INPUT = -4,
-} pt_macth_error_code;
+} pt_match_error_code;
 
 #ifndef PT_DATA
     /// Default data type for Actions to return.
@@ -132,7 +126,6 @@ typedef enum pt_macth_error_code {
         unsigned long ul;
         long long ll;
         unsigned long long ull;
-        ssize_t ssz;
         size_t sz;
         float f;
         double d;
@@ -235,10 +228,10 @@ typedef pt_expr *pt_grammar[];
 #define PT_END()  ((pt_expr){ PT_OP_END })
 #define PT_ELEMENT(e)  ((pt_expr){ PT_OP_ELEMENT, 0, (void *)(uintptr_t) e })
 #define PT_LITERAL(str, size)  ((pt_expr){ PT_OP_LITERAL, size, str })
-#define PT_LITERAL_S(str)  ((pt_expr){ PT_OP_LITERAL, sizeof(str) - 1, str })
+#define PT_LITERAL_S(str)  ((pt_expr){ PT_OP_LITERAL, (sizeof(str) - 1) / sizeof(PT_ELEMENT_TYPE), str })
 #define PT_LITERAL_0(str)  ((pt_expr){ PT_OP_LITERAL, strlen(str), str })
 #define PT_CASE(str, size)  ((pt_expr){ PT_OP_CASE_INSENSITIVE, size, str })
-#define PT_CASE_S(str)  ((pt_expr){ PT_OP_CASE_INSENSITIVE, sizeof(str) - 1, str })
+#define PT_CASE_S(str)  ((pt_expr){ PT_OP_CASE_INSENSITIVE, (sizeof(str) - 1) / sizeof(PT_ELEMENT_TYPE), str })
 #define PT_CASE_0(str)  ((pt_expr){ PT_OP_CASE_INSENSITIVE, strlen(str), str })
 #define PT_CLASS(f)  ((pt_expr){ PT_OP_CHARACTER_CLASS, 0, (void *) f })
 #define PT_ALNUM()  PT_CLASS(&isalnum)
@@ -252,7 +245,7 @@ typedef pt_expr *pt_grammar[];
 #define PT_UPPER()  PT_CLASS(&isupper)
 #define PT_XDIGIT()  PT_CLASS(&isxdigit)
 #define PT_SET(str, size)  ((pt_expr){ PT_OP_SET, size, str })
-#define PT_SET_S(str)  ((pt_expr){ PT_OP_SET, sizeof(str) - 1, str })
+#define PT_SET_S(str)  ((pt_expr){ PT_OP_SET, (sizeof(str) - 1) / sizeof(PT_ELEMENT_TYPE), str })
 #define PT_SET_0(str)  ((pt_expr){ PT_OP_SET, strlen(str), str })
 #define PT_RANGE(from, to)  ((pt_expr){ PT_OP_RANGE, 0, (void *)(uintptr_t) PT_RANGE_PACK(from, to) })
 #define PT_ANY()  ((pt_expr){ PT_OP_ANY, 0 })
@@ -337,8 +330,16 @@ typedef struct pt_match_result {
 
 /// Options passed to `pt_match`.
 typedef struct pt_match_options {
-    void *userdata;  ///< Custom user data for the actions
-    size_t initial_stack_capacity;  ///< The initial capacity for the stack. If 0, stack capacity will begin at a reasonable default
+    /// Custom user data for the actions
+    void *userdata;
+    /// The initial capacity for the action stack. If 0, defaults to #PT_DEFAULT_INITIAL_STACK_CAPACITY
+    size_t initial_stack_capacity;
+    /// Memory allocation function. If NULL, `malloc` will be used.
+    void *(*malloc)(size_t size, void *userdata);
+    /// Memory reallocation function. If NULL, `realloc` will be used.
+    void *(*realloc)(void *ptr, size_t size, void *userdata);
+    /// Memory free function. If NULL, `free` will be used.
+    void (*free)(void *ptr, void *userdata);
 } pt_match_options;
 
 
@@ -347,8 +348,9 @@ PT_DECL const pt_match_options pt_default_match_options;
 
 /// Try to match the string `str` with a PEG.
 /// 
-/// @warning This function doesn't check for ill-formed grammars, so it's advised
-///          that you validate it before running the match algorithm.
+/// @warning This function doesn't check if grammars are well-formed or not.
+///          It does, though, refuse to loop infinitely on repetitions of
+///          expressions that accept the empty string, like "(.?)*".
 /// 
 /// @param grammar  Expression array of arbitrary size. For a single Expression,
 ///                 just pass a pointer to it.
@@ -357,8 +359,6 @@ PT_DECL const pt_match_options pt_default_match_options;
 ///              @ref pt_default_match_options.
 /// @return Number of matched characters/error code, result of Action folding.
 PT_DECL pt_match_result pt_match(const pt_grammar grammar, pt_element_string str, const pt_match_options *const opts);
-
-// TODO: grammar validation
 
 #ifdef __cplusplus
 }
@@ -375,15 +375,53 @@ PT_DECL pt_match_result pt_match(const pt_grammar grammar, pt_element_string str
     #define PT_ASSERT(cond, message, d) assert(cond && message)
 #endif
 
-#ifndef PT_MALLOC
-    #define PT_MALLOC(size, d) malloc(size)
+#ifdef PT_MALLOC
+    #warning "PT_MALLOC is obsolete. Pass a `malloc` function to pt_match_options instead."
 #endif
-#ifndef PT_REALLOC
-    #define PT_REALLOC(p, size, d) realloc(p, size)
+#ifdef PT_REALLOC
+    #warning "PT_REALLOC is obsolete. Pass a `realloc` function to pt_match_options instead."
 #endif
-#ifndef PT_FREE
-    #define PT_FREE(p, d) free(p)
+#ifdef PT_FREE
+    #warning "PT_FREE is obsolete. Pass a `free` function to pt_match_options instead."
 #endif
+
+// Default memory functions
+static void *pt__malloc(size_t size, void *userdata) {
+    return malloc(size);
+}
+static void *pt__realloc(void *ptr, size_t size, void *userdata) {
+    return realloc(ptr, size);
+}
+static void pt__free(void *ptr, void *userdata) {
+    free(ptr);
+}
+
+// Versions of strncmp, strcasecmp and strchr supporting PT_ELEMENT_TYPE
+// Note that we don't really need them to worry about returning negative vs positive, we only care for equality
+int pt__strncmp(pt_element_string s1, pt_element_string s2, size_t n) {
+    for(size_t i = 0; i < n; i++) {
+        if(s1[i] != s2[i] || !s1[i] || !s2[i]) {
+            return 1;
+        }
+    }
+    return 0;
+}
+int pt__strncasecmp(pt_element_string s1, pt_element_string s2, size_t n) {
+    for(size_t i = 0; i < n; i++) {
+        if(tolower(s1[i]) != tolower(s2[i]) || !s1[i] || !s2[i]) {
+            return 1;
+        }
+    }
+    return 0;
+}
+pt_element_string pt__strchr(pt_element_string s, int c) {
+    for( ; *s; s++) {
+        if(*s == c) {
+            return s;
+        }
+    }
+    return NULL;
+}
 
 const char * const pt_operation_names[] = {
     "PT_OP_END",
@@ -430,18 +468,18 @@ typedef struct pt__match_action_stack {
 
 typedef struct pt__match_context {
     const pt_expr *const *const grammar;
-    const pt_match_options *opts;
+    pt_match_options opts;
     const pt_element_string str;
     pt__match_action_stack action_stack;
 } pt__match_context;
 
 
 static int pt__initialize_action_stack(pt__match_context *context) {
-    size_t initial_capacity = context->opts->initial_stack_capacity;
+    size_t initial_capacity = context->opts.initial_stack_capacity;
     if(initial_capacity == 0) {
         initial_capacity = PT_DEFAULT_INITIAL_STACK_CAPACITY;
     }
-    context->action_stack.actions = (pt__match_action *) PT_MALLOC(initial_capacity * sizeof(pt__match_action), context->opts->userdata);
+    context->action_stack.actions = (pt__match_action *) context->opts.malloc(initial_capacity * sizeof(pt__match_action), context->opts.userdata);
     if(context->action_stack.actions) {
         context->action_stack.size = 0;
         context->action_stack.capacity = initial_capacity;
@@ -453,7 +491,7 @@ static int pt__initialize_action_stack(pt__match_context *context) {
 }
 
 static void pt__destroy_action_stack(pt__match_context *context) {
-    PT_FREE(context->action_stack.actions, context->opts->userdata);
+    context->opts.free(context->action_stack.actions, context->opts.userdata);
 }
 
 static pt__match_action *pt__push_action(pt__match_context *context, pt_expression_action f, pt_element_string str, size_t size, int argc) {
@@ -461,7 +499,7 @@ static pt__match_action *pt__push_action(pt__match_context *context, pt_expressi
     // Double capacity, if reached
     if(context->action_stack.size == context->action_stack.capacity) {
         int new_capacity = context->action_stack.capacity * 2;
-        action = (pt__match_action *) PT_REALLOC(context->action_stack.actions, new_capacity * sizeof(pt__match_action), context->opts->userdata);
+        action = (pt__match_action *) context->opts.realloc(context->action_stack.actions, new_capacity * sizeof(pt__match_action), context->opts.userdata);
         if(action) {
             context->action_stack.capacity = new_capacity;
             context->action_stack.actions = action;
@@ -483,7 +521,7 @@ static void pt__run_actions(pt__match_context *context, pt_match_result *result)
     PT_DATA *data_stack;
     if(sizeof(PT_DATA) > sizeof(pt__match_action)) {
         // Allocate the data stack
-        data_stack = (PT_DATA *) PT_MALLOC(context->action_stack.size * sizeof(PT_DATA), context->opts->userdata);
+        data_stack = (PT_DATA *) context->opts.malloc(context->action_stack.size * sizeof(PT_DATA), context->opts.userdata);
         if(data_stack == NULL) {
             result->matched = PT_NO_STACK_MEM;
             return;
@@ -498,9 +536,8 @@ static void pt__run_actions(pt__match_context *context, pt_match_result *result)
     // index to current Data on the stack
     int data_index = 0;
 
-    // Fold It, 'til there are no Actions left.
-    // Note that this only works because of how the Actions are layed out in
-    // the Action Stack.
+    // Fold It, until there are no Actions left.
+    // Note that this only works because of how the Actions are layed out in the Action Stack.
     pt__match_action *action;
     for(action = context->action_stack.actions; action < context->action_stack.actions + context->action_stack.size; action++) {
         // "pop" arguments
@@ -511,21 +548,21 @@ static void pt__run_actions(pt__match_context *context, pt_match_result *result)
             action->size,
             action->argc,
             data_stack + data_index,
-            context->opts->userdata
+            context->opts.userdata
         );
         // "push" result
         data_index++;
     }
     result->data = data_stack[0];
     if(sizeof(PT_DATA) > sizeof(pt__match_action)) {
-        PT_FREE(data_stack, context->opts->userdata);
+        context->opts.free(data_stack, context->opts.userdata);
     }
 }
 
 typedef struct pt__match_expr_result {
-    int success; // < 0 on exception, 0 on no match, 1 on match success
-    int sp_advance;
-    int e_advance;
+    int success;  // < 0 on exception, 0 on no match, 1 on match success
+    int sp_advance;  // "str pointer" advance: how many elements were successfully matched
+    int e_advance;  // "expression" advance: how many expressions were successfully matched
 } pt__match_expr_result;
 
 static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt_expr *const e, pt_element_string sp);
@@ -573,13 +610,13 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
         }
 
         case PT_OP_LITERAL: {
-            result.success = strncmp(sp, e->str, e->N) == 0;
+            result.success = pt__strncmp(sp, e->str, e->N) == 0;
             result.sp_advance = e->N;
             break;
         }
 
         case PT_OP_CASE_INSENSITIVE: {
-            result.success = strncasecmp(sp, e->str, e->N) == 0;
+            result.success = pt__strncasecmp(sp, e->str, e->N) == 0;
             result.sp_advance = e->N;
             break;
         }
@@ -591,7 +628,7 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
         }
 
         case PT_OP_SET: {
-            result.success = *sp && strchr(e->str, *sp);
+            result.success = *sp && pt__strchr(e->str, *sp);
             result.sp_advance = 1;
             break;
         }
@@ -610,7 +647,7 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
         }
 
         case PT_OP_CUSTOM_MATCHER: {
-            int custom_matcher_result = e->matcher(sp, context->opts->userdata);
+            int custom_matcher_result = e->matcher(sp, context->opts.userdata);
             result.success = custom_matcher_result > 0;
             result.sp_advance = custom_matcher_result;
             break;
@@ -706,14 +743,14 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
 
         case PT_OP_ERROR: {
             if(e->error_action) {
-                e->error_action(context->str, sp - context->str, context->opts->userdata);
+                e->error_action(context->str, sp - context->str, context->opts.userdata);
             }
             result.success = PT_MATCHED_ERROR;
             break;
         }
 
         default: {
-            PT_ASSERT(0, "Unknown operation", context->opts->userdata);
+            PT_ASSERT(0, "Unknown operation", context->opts.userdata);
             break;
         }
     }
@@ -728,9 +765,18 @@ PT_DECL pt_match_result pt_match(const pt_grammar grammar, pt_element_string str
     }
     pt__match_context context = {
         (const pt_expr *const *const) grammar,
-        opts == NULL ? &pt_default_match_options : opts,
+        opts == NULL ? pt_default_match_options : *opts,
         str,
     };
+    if (!context.opts.malloc) {
+        context.opts.malloc = &pt__malloc;
+    }
+    if (!context.opts.realloc) {
+        context.opts.realloc = &pt__realloc;
+    }
+    if (!context.opts.free) {
+        context.opts.free = &pt__free;
+    }
     if(!pt__initialize_action_stack(&context)) {
         result.matched = PT_NO_STACK_MEM;
         return result;
