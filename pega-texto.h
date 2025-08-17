@@ -50,7 +50,7 @@
 #endif
 
 // Define PT_ELEMENT_TYPE to the string element type, so there can be
-// parsers for stuff other than `const char` like `const uint8_t`
+// parsers for stuff other than `const char` like `const char16_t` or `const char32_t`.
 #ifndef PT_ELEMENT_TYPE
     typedef const char PT_ELEMENT_TYPE;
 #endif
@@ -74,8 +74,8 @@ enum pt_operation {
     PT_OP_RANGE,            // [c1-c2]
     PT_OP_ANY,              // .
     // Custom match by function
-    PT_OP_CUSTOM_MATCHER,   // int(const char *, void *) // Return how many characters were matched
-                                                         // Return non-positive values for no match to occur
+    PT_OP_CUSTOM_MATCHER,   // int(pt_element_string, void *) // Return how many characters were matched
+                                                              // Return non-positive values for no match to occur
     // Unary
     PT_OP_NON_TERMINAL,     // <non-terminal> // Recurse to non-terminal expression
     PT_OP_AT_LEAST,         // e^N // Match N or more occurrences of next Expression
@@ -87,6 +87,10 @@ enum pt_operation {
     PT_OP_CHOICE,           // e1 / e2
     PT_OP_ACTION,           // Push an action to the stack
     PT_OP_ERROR,            // ERROR // Represents a syntactic error
+
+    // Custom match by function accepting str size
+    PT_OP_CUSTOM_MATCHER_N,   // int(pt_element_string, size_t, void *) // Return how many characters were matched
+                                                                        // Return non-positive values for no match to occur
 
     PT_OP_OPERATION_ENUM_COUNT,
 };
@@ -134,6 +138,8 @@ typedef enum pt_match_error_code {
 
 /// A function that receives a string and userdata and match it (positive) or not, advancing the matched number.
 typedef int (*pt_custom_matcher_function)(pt_element_string, void *);
+/// A function that receives a string, its size and userdata and match it (positive) or not, advancing the matched number.
+typedef int (*pt_custom_matcher_n_function)(pt_element_string, size_t, void *);
 /// A ctype-like function that receives an element and match it (non-zero) or not, advancing 1.
 typedef int (*pt_character_class_function)(int);
 
@@ -182,6 +188,7 @@ typedef struct pt_expr {
         const pt_element_string str;
         const pt_character_class_function character_class_matcher;
         const pt_custom_matcher_function matcher;
+        const pt_custom_matcher_n_function matcher_n;
         const pt_expression_action action;
         const pt_error_action error_action;
         uintptr_t element;
@@ -191,9 +198,9 @@ typedef struct pt_expr {
     };
 } pt_expr;
 
-/// Rule typedef, an array of expressions.
+/// Rule is just an array of expressions ending in a PT_END expression.
 typedef pt_expr pt_rule[];
-/// Grammar typedef, a 2D array of expressions, or array of Rules.
+/// Grammar is just a 2D array of expressions, or array of Rules.
 typedef pt_expr *pt_grammar[];
 
 #define PT_RANGE_PACK(from, to) \
@@ -257,6 +264,7 @@ typedef pt_expr *pt_grammar[];
 #define PT_SEQUENCE(...)  ((pt_expr){ PT_OP_SEQUENCE, PT_NARG(__VA_ARGS__) }), __VA_ARGS__
 #define PT_CHOICE(...)  ((pt_expr){ PT_OP_CHOICE, PT_NARG(__VA_ARGS__) }), __VA_ARGS__
 #define PT_CUSTOM_MATCHER(f)  ((pt_expr){ PT_OP_CUSTOM_MATCHER, 0, (void *) f })
+#define PT_CUSTOM_MATCHER_N(f)  ((pt_expr){ PT_OP_CUSTOM_MATCHER_N, 0, (void *) f })
 #define PT_ACTION(action, ...)  ((pt_expr){ PT_OP_ACTION, PT_NARG(__VA_ARGS__), (void *) action }), __VA_ARGS__
 #define PT_ERROR(error_action)  ((pt_expr){ PT_OP_ERROR, 0, (void *) error_action })
 
@@ -305,6 +313,7 @@ typedef pt_expr *pt_grammar[];
     #define SEQ PT_SEQUENCE
     #define EITHER PT_CHOICE
     #define CUSTOM_MATCHER PT_CUSTOM_MATCHER
+    #define CUSTOM_MATCHER_N PT_CUSTOM_MATCHER_N
     #define F PT_CUSTOM_MATCHER
     #define ERROR PT_ERROR
     #define ERROR_IF PT_ERROR_IF
@@ -352,13 +361,27 @@ PT_DECL const pt_match_options pt_default_match_options;
 ///          It does, though, refuse to loop infinitely on repetitions of
 ///          expressions that accept the empty string, like "(.?)*".
 /// 
-/// @param grammar  Expression array of arbitrary size. For a single Expression,
-///                 just pass a pointer to it.
+/// @param grammar  Rule array of arbitrary size.
 /// @param str   Subject string to match.
 /// @param opts  Match options. If NULL, pega-texto will use the default value
 ///              @ref pt_default_match_options.
 /// @return Number of matched characters/error code, result of Action folding.
 PT_DECL pt_match_result pt_match(const pt_grammar grammar, pt_element_string str, const pt_match_options *const opts);
+
+/// Try to match at most `str_size` elements from the string `str` with a PEG.
+/// 
+/// @warning This function doesn't check if grammars are well-formed or not.
+///          It does, though, refuse to loop infinitely on repetitions of
+///          expressions that accept the empty string, like "(.?)*".
+/// 
+/// @param grammar  Rule array of arbitrary size.
+/// @param str   Subject string to match.
+/// @param str_size   Maximum size of the string to match.
+///                   Use this if your string is not null-terminated.
+/// @param opts  Match options. If NULL, pega-texto will use the default value
+///              @ref pt_default_match_options.
+/// @return Number of matched characters/error code, result of Action folding.
+PT_DECL pt_match_result pt_match_n(const pt_grammar grammar, pt_element_string str, size_t str_size, const pt_match_options *const opts);
 
 #ifdef __cplusplus
 }
@@ -396,31 +419,30 @@ static void pt__free(void *ptr, void *userdata) {
     free(ptr);
 }
 
-// Versions of strncmp, strcasecmp and strchr supporting PT_ELEMENT_TYPE
-// Note that we don't really need them to worry about returning negative vs positive, we only care for equality
-int pt__strncmp(pt_element_string s1, pt_element_string s2, size_t n) {
+// Helper functions for basic element string comparison
+int pt__string_equals(pt_element_string s1, pt_element_string s2, size_t n) {
     for(size_t i = 0; i < n; i++) {
         if(s1[i] != s2[i] || !s1[i] || !s2[i]) {
-            return 1;
+            return 0;
         }
     }
-    return 0;
+    return 1;
 }
-int pt__strncasecmp(pt_element_string s1, pt_element_string s2, size_t n) {
+int pt__string_case_equals(pt_element_string s1, pt_element_string s2, size_t n) {
     for(size_t i = 0; i < n; i++) {
         if(tolower(s1[i]) != tolower(s2[i]) || !s1[i] || !s2[i]) {
+            return 0;
+        }
+    }
+    return 1;
+}
+int pt__set_contains(pt_element_string set, size_t n, int c) {
+    for(size_t i = 0; i < n; i++) {
+        if(set[i] == c) {
             return 1;
         }
     }
     return 0;
-}
-pt_element_string pt__strchr(pt_element_string s, int c) {
-    for( ; *s; s++) {
-        if(*s == c) {
-            return s;
-        }
-    }
-    return NULL;
 }
 
 const char * const pt_operation_names[] = {
@@ -442,6 +464,7 @@ const char * const pt_operation_names[] = {
     "PT_OP_CHOICE",
     "PT_OP_ACTION",
     "PT_OP_ERROR",
+    "PT_OP_CUSTOM_MATCHER_N",
 };
 
 const pt_match_options pt_default_match_options = {};
@@ -565,13 +588,15 @@ typedef struct pt__match_expr_result {
     int e_advance;  // "expression" advance: how many expressions were successfully matched
 } pt__match_expr_result;
 
-static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt_expr *const e, pt_element_string sp);
+static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt_expr *const e, pt_element_string sp, size_t str_size);
+static pt__match_expr_result pt__match_rule(pt__match_context *context, size_t index, pt_element_string sp, size_t str_size);
+static pt__match_expr_result pt__match_sequence(pt__match_context *context, const pt_expr *const e, pt_element_string sp, size_t str_size);
 
-static pt__match_expr_result pt__match_sequence(pt__match_context *context, const pt_expr *const e, pt_element_string sp) {
+static pt__match_expr_result pt__match_sequence(pt__match_context *context, const pt_expr *const e, pt_element_string sp, size_t str_size) {
     pt__match_expr_result result = { 1, 0, 1 + e->N }, subresult;
     size_t current_action_count = context->action_stack.size;
     for(int i = 0; result.success > 0 && i < e->N; i += subresult.e_advance) {
-        subresult = pt__match_expr(context, e + 1 + i, sp + result.sp_advance);
+        subresult = pt__match_expr(context, e + 1 + i, sp + result.sp_advance, str_size - result.sp_advance);
         result.success = subresult.success;
         result.sp_advance += subresult.sp_advance;
     }
@@ -581,11 +606,11 @@ static pt__match_expr_result pt__match_sequence(pt__match_context *context, cons
     return result;
 }
 
-static pt__match_expr_result pt__match_rule(pt__match_context *context, size_t index, pt_element_string sp) {
+static pt__match_expr_result pt__match_rule(pt__match_context *context, size_t index, pt_element_string sp, size_t str_size) {
     pt__match_expr_result result = { 1, 0, 1 }, subresult;
     size_t current_action_count = context->action_stack.size;
     for(const pt_expr *e = context->grammar[index]; result.success > 0 && e->op != PT_OP_END; e += subresult.e_advance) {
-        subresult = pt__match_expr(context, e, sp + result.sp_advance);
+        subresult = pt__match_expr(context, e, sp + result.sp_advance, str_size - result.sp_advance);
         result.success = subresult.success;
         result.sp_advance += subresult.sp_advance;
     }
@@ -595,7 +620,7 @@ static pt__match_expr_result pt__match_rule(pt__match_context *context, size_t i
     return result;
 }
 
-static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt_expr *const e, pt_element_string sp) {
+static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt_expr *const e, pt_element_string sp, size_t str_size) {
     pt__match_expr_result result = { 0, 0, 1 };
     switch(e->op) {
         case PT_OP_END: {
@@ -604,44 +629,43 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
         }
 
         case PT_OP_ELEMENT: {
-            result.success = (*sp) == (PT_ELEMENT_TYPE) e->element;
+            result.success = str_size > 0 && (*sp) == (PT_ELEMENT_TYPE) e->element;
             result.sp_advance = 1;
             break;
         }
 
         case PT_OP_LITERAL: {
-            result.success = pt__strncmp(sp, e->str, e->N) == 0;
+            result.success = str_size >= e->N && pt__string_equals(sp, e->str, e->N);
             result.sp_advance = e->N;
             break;
         }
 
         case PT_OP_CASE_INSENSITIVE: {
-            result.success = pt__strncasecmp(sp, e->str, e->N) == 0;
+            result.success = str_size >= e->N && pt__string_case_equals(sp, e->str, e->N);
             result.sp_advance = e->N;
             break;
         }
 
         case PT_OP_CHARACTER_CLASS: {
-            result.success = e->character_class_matcher(*sp) != 0;
+            result.success = str_size > 0 && e->character_class_matcher(*sp);
             result.sp_advance = 1;
             break;
         }
 
         case PT_OP_SET: {
-            result.success = *sp && pt__strchr(e->str, *sp);
+            result.success = str_size > 0 && pt__set_contains(e->str, e->N, *sp);
             result.sp_advance = 1;
             break;
         }
 
         case PT_OP_RANGE: {
-            PT_ELEMENT_TYPE element = *sp;
-            result.success = element >= PT_RANGE_UNPACK_FROM(e->range) && element <= PT_RANGE_UNPACK_TO(e->range);
+            result.success = str_size > 0 && (*sp) >= PT_RANGE_UNPACK_FROM(e->range) && (*sp) <= PT_RANGE_UNPACK_TO(e->range);
             result.sp_advance = 1;
             break;
         }
 
         case PT_OP_ANY: {
-            result.success = (*sp) != 0;
+            result.success = str_size > 0 && (*sp) != 0;
             result.sp_advance = 1;
             break;
         }
@@ -653,14 +677,22 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
             break;
         }
 
-        case PT_OP_NON_TERMINAL:
-            return pt__match_rule(context, e->index, sp);
+        case PT_OP_CUSTOM_MATCHER_N: {
+            int custom_matcher_result = e->matcher_n(sp, str_size, context->opts.userdata);
+            result.success = custom_matcher_result > 0;
+            result.sp_advance = custom_matcher_result;
+            break;
+        }
+
+        case PT_OP_NON_TERMINAL: {
+            return pt__match_rule(context, e->index, sp, str_size);
+        }
 
         case PT_OP_AT_LEAST: {
             unsigned int counter = 0;
             pt__match_expr_result subresult;
             while(1) {
-                subresult = pt__match_sequence(context, e, sp + result.sp_advance);
+                subresult = pt__match_sequence(context, e, sp + result.sp_advance, str_size - result.sp_advance);
                 if(subresult.success > 0 && subresult.sp_advance > 0) {
                     result.sp_advance += subresult.sp_advance;
                     counter++;
@@ -682,7 +714,7 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
         case PT_OP_AT_MOST: {
             pt__match_expr_result subresult;
             for(unsigned int counter = 0; counter < e->quantifier; counter++) {
-                subresult = pt__match_sequence(context, e, sp + result.sp_advance);
+                subresult = pt__match_sequence(context, e, sp + result.sp_advance, str_size - result.sp_advance);
                 if(subresult.success > 0 && subresult.sp_advance > 0) {
                     result.sp_advance += subresult.sp_advance;
                 }
@@ -702,7 +734,7 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
 
         case PT_OP_NOT: {
             size_t current_action_count = context->action_stack.size;
-            result = pt__match_sequence(context, e, sp);
+            result = pt__match_sequence(context, e, sp, str_size);
             if(result.success >= 0) {
                 context->action_stack.size = current_action_count; // ignore captures
                 result.success = !result.success;
@@ -713,18 +745,19 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
 
         case PT_OP_AND: {
             size_t current_action_count = context->action_stack.size;
-            result = pt__match_sequence(context, e, sp);
+            result = pt__match_sequence(context, e, sp, str_size);
             context->action_stack.size = current_action_count; // ignore captures
             result.sp_advance = 0;
             break;
         }
 
-        case PT_OP_SEQUENCE:
-            return pt__match_sequence(context, e, sp);
+        case PT_OP_SEQUENCE: {
+            return pt__match_sequence(context, e, sp, str_size);
+        }
 
         case PT_OP_CHOICE: {
             for(int i = 0; result.success == 0 && i < e->N; i += result.e_advance) {
-                result = pt__match_expr(context, e + 1 + i, sp);
+                result = pt__match_expr(context, e + 1 + i, sp, str_size);
             }
             result.e_advance = 1 + e->N;
             break;
@@ -732,7 +765,7 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
 
         case PT_OP_ACTION: {
             size_t previous_action_count = context->action_stack.size;
-            result = pt__match_sequence(context, e, sp);
+            result = pt__match_sequence(context, e, sp, str_size);
             if(result.success > 0) {
                 if(!pt__push_action(context, e->action, sp, result.sp_advance, context->action_stack.size - previous_action_count)) {
                     result.success = PT_NO_STACK_MEM;
@@ -758,6 +791,10 @@ static pt__match_expr_result pt__match_expr(pt__match_context *context, const pt
 }
 
 PT_DECL pt_match_result pt_match(const pt_grammar grammar, pt_element_string str, const pt_match_options *const opts) {
+    return pt_match_n(grammar, str, SIZE_MAX, opts);
+}
+
+PT_DECL pt_match_result pt_match_n(const pt_grammar grammar, pt_element_string str, size_t str_size, const pt_match_options *const opts) {
     pt_match_result result = {};
     if(str == NULL) {
         result.matched = PT_NULL_INPUT;
@@ -781,7 +818,7 @@ PT_DECL pt_match_result pt_match(const pt_grammar grammar, pt_element_string str
         result.matched = PT_NO_STACK_MEM;
         return result;
     }
-    pt__match_expr_result subresult = pt__match_rule(&context, 0, str);
+    pt__match_expr_result subresult = pt__match_rule(&context, 0, str, str_size);
     if(subresult.success > 0) {
         result.matched = subresult.sp_advance;
         if(context.action_stack.size > 0) {

@@ -1,5 +1,11 @@
 # Changelog
 ## [Unreleased](https://github.com/gilzoide/pega-texto/compare/v4.1.0...HEAD)
+### Added
+- Support for passing the size of the input string to the matching algorithm.
+  + Call `pt_match_n` instead of `pt_match` to pass the string size.
+  + `pt_match` simply forwards the call to `pt_match_n` passing `SIZE_MAX` as the string size.
+  + A new `PT_OP_CUSTOM_MATCHER_N` operation was added for custom matchers that receive the input string size.
+    Use the `PT_CUSTOM_MATCHER_N` macro or `CUSTOM_MATCHER_N` alias to create such expression.
 
 
 ## [v4.1.0](https://github.com/gilzoide/lua-gdextension/releases/tag/v4.1.0)
