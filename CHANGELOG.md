@@ -1,5 +1,8 @@
 # Changelog
-## [Unreleased](https://github.com/gilzoide/pega-texto/compare/v4.1.0...HEAD)
+## [Unreleased](https://github.com/gilzoide/pega-texto/compare/v4.2.0...HEAD)
+
+
+## [v4.2.0](https://github.com/gilzoide/lua-gdextension/releases/tag/v4.2.0)
 ### Added
 - Support for passing the size of the input string to the matching algorithm.
   + Call `pt_match_n` instead of `pt_match` to pass the string size.
